@@ -2,6 +2,6 @@
 
 int main(void)
 {
-    printf("Nordiska PDF signer ready");
+    printf("Nordiska PDF signer ready\n");
     return 0;
 }
