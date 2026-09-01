@@ -1,1 +1,45 @@
-build/
+# CMake build directories
+/build/
+/out/
+/cmake-build-*/
+
+# CMake-generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+Makefile
+build.ninja
+rules.ninja
+.ninja_deps
+.ninja_log
+
+# Compiled native files
+*.o
+*.obj
+*.a
+*.so
+*.dll
+*.dylib
+*.exe
+
+# Executables created directly inside source folders
+/pdf_generator/pdf_generator
+/pdf_signer/pdf_signer
+
+# Generated report and signing output
+*.pdf
+*.sig
+*.signature
+*.hash
+
+# Private keys and certificate containers
+*.pem
+*.key
+*.p12
+*.pfx
+*.der
+
+# Temporary runtime files
+*.log
+*.tmp
