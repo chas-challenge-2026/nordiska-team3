@@ -1,7 +1,6 @@
 import './LoginPage.css'
 import { Button } from '../../components/Button'
 import { Input } from '../../components/Input'
-import { DecorativeCircle } from '../../components/DecorativeCircle'
 
 function LoginPage() {
     return (
