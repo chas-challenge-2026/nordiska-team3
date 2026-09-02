@@ -182,3 +182,44 @@
     border-right-color: var(--border);
   }
 }
+
+/* ============================= */
+/* Button-komponent (Nordiska)   */
+/* ============================= */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 14px;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s, background-color 0.2s;
+}
+
+.button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.button--primary {
+  background-color: #FF9E7A;
+  color: #12213B;
+}
+
+.button--primary:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.button--secondary {
+  background-color: transparent;
+  color: #12213B;
+  border: 1px solid #12213B;
+}
+
+.button--secondary:hover:not(:disabled) {
+  background-color: rgba(18, 33, 59, 0.05);
+}
