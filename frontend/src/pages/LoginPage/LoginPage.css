@@ -19,30 +19,30 @@
   position: absolute;
   top: 34px;
   right: 34px;
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: #f8fbff;
   color: #164e66;
   display: grid;
   place-items: center;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .brand-card {
   position: absolute;
-  top: 70px;
+  top: 62px;
   left: 50%;
   transform: translateX(-50%);
-  width: 158px;
-  height: 90px;
-  border-radius: 34px;
+  width: 190px;
+  height: 108px;
+  border-radius: 42px;
   background: linear-gradient(160deg, #fff2d1 0%, #ffd37b 55%, #f9ad1b 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1px;
+  gap: 2px;
   line-height: 1;
   color: #164e66;
   z-index: 3;
@@ -50,48 +50,48 @@
 
 .brand-card span {
   text-transform: uppercase;
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 800;
   letter-spacing: 1px;
   color: #f0a41a;
 }
 
 .brand-card strong {
-  font-size: 30px;
+  font-size: 36px;
 }
 
 .login-card {
   position: relative;
   z-index: 2;
-  width: 300px;
-  padding: 24px 24px 18px;
-  border-radius: 14px;
+  width: 420px;
+  padding: 46px 42px 34px;
+  border-radius: 18px;
   background: #eaf1f4;
   box-shadow: 0 24px 50px rgba(4, 29, 42, 0.22);
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  transform: translateY(28px);
+  gap: 18px;
+  transform: translateY(54px);
 }
 
 .login-card h1 {
   margin: 0;
-  font-size: 14px;
+  font-size: 20px;
   color: #164e66;
 }
 
 .login-card p {
   margin: 0;
-  font-size: 10px;
+  font-size: 14px;
   color: #477084;
 }
 
 .login-card label {
   display: flex;
   flex-direction: column;
-  gap: 7px;
-  font-size: 8px;
-  font-weight: 700;
+  gap: 9px;
+  font-size: 11px;
+  font-weight: 800;
   text-transform: uppercase;
   color: #164e66;
 }
@@ -101,9 +101,9 @@
   border-radius: 999px;
   background: #f7f9fa;
   color: #164e66;
-  padding: 10px 14px;
+  padding: 15px 20px;
   outline: none;
-  font-size: 10px;
+  font-size: 14px;
 }
 
 .login-card input:focus {
@@ -111,12 +111,12 @@
 }
 
 .button-placeholder {
-  height: 34px;
+  height: 48px;
   border-radius: 999px;
   display: grid;
   place-items: center;
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 800;
 }
 
 .button-placeholder.primary {
@@ -126,28 +126,31 @@
 }
 
 .button-placeholder.secondary {
-  margin-top: 8px;
+  margin-top: 10px;
   border: 1px solid #9ab7c6;
   color: #164e66;
 }
 
 .secure-text {
-  padding-top: 8px;
-  font-size: 9px;
+  padding-top: 10px;
+  font-size: 12px;
   color: #7a94a2;
 }
 
 @media (max-width: 700px) {
   .login-page {
-    background: #f4f4f2;
-    padding: 18px 12px;
+    background: #164e66;
+    padding: 0;
     place-items: stretch;
   }
 
   .login-shell {
-    min-height: calc(100vh - 36px);
+    min-height: 100vh;
     width: 100%;
-    place-items: start center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
   }
 
   .theme-toggle-placeholder {
@@ -163,10 +166,11 @@
     top: auto;
     left: auto;
     transform: none;
-    margin-top: 100px;
-    width: 170px;
-    height: 94px;
-    border-radius: 46px;
+    margin-top: 76px;
+    margin-bottom: -10px;
+    width: 190px;
+    height: 105px;
+    border-radius: 52px;
   }
 
   .brand-card strong {
@@ -175,24 +179,25 @@
 
   .brand-card strong::before {
     content: "n.";
-    font-size: 78px;
-    line-height: 0.8;
+    font-size: 88px;
+    line-height: 0.75;
   }
 
   .brand-card span {
     order: 2;
-    margin-top: 2px;
-    font-size: 6px;
+    margin-top: 4px;
+    font-size: 7px;
     font-weight: 800;
   }
 
   .login-card {
-    width: calc(100% - 20px);
-    max-width: 330px;
-    margin-top: 8px;
+    width: calc(100% - 32px);
+    max-width: 360px;
+    margin-top: 24px;
     transform: none;
     padding: 24px 22px 20px;
     border-radius: 14px;
+    gap: 13px;
   }
 
   .login-card h1 {
@@ -203,11 +208,22 @@
     font-size: 10px;
   }
 
+  .login-card label {
+    font-size: 8px;
+    gap: 7px;
+  }
+
   .login-card input {
     padding: 10px 14px;
+    font-size: 10px;
   }
 
   .button-placeholder {
     height: 34px;
+    font-size: 10px;
+  }
+
+  .secure-text {
+    font-size: 9px;
   }
 }
