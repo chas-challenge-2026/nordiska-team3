@@ -301,3 +301,28 @@
   background-color: #FF9E7A;
   color: #12213B;
 }
+
+/* ================================== */
+/* DecorativeCircle-komponent (Nordiska) */
+/* ================================== */
+.decorative-circle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.decorative-circle--orange {
+  background-color: #FF9E7A;
+}
+
+.decorative-circle--blue {
+  background-color: #7CA5C9;
+}
+
+.decorative-circle--green {
+  background-color: #6FA88A;
+}
+
+.decorative-circle--white {
+  background-color: #FFFFFF;
+}
