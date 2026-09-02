@@ -4,6 +4,11 @@ obj/
 .vs/
 *.slnx
 appsettings.Development.json
-
 # Local-only notes, never commit
 docs/systemdev-context.md
+
+# Frontend / Node
+node_modules/
+dist/
+.env
+.env.local
