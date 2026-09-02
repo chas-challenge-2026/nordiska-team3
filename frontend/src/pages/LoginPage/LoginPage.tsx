@@ -1,6 +1,4 @@
 import './LoginPage.css'
-import { Button } from '../../components/Button'
-import { Input } from '../../components/Input'
 
 function LoginPage() {
     return (
@@ -21,17 +19,18 @@ function LoginPage() {
                         <p>Logga in med BankID eller PIN.</p>
                     </div>
 
-                    <Input label="Personnummer" type="text" placeholder="ÅÅMMDD-XXXX" />
+                    <label>
+                        Personnummer
+                        <input type="text" placeholder="ÅÅMMDD-XXXX" />
+                    </label>
 
-                    <Input label="PIN-kod" type="password" placeholder="••••••" />
+                    <label>
+                        PIN-kod
+                        <input type="password" placeholder="••••••" />
+                    </label>
 
-                    <Button type="submit" variant="primary">
-                        Logga in
-                    </Button>
-
-                    <Button type="button" variant="secondary">
-                        Logga in med BankID
-                    </Button>
+                    <div className="button-placeholder primary">Logga in</div>
+                    <div className="button-placeholder secondary">Logga in med BankID</div>
 
                     <p className="secure-text">
                         Inloggning skyddas av BankID och 256-bitars kryptering.
