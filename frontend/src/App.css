@@ -182,3 +182,122 @@
     border-right-color: var(--border);
   }
 }
+
+/* ============================= */
+/* Button-komponent (Nordiska)   */
+/* ============================= */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 14px;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s, background-color 0.2s;
+}
+
+.button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.button--primary {
+  background-color: #FF9E7A;
+  color: #12213B;
+}
+
+.button--primary:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.button--secondary {
+  background-color: transparent;
+  color: #12213B;
+  border: 1px solid #12213B;
+}
+
+.button--secondary:hover:not(:disabled) {
+  background-color: rgba(18, 33, 59, 0.05);
+}
+
+/* ============================= */
+/* Input-komponent (Nordiska)    */
+/* ============================= */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.input-label {
+  font-size: 13px;
+  color: #5B6472;
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #D8DCE3;
+  font-size: 15px;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  outline: 2px solid #FF9E7A;
+  outline-offset: 1px;
+  border-color: #FF9E7A;
+}
+
+.input--error {
+  border-color: #B3261E;
+}
+
+.input-suffix {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  color: #5B6472;
+}
+
+.input-error-text {
+  font-size: 12px;
+  color: #B3261E;
+  margin: 0;
+}
+
+/* ============================= */
+/* NavIcon-komponent (Nordiska)  */
+/* ============================= */
+.nav-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5B6472;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.nav-icon:hover {
+  background-color: rgba(18, 33, 59, 0.05);
+}
+
+.nav-icon--active {
+  background-color: #FF9E7A;
+  color: #12213B;
+}
