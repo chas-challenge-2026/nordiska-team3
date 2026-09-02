@@ -326,3 +326,84 @@
 .decorative-circle--white {
   background-color: #FFFFFF;
 }
+
+/* ============================= */
+/* BlobCard-komponent (Nordiska) */
+/* ============================= */
+.blob-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-radius: 20px;
+  padding: 16px;
+}
+
+.blob-card-icon {
+  margin-bottom: 6px;
+}
+
+.blob-card-label {
+  font-size: 11px;
+  margin: 0 0 4px;
+  opacity: 0.75;
+}
+
+.blob-card-value {
+  font-family: monospace;
+  font-weight: 600;
+  margin: 0;
+}
+
+.blob-card-sublabel {
+  font-size: 10px;
+  margin: 4px 0 0;
+  opacity: 0.6;
+}
+
+/* Storlekar */
+.blob-card--lg {
+  width: 240px;
+  padding: 24px;
+}
+.blob-card--lg .blob-card-value {
+  font-size: 28px;
+}
+
+.blob-card--md {
+  width: 140px;
+}
+.blob-card--md .blob-card-value {
+  font-size: 16px;
+}
+
+.blob-card--sm {
+  width: 110px;
+  padding: 12px;
+}
+.blob-card--sm .blob-card-value {
+  font-size: 14px;
+}
+
+/* Färger */
+.blob-card--white {
+  background-color: #FFFFFF;
+  color: #12213B;
+  border: 1px solid #D8DCE3;
+}
+
+.blob-card--mint {
+  background-color: #D9F2E6;
+  color: #1F6B4D;
+}
+
+.blob-card--peach {
+  background-color: #FFE8D6;
+  color: #A45528;
+}
+
+.blob-card--dark {
+  background-color: #0D1B2A;
+  color: #F0E6D8;
+}
