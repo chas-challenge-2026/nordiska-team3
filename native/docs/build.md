@@ -141,7 +141,7 @@ No input will result in a Usage Error:
 **'sign'** and **'verify'** input results:
 
     ```bash
-    Operation: SIGN
+    Operation: sign
     Input PDF: report.pdf
     Private Key: private_key.pem
     Output Signature: report.sig
@@ -149,7 +149,7 @@ No input will result in a Usage Error:
     Exit Code: 0.
 
     ```bash
-    Operation: VERIFY
+    Operation: verify
     Input PDF: report.pdf
     Public Key: private_key.pem
     Signature: report.sig
