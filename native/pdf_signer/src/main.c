@@ -1,3 +1,27 @@
+// main.c
+
+/*  
+    Simple program that takes the input of 'user' 
+    and and gives out the assigned arguments. 
+    There are total 5 arguments expected. 
+    Currently serves as a small draft of a complete function.
+
+    To test, first you need to build the project: 
+    (make sure to have all required libraries installed)
+
+    '''bash
+    cd "D:/'yourpath'/nordiska-team3"
+
+    cmake -S native -B native/build
+    cmake --build native/build
+    '''
+
+    Command to start the program:
+    '''bash
+    ./native/build 'prompt' report.pdf private-key.pem report.sig
+    '''
+*/ 
+
 #include <stdio.h>
 #include <string.h>
 
