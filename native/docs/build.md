@@ -114,30 +114,62 @@ Expected exit code:
 ```
 
 ## Run the PDF signer
+  
+Currently contains a simple program that takes the 
+input of 'user' and gives out the assigned arguments. 
+There are total 5 arguments expected. 
+Currently serves as a small draft of a complete function.
+
+### Run the program:
 
 ```bash
-./native/build/pdf_signer/pdf_signer
+./native/build 'task' report.pdf private-key.pem report.sig
 ```
 
-Expected output:
+In **'task'** write either **'sign'** or **'verify'**.
 
-```text
-Nordiska PDF signer ready
-```
+No input will result in a Usage Error:
+    ```bash
+    Usage:
+    ./native/build/pdf_signer/pdf_signer sign
+        <input-pdf> <private-key-pem> <output-signature>
+    ./native/build/pdf_signer/pdf_signer verify 
+        <input-pdf> <public-key-pem> <signature-file>
+    ```
+    Exit Code: 1
 
-Check its exit code immediately:
+**'sign'** and **'verify'** input results:
+
+    ```bash
+    Operation: SIGN
+    Input PDF: report.pdf
+    Private Key: private_key.pem
+    Output Signature: report.sig
+    ```
+    Exit Code: 0.
+
+    ```bash
+    Operation: VERIFY
+    Input PDF: report.pdf
+    Public Key: private_key.pem
+    Signature: report.sig
+    ```
+    Exit code: 0
+
+Invalid input result:
+    ```bash
+    Error: Unknown operation - '(invalid input)'
+    ```
+    Exit Code: 1.
+
+Check the exit code:
 
 ```bash
 echo $?
 ```
 
-Expected exit code:
-
-```text
-0
-```
-
 Exit code `0` means the program completed successfully.
+Exit code `1` means the program has stumbled upon an error.
 
 ## Rebuild after changing source code
 
