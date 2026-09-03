@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) //argv used later to call real data, I suppose.
 
     if (argc != expectedArgumentCount)
     {
-        fprintf(stderr,
+        fprintf(stderr,  // fprintf is used to write to the standard error stream
                 "Usage:\n"
                 "  %s sign <input-pdf> <private-key-pem> "
                 "<output-signature>\n"
@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) //argv used later to call real data, I suppose.
 
     const char* operation = argv[1];
 
-    if (strcmp(operation, "sign") == 0)
+    if (strcmp(operation, "sign") == 0) // Checks if the operation is 'sign' returns 0
     {
         printf("Operation: SIGN\n");
         printf("Input PDF: %s\n", argv[2]);
@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) //argv used later to call real data, I suppose.
         return 0;
     }
 
-    if (strcmp(operation, "verify") == 0)
+    if (strcmp(operation, "verify") == 0) // checks if the operation is 'verify' returns 0
     {
         printf("Operation: VERIFY\n");
         printf("Input PDF: %s\n", argv[2]);
