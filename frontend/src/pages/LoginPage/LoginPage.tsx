@@ -2,6 +2,7 @@ import { type FormEvent, useState } from 'react'
 import './LoginPage.css'
 import { Button } from '../../components/Button'
 import { Input } from '../../components/Input'
+import { DecorativeCircle } from '../../components/DecorativeCircle'
 
 function LoginPage() {
     const [isCheckingPin, setIsCheckingPin] = useState(false)
@@ -41,7 +42,14 @@ function LoginPage() {
     return (
         <main className="login-page">
             <section className="login-shell">
-                <div className="theme-toggle-placeholder" aria-label="Byt tema"></div>
+                <DecorativeCircle color="orange" size={190} left={-30} top={220} />
+                <DecorativeCircle color="green" size={115} left={80} top={340} opacity={0.9} />
+                <DecorativeCircle color="orange" size={75} left={150} bottom={80} />
+                <DecorativeCircle color="green" size={150} right={-20} bottom={180} />
+                <DecorativeCircle color="blue" size={110} right={60} bottom={100} opacity={0.9} />
+
+                <div className="theme-toggle-placeholder" aria-label="Byt tema">
+                </div>
 
                 <div className="brand-card">
                     <span>Sparportal</span>
