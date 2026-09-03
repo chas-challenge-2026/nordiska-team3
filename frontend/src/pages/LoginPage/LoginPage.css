@@ -31,7 +31,7 @@
 
 .brand-card {
   position: absolute;
-  top: 62px;
+  top: 54px;
   left: 50%;
   transform: translateX(-50%);
   width: 190px;
@@ -69,13 +69,13 @@
   position: relative;
   z-index: 2;
   width: 420px;
-  padding: 46px 42px 34px;
+  padding: 40px 42px 28px;
   border-radius: var(--radius-lg);
   background: var(--color-surface);
   box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
   transform: translateY(54px);
 }
 
@@ -108,10 +108,13 @@
   gap: 9px;
 }
 
+.login-card .input-group:nth-of-type(3) {
+  margin-bottom: -12px;
+}
+
 .login-card .input-wrapper {
   position: relative;
 }
-
 
 .login-card input,
 .login-card .input {
@@ -139,6 +142,15 @@
   font-weight: 400;
 }
 
+.login-error {
+  min-height: 15px;
+  margin-top: -6px;
+  color: #a63d40;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 15px;
+}
+
 .login-card .button {
   height: 48px;
   border-radius: var(--radius-pill);
@@ -156,11 +168,29 @@
 }
 
 .login-card .button--secondary {
-  margin-top: 10px;
+  margin-top: 4px;
   background: transparent;
   border: 1px solid var(--color-border);
   color: var(--color-text-primary);
   box-shadow: none;
+}
+
+.bankid-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: -4px;
+}
+
+.bankid-options button {
+  height: 38px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-soft);
+  color: var(--color-text-primary);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .secure-text {
