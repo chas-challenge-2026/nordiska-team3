@@ -283,15 +283,15 @@
 /* NavIcon-komponent (Nordiska)  */
 /* ============================= */
 .nav-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-pill);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
   border: none;
-  background: transparent;
+  background: var(--color-surface);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-secondary);
+  color: var(--color-text-primary);
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s;
 }
@@ -301,10 +301,9 @@
 }
 
 .nav-icon--active {
-  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
+  background: var(--color-primary);
   color: var(--color-text-primary);
 }
-
 /* ================================== */
 /* DecorativeCircle-komponent (Nordiska) */
 /* ================================== */
