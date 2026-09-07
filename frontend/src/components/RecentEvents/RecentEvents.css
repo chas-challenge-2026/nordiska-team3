@@ -1,0 +1,110 @@
+.recent-events {
+  width: 100%;
+  max-width: 560px;
+}
+
+.recent-events__title {
+  margin: 0 0 12px;
+  color: var(--color-text-inverted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.recent-events__list {
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-soft);
+  box-shadow: var(--shadow-sm);
+}
+
+.recent-events__item {
+  min-height: 62px;
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--color-surface-soft);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.recent-events__item:last-child {
+  border-bottom: none;
+}
+
+.recent-events__icon {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-pill);
+  display: grid;
+  place-items: center;
+  color: var(--color-success);
+  background: var(--color-success-soft);
+}
+
+.recent-events__icon--negative {
+  color: var(--color-danger);
+  background: var(--color-danger-soft);
+}
+
+.recent-events__content h3 {
+  margin: 0 0 4px;
+  color: var(--color-text-primary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.recent-events__content p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.recent-events__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.recent-events__meta strong {
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.recent-events__meta span {
+  padding: 3px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--color-success-soft);
+  color: var(--color-success);
+  font-size: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.recent-events__meta .is-positive {
+  color: var(--color-success);
+}
+
+.recent-events__meta .is-negative {
+  color: var(--color-danger);
+}
+
+.recent-events__meta .is-negative + span {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+@media (max-width: 520px) {
+  .recent-events__item {
+    grid-template-columns: 28px 1fr;
+  }
+
+  .recent-events__meta {
+    grid-column: 2;
+    align-items: flex-start;
+  }
+}
