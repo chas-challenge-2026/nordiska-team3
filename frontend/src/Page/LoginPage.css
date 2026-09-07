@@ -15,7 +15,7 @@
   overflow: hidden;
 }
 
-.theme-toggle-placeholder {
+.theme-toggle {
   position: absolute;
   top: 34px;
   right: 34px;
@@ -26,7 +26,22 @@
   color: var(--color-text-primary);
   display: grid;
   place-items: center;
-  font-size: 16px;
+  box-shadow: var(--shadow-sm);
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    transform 0.2s;
+  z-index: 4;
+}
+
+.theme-toggle:hover {
+  transform: translateY(-1px);
+  background: var(--color-surface);
+}
+
+.theme-toggle svg {
+  width: 16px;
+  height: 16px;
 }
 
 .brand-card {
@@ -63,6 +78,7 @@
 
 .brand-card strong {
   font-size: 36px;
+  color: var(--color-yale-blue-900);
 }
 
 .login-card {
@@ -138,7 +154,7 @@
 
 .login-card input::placeholder,
 .login-card .input::placeholder {
-  color: rgba(19, 71, 99, 0.55);
+  color: var(--color-text-placeholder);
   font-weight: 400;
 }
 
@@ -163,7 +179,7 @@
 
 .login-card .button--primary {
   background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
-  color: var(--color-text-inverted);
+  color: var(--color-text-primary);
   box-shadow: var(--shadow-sm);
 }
 
@@ -215,12 +231,16 @@
     justify-content: flex-start;
   }
 
-  .theme-toggle-placeholder {
+  .theme-toggle {
     top: 16px;
     right: 16px;
     width: 26px;
     height: 26px;
-    font-size: 13px;
+  }
+
+  .theme-toggle svg {
+    width: 13px;
+    height: 13px;
   }
 
   .brand-card {

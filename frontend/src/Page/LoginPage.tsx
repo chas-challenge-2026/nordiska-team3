@@ -1,12 +1,15 @@
 import { type FormEvent, useState } from 'react'
+import { Moon, Sun } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import './LoginPage.css'
 import { Button } from '../components/Button'
 import { Input } from '../components/Input'
 import { DecorativeCircle } from '../components/DecorativeCircle'
+import { useTheme } from '../context/useTheme'
 
 function LoginPage() {
     const navigate = useNavigate()
+    const { theme, toggleTheme } = useTheme()
 
     const [isCheckingPin, setIsCheckingPin] = useState(false)
     const [isStartingBankId, setIsStartingBankId] = useState(false)
@@ -63,8 +66,14 @@ function LoginPage() {
                 <DecorativeCircle color="green" size={150} right={-20} bottom={180} />
                 <DecorativeCircle color="blue" size={110} right={60} bottom={100} opacity={0.9} />
 
-                <div className="theme-toggle-placeholder" aria-label="Byt tema">
-                </div>
+                <button
+                    className="theme-toggle"
+                    type="button"
+                    aria-label={theme === 'dark' ? 'Byt till ljust tema' : 'Byt till mörkt tema'}
+                    onClick={toggleTheme}
+                >
+                    {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+                </button>
 
                 <div className="brand-card">
                     <span>Sparportal</span>
