@@ -1,0 +1,28 @@
+.dashboard-page {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-page-bg);
+}
+
+.dashboard-sidebar {
+  width: 76px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6) 0;
+}
+
+.sidebar-divider {
+  width: 28px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.15);
+  margin: var(--space-3) 0;
+}
+
+.dashboard-main {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}

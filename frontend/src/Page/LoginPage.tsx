@@ -1,10 +1,13 @@
 import { type FormEvent, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import './LoginPage.css'
-import { Button } from '../../components/Button'
-import { Input } from '../../components/Input'
-import { DecorativeCircle } from '../../components/DecorativeCircle'
+import { Button } from '../components/Button'
+import { Input } from '../components/Input'
+import { DecorativeCircle } from '../components/DecorativeCircle'
 
 function LoginPage() {
+    const navigate = useNavigate()
+
     const [isCheckingPin, setIsCheckingPin] = useState(false)
     const [isStartingBankId, setIsStartingBankId] = useState(false)
     const [showBankIdOptions, setShowBankIdOptions] = useState(false)
@@ -24,6 +27,12 @@ function LoginPage() {
 
         setErrorMessage('')
         setIsCheckingPin(true)
+
+        // Mock: simulerar en API-fördröjning innan vi navigerar vidare
+        setTimeout(() => {
+            setIsCheckingPin(false)
+            navigate('/dashboard')
+        }, 900)
     }
 
     function handleBankIdLogin() {
@@ -37,6 +46,12 @@ function LoginPage() {
         setBankIdMode(mode)
         setShowBankIdOptions(false)
         setIsStartingBankId(true)
+
+        // Mock: simulerar att BankID-appen bekräftats efter en kort väntan
+        setTimeout(() => {
+            setIsStartingBankId(false)
+            navigate('/dashboard')
+        }, 1400)
     }
 
     return (
@@ -82,7 +97,7 @@ function LoginPage() {
                         {errorMessage}
                     </p>
 
-                    <Button type="submit" variant="primary">
+                    <Button type="submit" variant="primary" disabled={isCheckingPin}>
                         {isCheckingPin ? 'Kontrollerar PIN...' : 'Logga in'}
                     </Button>
 
@@ -96,7 +111,7 @@ function LoginPage() {
                             </button>
                         </div>
                     ) : (
-                        <Button type="button" variant="secondary" onClick={handleBankIdLogin}>
+                        <Button type="button" variant="secondary" onClick={handleBankIdLogin} disabled={isStartingBankId}>
                             {isStartingBankId
                                 ? bankIdMode === 'same-device'
                                     ? 'Öppnar BankID...'
