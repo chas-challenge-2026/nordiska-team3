@@ -1,3 +1,4 @@
+#include "nordiska/error_codes.h"
 #include <iostream>
 #include <string>
 
@@ -9,7 +10,7 @@ int main(int argc, char* argv[])
     { 
         std::cerr << "Usage: " << argv[0] // for .NET to seperate error messages from normal output (CERR)
         << " <input-json> <output-pdf>\n"; // print expected arguments
-        return 1;   
+        return NORDISKA_EXIT_INVALID_INPUT;   
     
     }
 
@@ -20,6 +21,6 @@ int main(int argc, char* argv[])
     std::cout << "Input: " << inputpath << "\n";
     std::cout << "Output: " << outputpath << "\n";
 
-    return 0;
+    return NORDISKA_EXIT_SUCCESS;
 
 }
