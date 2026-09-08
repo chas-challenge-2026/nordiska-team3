@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) //argv used later to call real data, I suppose.
 
     if (strcmp(operation, "sign") == 0) // Checks if the operation is 'sign' returns 0
     {
-        printf("Operation: SIGN\n");
+        printf("Operation: sign\n");
         printf("Input PDF: %s\n", argv[2]);
         printf("Private Key: %s\n", argv[3]);
         printf("Output Signature: %s\n", argv[4]);
@@ -57,7 +57,7 @@ int main(int argc, char* argv[]) //argv used later to call real data, I suppose.
 
     if (strcmp(operation, "verify") == 0) // checks if the operation is 'verify' returns 0
     {
-        printf("Operation: VERIFY\n");
+        printf("Operation: verify\n");
         printf("Input PDF: %s\n", argv[2]);
         printf("Public Key: %s\n", argv[3]);
         printf("Signature: %s\n", argv[4]);
