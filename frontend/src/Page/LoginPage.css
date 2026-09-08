@@ -77,6 +77,8 @@
 }
 
 .brand-card strong {
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
   font-size: 36px;
   color: var(--color-yale-blue-900);
 }

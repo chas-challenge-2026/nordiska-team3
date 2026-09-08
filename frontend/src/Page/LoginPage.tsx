@@ -77,7 +77,7 @@ function LoginPage() {
 
                 <div className="brand-card">
                     <span>Sparportal</span>
-                    <strong>nordiska</strong>
+                    <strong>nordiska.</strong>
                 </div>
 
                 <form className="login-card" onSubmit={handlePinLogin}>
