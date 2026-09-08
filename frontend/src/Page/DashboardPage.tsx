@@ -60,7 +60,6 @@ function DashboardPage() {
 
                 <div className="dashboard-content">
                     <div className="brand-card">
-                        <span>Sparportal</span>
                         <strong>nordiska<span className="brand-dot">.</span></strong>
                     </div>
 
