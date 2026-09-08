@@ -20,7 +20,7 @@
   width: 100%;
   max-width: 560px;
   margin: 0 auto;
-  padding: 150px var(--space-5) var(--space-7);
+  padding-top: 150px;;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -178,6 +178,6 @@
   }
 
   .dashboard-content {
-    padding-top: 64px;
+   padding-top: 124px;
   }
 }
