@@ -77,9 +77,9 @@ function LoginPage() {
                 </button>
 
                 <div className="login-stack">
-                    <div className="brand-card">
+                    <div className="login-brand-card">
                         <span>Sparportal</span>
-                        <strong>nordiska<span className="brand-dot">.</span></strong>
+                        <strong>nordiska<span className="login-brand-dot">.</span></strong>
                     </div>
 
                     <form className="login-card" onSubmit={handlePinLogin}>
