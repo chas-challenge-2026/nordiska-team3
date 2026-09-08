@@ -2,24 +2,37 @@
 #include <iostream>
 #include <string>
 
+namespace
+{
+void printUsage()
+{
+    std::cerr
+        << "USAGE: pdf_generator <input-json> <output-pdf>\n";
+}
+}
+
 int main(int argc, char* argv[])
 {
-    constexpr int expectedArgumentCount = 3; // program name + input JSON + output PDF, to avoid magic numbers!
+    constexpr int expectedArgumentCount = 3;
 
-    if (argc != expectedArgumentCount) // runs when argument count is incorrect
-    { 
-        std::cerr << "Usage: " << argv[0] // for .NET to seperate error messages from normal output (CERR)
-        << " <input-json> <output-pdf>\n"; // print expected arguments
-        return NORDISKA_EXIT_INVALID_INPUT;   
-    
+    if (argc != expectedArgumentCount)
+    {
+        std::cerr
+            << "ERROR 1 INVALID_INPUT: expected exactly two arguments\n";
+
+        printUsage();
+
+        return NORDISKA_EXIT_INVALID_INPUT;
     }
 
+    const std::string inputPath = argv[1];
+    const std::string outputPath = argv[2];
 
-    const std::string inputpath = argv[1]; //  converts C-Style string to C++ string
-    const std::string outputpath = argv[2];
+    // These paths will be used when file handling is implemented.
+    (void)inputPath;
+    (void)outputPath;
 
-    std::cout << "Input: " << inputpath << "\n";
-    std::cout << "Output: " << outputpath << "\n";
+    std::cout << "SUCCESS: pdf_generator command accepted\n";
 
     return NORDISKA_EXIT_SUCCESS;
 

@@ -1,71 +1,68 @@
-// main.c
-
-/*  
-    Simple program that takes the input of 'user' 
-    and and gives out the assigned arguments. 
-    There are total 5 arguments expected. 
-    Currently serves as a small draft of a complete function.
-
-    To test, first you need to build the project: 
-    (make sure to have all required libraries installed)
-
-    '''bash
-    cd "D:/'yourpath'/nordiska-team3"
-
-    cmake -S native -B native/build
-    cmake --build native/build
-    '''
-
-    Command to start the program:
-    '''bash
-    ./native/build 'prompt' report.pdf private-key.pem report.sig
-    '''
-*/ 
 #include "nordiska/error_codes.h"
 #include <stdio.h>
 #include <string.h>
 
+
+static void print_usage(void)
+{
+    fprintf(
+        stderr,
+        "USAGE: pdf_signer sign "
+        "<input-pdf> <private-key-pem> <output-signature>\n"
+        "USAGE: pdf_signer verify "
+        "<input-pdf> <public-key-pem> <signature-file>\n"
+    );
+}
+
+static int invalid_input(const char* message)
+{
+    fprintf(
+        stderr,
+        "ERROR 1 INVALID_INPUT: %s\n",
+        message
+    );
+
+    print_usage();
+
+    return NORDISKA_EXIT_INVALID_INPUT;
+}
+
+
 int main(int argc, char* argv[]) //argv used later to call real data, I suppose.
 {
-    const int expectedArgumentCount = 5;
+    
+     const int expectedArgumentCount = 5;
 
     if (argc != expectedArgumentCount)
     {
-        fprintf(stderr,  // fprintf is used to write to the standard error stream
-                "Usage:\n"
-                "  %s sign <input-pdf> <private-key-pem> "
-                "<output-signature>\n"
-                "  %s verify <input-pdf> <public-key-pem> "
-                "<signature-file>\n",
-                argv[0],
-                argv[0]);
-        
-        return NORDISKA_EXIT_INVALID_INPUT;
+        return invalid_input(
+            "expected an operation and three file arguments"
+        );
     }
 
     const char* operation = argv[1];
 
-    if (strcmp(operation, "sign") == 0) // Checks if the operation is 'sign' returns 0
+    if (strcmp(operation, "sign") == 0)
     {
-        printf("Operation: SIGN\n");
-        printf("Input PDF: %s\n", argv[2]);
-        printf("Private Key: %s\n", argv[3]);
-        printf("Output Signature: %s\n", argv[4]);
+        printf(
+            "SUCCESS: pdf_signer sign command accepted\n"
+        );
 
         return NORDISKA_EXIT_SUCCESS;
     }
 
-    if (strcmp(operation, "verify") == 0) // checks if the operation is 'verify' returns 0
+    if (strcmp(operation, "verify") == 0)
     {
-        printf("Operation: VERIFY\n");
-        printf("Input PDF: %s\n", argv[2]);
-        printf("Public Key: %s\n", argv[3]);
-        printf("Signature: %s\n", argv[4]);
+        printf(
+            "SUCCESS: pdf_signer verify command accepted\n"
+        );
 
         return NORDISKA_EXIT_SUCCESS;
     }
 
-    fprintf(stderr, "Error: Unknown operation - '%s'\n", operation);
+    return invalid_input(
+        "operation must be sign or verify"
+    );
 
-    return NORDISKA_EXIT_INVALID_INPUT;
+    
 }

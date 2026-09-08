@@ -170,3 +170,40 @@ During NAT-13, the signer only:
 - Prints the received paths for testing
 
 It does not open files, hash, sign, or verify anything yet.
+
+
+# Native stdout and stderr Contract
+
+Status: Approved v1.0
+
+This contract applies to both `pdf_generator` and `pdf_signer`.
+
+## Exit code authority
+
+The process exit code is the only current value the .NET backend uses
+to determine whether a native command succeeded or failed.
+
+The backend must not determine success by searching stdout or stderr
+for particular words.
+
+Machine-readable result metadata will be introduced in NAT-41.
+
+## Standard output
+
+`stdout` is used only for the final success message.
+
+Rules:
+
+- A successful command writes one final line to stdout.
+- The line starts with `SUCCESS:`.
+- The line ends with a newline.
+- Progress and debugging messages must not be printed.
+- File contents, JSON input, keys, passwords, and secrets must not be printed.
+- A failed command must leave stdout empty.
+
+Current success messages:
+
+```text
+SUCCESS: pdf_generator command accepted
+SUCCESS: pdf_signer sign command accepted
+SUCCESS: pdf_signer verify command accepted
