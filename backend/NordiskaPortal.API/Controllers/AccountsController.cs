@@ -115,12 +115,17 @@ public class  AccountsController : ControllerBase
             return NotFound("Account does not exist.");
         }
 
+        await using var dbTransaction = await _context.Database.BeginTransactionAsync();
+
+        await _context.Database.ExecuteSqlInterpolatedAsync(
+            $"SELECT 1 FROM \"Accounts\" WHERE \"Id\" = {accountId} FOR UPDATE");
+
         var currentBalance = await GetBalance(accountId);
         if (currentBalance < request.Amount)
         {
             return BadRequest("Insufficient funds.");
         }
-        
+
         var transaction = new Transaction
         {
             AccountId = accountId,
@@ -135,13 +140,15 @@ public class  AccountsController : ControllerBase
             AccountId = accountId,
             TransactionId = transaction.Id,
             Amount = -request.Amount,
-            EntryType = "Withdrawal",
+            EntryType = "WITHDRAWAL",
             Description = "Withdrawal"
         };
 
         _context.Transactions.Add(transaction);
         _context.LedgerEntries.Add(ledgerEntry);
         await _context.SaveChangesAsync();
+
+        await dbTransaction.CommitAsync();
 
         return Ok(new { transactionId = transaction.Id, balance = await GetBalance(accountId) });
     }
