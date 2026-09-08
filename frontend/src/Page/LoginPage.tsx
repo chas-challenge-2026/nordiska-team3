@@ -76,12 +76,13 @@ function LoginPage() {
                     {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
                 </button>
 
-                <div className="brand-card">
-                    <span>Sparportal</span>
-                    <strong>nordiska<span className="brand-dot">.</span></strong>
-                </div>
+                <div className="login-stack">
+                    <div className="brand-card">
+                        <span>Sparportal</span>
+                        <strong>nordiska<span className="brand-dot">.</span></strong>
+                    </div>
 
-                <form className="login-card" onSubmit={handlePinLogin}>
+                    <form className="login-card" onSubmit={handlePinLogin}>
                     <div>
                         <h1>Välkommen tillbaka</h1>
                         <p>Logga in med BankID eller PIN.</p>
@@ -148,7 +149,8 @@ function LoginPage() {
                         <ShieldCheck size={16} />
                         <span>Inloggning skyddas av BankID och 256-bitars kryptering.</span>
                     </p>
-                </form>
+                    </form>
+                </div>
             </section>
         </main>
     )
