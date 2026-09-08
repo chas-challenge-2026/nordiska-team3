@@ -47,9 +47,8 @@ export function RecentEvents({ events = mockRecentEvents }: RecentEventsProps) {
 
 function formatAmount(amount: number) {
   const sign = amount > 0 ? '+' : ''
-
   return `${sign}${amount.toLocaleString('sv-SE', {
-    minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
+    minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })} kr`
 }
