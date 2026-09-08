@@ -51,7 +51,7 @@
   padding-top: 134px;
 }
 
-.brand-card {
+.login-brand-card {
   position: absolute;
   top: 0;
   left: 50%;
@@ -60,7 +60,7 @@
   height: 108px;
   border-radius: 42px;
   background: linear-gradient(
-    180deg,
+    135deg,
     #ffffff 0%,
     #ffffff 28%,
     #fff7e6 46%,
@@ -78,7 +78,7 @@
   z-index: 3;
 }
 
-.brand-card > span {
+.login-brand-card > span {
   text-transform: uppercase;
   font-size: 12px;
   font-weight: 800;
@@ -86,14 +86,14 @@
   color: var(--color-primary);
 }
 
-.brand-card strong {
+.login-brand-card strong {
   font-family: "Poppins", sans-serif;
   font-weight: 700;
   font-size: 36px;
   color: var(--color-yale-blue-900);
 }
 
-.brand-dot {
+.login-brand-dot {
   color: var(--color-primary);
   font: inherit;
 }
@@ -146,7 +146,7 @@
 }
 
 .login-card .input-group:nth-of-type(3) {
-  margin-bottom: -22px;
+  margin-bottom: -8px;
 }
 
 .login-card .input-wrapper {
@@ -179,14 +179,14 @@
   font-weight: 400;
 }
 
-.login-error {
+.login-card .login-error {
   min-height: 15px;
-  margin-top: -18px;
-  margin-bottom: -18px;
+  margin-top: 0;
+  margin-bottom: -10px;
   color: #a63d40;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
-  line-height: 15px;
+  line-height: 14px;
 }
 
 .login-card .button {
@@ -200,6 +200,10 @@
   font-size: 14px;
   font-weight: 800;
   padding: 0 20px;
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s,
+    filter 0.2s;
 }
 
 .password-input-wrapper {
@@ -236,7 +240,7 @@
 
 .login-card .button--primary {
   background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
-  color: var(--color-text-primary);
+  color: var(--color-yale-blue-900);
   box-shadow: var(--shadow-sm);
 }
 
@@ -272,7 +276,8 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  padding-top: 4px;
+  transform: translateY(-6px);
+  padding-top: 0;
   font-size: 12px;
   line-height: 1.55;
   color: var(--color-text-secondary);
@@ -321,7 +326,7 @@
     height: 13px;
   }
 
-  .brand-card {
+  .login-brand-card {
     position: absolute;
     top: 0;
     left: 50%;
@@ -340,24 +345,24 @@
     );
   }
 
-  .brand-card strong {
+  .login-brand-card strong {
     font-size: 0;
   }
 
-  .brand-card strong::before {
+  .login-brand-card strong::before {
     content: "n";
     font-size: 84px;
     line-height: 0.75;
   }
 
-  .brand-card > span {
+  .login-brand-card > span {
     order: 2;
     margin-top: 4px;
     font-size: 9px;
     font-weight: 800;
   }
 
-  .brand-card .brand-dot {
+  .login-brand-card .login-brand-dot {
     font-size: 84px;
     line-height: 0.75;
   }
@@ -370,7 +375,7 @@
     transform: none;
     padding: 30px 28px 24px;
     border-radius: var(--radius-md);
-    gap: 15px;
+    gap: 9px;
   }
 
   .login-card h1 {
@@ -426,7 +431,9 @@
   }
 
   .secure-text {
-    font-size: 10px;
-    line-height: 1.5;
+    gap: 7px;
+    margin-top: -31px;
+    font-size: 9px;
+    line-height: 1.35;
   }
 }
