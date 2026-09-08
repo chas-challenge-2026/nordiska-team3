@@ -46,16 +46,19 @@
 
 .brand-card {
   position: absolute;
-  top: 54px;
+  top: 64px;
   left: 50%;
   transform: translateX(-50%);
   width: 190px;
   height: 108px;
   border-radius: 42px;
   background: linear-gradient(
-    160deg,
-    var(--color-primary-pale) 0%,
-    var(--color-primary-soft) 55%,
+    180deg,
+    #ffffff 0%,
+    #ffffff 28%,
+    #fff7e6 46%,
+    var(--color-primary-pale) 64%,
+    var(--color-primary-soft) 86%,
     var(--color-primary) 100%
   );
   display: flex;
@@ -68,7 +71,7 @@
   z-index: 3;
 }
 
-.brand-card span {
+.brand-card > span {
   text-transform: uppercase;
   font-size: 12px;
   font-weight: 800;
@@ -83,29 +86,37 @@
   color: var(--color-yale-blue-900);
 }
 
+.brand-dot {
+  color: var(--color-primary);
+  font: inherit;
+}
+
 .login-card {
   position: relative;
   z-index: 2;
   width: 420px;
+  height: 480px;
   padding: 40px 42px 28px;
   border-radius: var(--radius-lg);
   background: var(--color-surface);
   box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   transform: translateY(54px);
 }
 
 .login-card h1 {
   margin: 0;
   font-size: 20px;
+  line-height: 1.2;
   color: var(--color-text-primary);
 }
 
 .login-card p {
   margin: 0;
   font-size: 14px;
+  line-height: 1.55;
   color: var(--color-text-secondary);
 }
 
@@ -123,11 +134,12 @@
 .login-card .input-group {
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .login-card .input-group:nth-of-type(3) {
-  margin-bottom: -12px;
+  margin-bottom: -22px;
 }
 
 .login-card .input-wrapper {
@@ -162,7 +174,8 @@
 
 .login-error {
   min-height: 15px;
-  margin-top: -6px;
+  margin-top: -18px;
+  margin-bottom: -18px;
   color: #a63d40;
   font-size: 12px;
   font-weight: 700;
@@ -171,12 +184,47 @@
 
 .login-card .button {
   height: 48px;
+  flex-shrink: 0;
   border-radius: var(--radius-pill);
-  display: grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   font-size: 14px;
   font-weight: 800;
   padding: 0 20px;
+}
+
+.password-input-wrapper {
+  position: relative;
+}
+
+.password-input-wrapper .input {
+  padding-right: 48px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-steel-blue);
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+.password-toggle:hover {
+  background: rgba(19, 71, 99, 0.08);
+  color: var(--color-yale-blue-900);
+}
+
+.login-card .button--secondary svg {
+  color: currentColor;
 }
 
 .login-card .button--primary {
@@ -197,11 +245,13 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  margin-top: -4px;
+  height: 48px;
+  margin-top: 4px;
+  flex-shrink: 0;
 }
 
 .bankid-options button {
-  height: 38px;
+  height: 48px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
   background: var(--color-surface-soft);
@@ -212,25 +262,38 @@
 }
 
 .secure-text {
-  padding-top: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding-top: 4px;
   font-size: 12px;
+  line-height: 1.55;
   color: var(--color-text-secondary);
+}
+
+.secure-text svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: currentColor;
 }
 
 @media (max-width: 700px) {
   .login-page {
     background: var(--color-page-bg);
-    padding: 0;
-    place-items: stretch;
+    padding: 0 18px;
+    place-items: center;
   }
 
   .login-shell {
     min-height: 100vh;
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
+    display: grid;
+    place-items: center;
+    padding: 142px 0 32px;
+  }
+
+  .login-shell .decorative-circle {
+    display: none;
   }
 
   .theme-toggle {
@@ -246,15 +309,22 @@
   }
 
   .brand-card {
-    position: relative;
-    top: auto;
-    left: auto;
-    transform: none;
-    margin-top: 76px;
-    margin-bottom: -10px;
-    width: 190px;
-    height: 105px;
+    position: absolute;
+    top: 44px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 188px;
+    height: 104px;
     border-radius: 52px;
+    background: linear-gradient(
+      0deg,
+      #ffffff 0%,
+      #ffffff 28%,
+      #fff7e6 46%,
+      var(--color-primary-pale) 64%,
+      var(--color-primary-soft) 86%,
+      var(--color-primary) 100%
+    );
   }
 
   .brand-card strong {
@@ -262,58 +332,88 @@
   }
 
   .brand-card strong::before {
-    content: "n.";
-    font-size: 88px;
+    content: "n";
+    font-size: 84px;
     line-height: 0.75;
   }
 
-  .brand-card span {
+  .brand-card > span {
     order: 2;
     margin-top: 4px;
-    font-size: 7px;
+    font-size: 9px;
     font-weight: 800;
   }
 
+  .brand-card .brand-dot {
+    font-size: 84px;
+    line-height: 0.75;
+  }
+
   .login-card {
-    width: calc(100% - 32px);
-    max-width: 360px;
-    margin-top: 24px;
+    width: 100%;
+    max-width: 370px;
+    height: 440px;
+    margin-top: 0;
     transform: none;
-    padding: 24px 22px 20px;
+    padding: 30px 28px 24px;
     border-radius: var(--radius-md);
-    gap: 13px;
+    gap: 15px;
   }
 
   .login-card h1 {
-    font-size: 15px;
+    font-size: 18px;
+    line-height: 1.2;
   }
 
   .login-card p {
-    font-size: 10px;
+    font-size: 12px;
+    line-height: 1.5;
   }
 
   .login-card label,
   .login-card .input-label {
-    font-size: 8px;
-    gap: 7px;
+    font-size: 10px;
+    gap: 8px;
   }
 
   .login-card .input-group {
-    gap: 7px;
+    gap: 9px;
   }
 
   .login-card input,
   .login-card .input {
-    padding: 10px 14px;
-    font-size: 10px;
+    padding: 13px 16px;
+    font-size: 12px;
   }
 
   .login-card .button {
-    height: 34px;
-    font-size: 10px;
+    height: 42px;
+    font-size: 12px;
+  }
+
+  .bankid-options button {
+    height: 42px;
+    font-size: 12px;
+  }
+
+  .bankid-options {
+    height: 42px;
+  }
+
+  .password-toggle {
+    right: 12px;
+    width: 24px;
+    height: 24px;
+  }
+
+  .password-toggle svg,
+  .secure-text svg {
+    width: 14px;
+    height: 14px;
   }
 
   .secure-text {
-    font-size: 9px;
+    font-size: 10px;
+    line-height: 1.5;
   }
 }
