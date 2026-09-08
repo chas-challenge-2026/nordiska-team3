@@ -21,7 +21,7 @@
     ./native/build 'prompt' report.pdf private-key.pem report.sig
     '''
 */ 
-
+#include "nordiska/error_codes.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) //argv used later to call real data, I suppose.
                 argv[0],
                 argv[0]);
         
-        return 1;
+        return NORDISKA_EXIT_INVALID_INPUT;
     }
 
     const char* operation = argv[1];
@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) //argv used later to call real data, I suppose.
         printf("Private Key: %s\n", argv[3]);
         printf("Output Signature: %s\n", argv[4]);
 
-        return 0;
+        return NORDISKA_EXIT_SUCCESS;
     }
 
     if (strcmp(operation, "verify") == 0) // checks if the operation is 'verify' returns 0
@@ -62,10 +62,10 @@ int main(int argc, char* argv[]) //argv used later to call real data, I suppose.
         printf("Public Key: %s\n", argv[3]);
         printf("Signature: %s\n", argv[4]);
 
-        return 0;
+        return NORDISKA_EXIT_SUCCESS;
     }
 
     fprintf(stderr, "Error: Unknown operation - '%s'\n", operation);
 
-    return 1;
+    return NORDISKA_EXIT_INVALID_INPUT;
 }
