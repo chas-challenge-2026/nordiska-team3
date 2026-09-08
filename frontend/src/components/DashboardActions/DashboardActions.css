@@ -7,8 +7,8 @@
 }
 
 .dashboard-actions__button {
-  min-height: 70px;
-  border-radius: 12px;
+  min-height: 82px;
+  border-radius: var(--radius-sm);
   background: var(--dashboard-card-bg, var(--color-surface-soft));
   color: var(--color-text-primary);
   box-shadow: var(--dashboard-card-shadow, var(--shadow-sm));
@@ -17,8 +17,7 @@
   align-items: center;
   justify-content: center;
   gap: 7px;
-  padding: 9px 10px;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 800;
   transition:
     background-color 0.2s,
@@ -40,8 +39,8 @@
 }
 
 .dashboard-actions__icon {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: var(--radius-pill);
   background: var(--color-text-primary);
   color: var(--color-text-inverted);
@@ -107,6 +106,20 @@
 [data-theme="dark"] .dashboard-actions__button--secondary.dashboard-actions__button--deposit .dashboard-actions__icon {
   background: #17483d;
   color: #cfe9db;
+}
+
+@media (min-width: 521px) {
+  .dashboard-actions__button {
+    min-height: 70px;
+    border-radius: 12px;
+    padding: 9px 10px;
+    font-size: 9px;
+  }
+
+  .dashboard-actions__icon {
+    width: 24px;
+    height: 24px;
+  }
 }
 
 @media (max-width: 520px) {
