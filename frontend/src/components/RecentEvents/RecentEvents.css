@@ -8,14 +8,15 @@
   color: var(--color-text-inverted);
   font-size: 12px;
   font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .recent-events__list {
   overflow: hidden;
   border-radius: var(--radius-sm);
-  background: var(--color-surface-soft);
-  box-shadow: var(--shadow-sm);
+  background: var(--dashboard-card-bg, var(--color-surface-soft));
+  box-shadow: var(--dashboard-card-shadow, var(--shadow-sm));
 }
 
 .recent-events__item {
@@ -25,8 +26,8 @@
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  background: var(--color-surface-soft);
-  border-bottom: 1px solid var(--color-border);
+  background: var(--dashboard-card-bg, var(--color-surface-soft));
+  border-bottom: 1px solid #e1eaee;
 }
 
 .recent-events__item:last-child {
@@ -39,25 +40,25 @@
   border-radius: var(--radius-pill);
   display: grid;
   place-items: center;
-  color: var(--color-success);
-  background: var(--color-success-soft);
+  color: #1f4a3d;
+  background: #d9ede1;
 }
 
 .recent-events__icon--negative {
-  color: var(--color-danger);
-  background: var(--color-danger-soft);
+  color: #b23a2e;
+  background: #fbe3da;
 }
 
 .recent-events__content h3 {
   margin: 0 0 4px;
-  color: var(--color-text-primary);
+  color: #062f43;
   font-size: 12px;
   font-weight: 800;
 }
 
 .recent-events__content p {
   margin: 0;
-  color: var(--color-text-secondary);
+  color: #134763;
   font-size: 10px;
   font-weight: 600;
 }
@@ -71,31 +72,131 @@
 }
 
 .recent-events__meta strong {
+  color: #1f4a3d;
+  font-family: monospace;
   font-size: 11px;
   font-weight: 800;
 }
 
-.recent-events__meta span {
+.recent-events__badge {
   padding: 3px 7px;
   border-radius: var(--radius-pill);
-  background: var(--color-success-soft);
-  color: var(--color-success);
+  background: #d9ede1;
+  color: #1f4a3d;
   font-size: 8px;
   font-weight: 800;
   text-transform: uppercase;
 }
 
 .recent-events__meta .is-positive {
-  color: var(--color-success);
+  color: #1f4a3d;
 }
 
 .recent-events__meta .is-negative {
-  color: var(--color-danger);
+  color: #b23a2e;
 }
 
-.recent-events__meta .is-negative + span {
-  background: var(--color-danger-soft);
-  color: var(--color-danger);
+.recent-events__badge--withdrawal {
+  background: #fbe3da;
+  color: #b23a2e;
+}
+
+.recent-events__badge--interest {
+  background: #f8e8c7;
+  color: #d28a00;
+}
+
+[data-theme="dark"] .recent-events__item {
+  border-bottom-color: rgba(245, 251, 255, 0.04);
+}
+
+[data-theme="dark"] .recent-events__content h3,
+[data-theme="dark"] .recent-events__meta strong {
+  color: #f5fbff;
+}
+
+[data-theme="dark"] .recent-events__content p {
+  color: #c5d7df;
+}
+
+[data-theme="dark"] .recent-events__meta .is-positive {
+  color: #79d8ba;
+}
+
+[data-theme="dark"] .recent-events__meta .is-negative {
+  color: #ff8f88;
+}
+
+[data-theme="dark"] .recent-events__icon {
+  background: #d9ede1;
+  color: #1f4a3d;
+}
+
+[data-theme="dark"] .recent-events__icon--negative {
+  background: #fbe3da;
+  color: #b23a2e;
+}
+
+[data-theme="dark"] .recent-events__badge--deposit {
+  background: #3d7a5e;
+  color: #d9ede1;
+}
+
+[data-theme="dark"] .recent-events__badge--withdrawal {
+  background: #fbe3da;
+  color: #b23a2e;
+}
+
+[data-theme="dark"] .recent-events__badge--interest {
+  background: #f5a90f;
+  color: #062f43;
+}
+
+@media (min-width: 521px) {
+  .recent-events__title {
+    margin-bottom: 10px;
+  }
+
+  .recent-events__list {
+    border-radius: 10px;
+  }
+
+  .recent-events__item {
+    min-height: 58px;
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 9px 13px;
+  }
+
+  .recent-events__icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .recent-events__content h3 {
+    margin-bottom: 3px;
+    font-size: 11px;
+    line-height: 1.15;
+  }
+
+  .recent-events__content p {
+    font-size: 9px;
+    line-height: 1.25;
+  }
+
+  .recent-events__meta {
+    gap: 4px;
+  }
+
+  .recent-events__meta strong {
+    font-size: 10px;
+  }
+
+  .recent-events__badge {
+    padding: 3px 8px;
+    font-size: 7px;
+    line-height: 1;
+  }
 }
 
 @media (max-width: 520px) {

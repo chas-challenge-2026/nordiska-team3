@@ -1,9 +1,23 @@
 .dashboard-page {
+  --dashboard-card-bg: #ffffff;
+  --dashboard-card-shadow: 0 10px 24px rgba(4, 29, 42, 0.1);
+  --dashboard-action-deposit-bg: var(--color-success-soft);
+  --dashboard-action-withdraw-bg: var(--color-primary-pale);
+  --dashboard-action-neutral-bg: #ffffff;
+
   position: relative;
   overflow-x: hidden;
   display: flex;
   min-height: 100vh;
   background: var(--color-page-bg);
+}
+
+[data-theme="dark"] .dashboard-page {
+  --dashboard-card-bg: #062f43;
+  --dashboard-card-shadow: 0 16px 34px rgba(0, 20, 31, 0.34);
+  --dashboard-action-deposit-bg: #d9ede1;
+  --dashboard-action-withdraw-bg: #f8e8c7;
+  --dashboard-action-neutral-bg: #062f43;
 }
 
 /* Huvudyta */

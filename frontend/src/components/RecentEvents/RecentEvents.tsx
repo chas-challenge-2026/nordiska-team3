@@ -36,7 +36,9 @@ export function RecentEvents({ events = mockRecentEvents }: RecentEventsProps) {
               <strong className={event.amount >= 0 ? 'is-positive' : 'is-negative'}>
                 {formatAmount(event.amount)}
               </strong>
-              <span>{getEventLabel(event.type)}</span>
+              <span className={`recent-events__badge recent-events__badge--${event.type}`}>
+                {getEventLabel(event.type)}
+              </span>
             </div>
           </article>
         ))}
