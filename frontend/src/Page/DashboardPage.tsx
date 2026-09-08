@@ -7,9 +7,11 @@ import { DashboardActions } from '../components/DashboardActions/DashboardAction
 import { RecentEvents } from '../components/RecentEvents/RecentEvents'
 import { mockAccounts } from '../components/DashboardActions/mockAccounts'
 import type { DashboardAction } from '../components/DashboardActions/mockDashboardActions'
+import { useTheme } from '../context/useTheme'
 
 function DashboardPage() {
     const navigate = useNavigate()
+    const { toggleTheme } = useTheme()
 
     const currentUser = {
         name: 'Emma Lindström',
@@ -47,7 +49,7 @@ function DashboardPage() {
             <DecorativeCircle color="green" size={140} right={-30} bottom={140} />
             <DecorativeCircle color="green" size={90} right={40} bottom={30} opacity={0.9} />
 
-            <AppNav onLogout={handleLogout} />
+            <AppNav onLogout={handleLogout} onThemeToggle={toggleTheme} />
 
             <main className="dashboard-main">
                 <div className="user-profile">

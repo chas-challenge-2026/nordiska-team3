@@ -7,9 +7,11 @@ import {
     FileText,
     HelpCircle,
     Moon,
+    Sun,
     LogOut,
 } from 'lucide-react'
 import './AppNav.css'
+import { useTheme } from '../context/useTheme'
 
 interface AppNavProps {
     onLogout: () => void
@@ -27,6 +29,9 @@ const navItems = [
 export function AppNav({ onLogout, onThemeToggle }: AppNavProps) {
     const location = useLocation()
     const navigate = useNavigate()
+    const { theme } = useTheme()
+    const ThemeIcon = theme === 'dark' ? Sun : Moon
+    const themeLabel = theme === 'dark' ? 'Byt till ljust tema' : 'Byt till mörkt tema'
 
     function renderItems() {
         return navItems.map(({ to, icon: Icon, label }) => (
@@ -45,14 +50,14 @@ export function AppNav({ onLogout, onThemeToggle }: AppNavProps) {
             <aside className="app-nav app-nav--sidebar">
                 {renderItems()}
                 <div className="sidebar-divider" />
-                <NavIcon icon={<Moon size={18} />} label="Byt tema" onClick={onThemeToggle} />
+                <NavIcon icon={<ThemeIcon size={18} />} label={themeLabel} onClick={onThemeToggle} />
                 <NavIcon icon={<LogOut size={18} />} label="Logga ut" onClick={onLogout} />
             </aside>
 
             <nav className="app-nav app-nav--bottom">
                 {renderItems()}
                 <div className="bottom-nav-divider" />
-                <NavIcon icon={<Moon size={18} />} label="Byt tema" onClick={onThemeToggle} />
+                <NavIcon icon={<ThemeIcon size={18} />} label={themeLabel} onClick={onThemeToggle} />
                 <NavIcon icon={<LogOut size={18} />} label="Logga ut" onClick={onLogout} />
             </nav>
         </>
