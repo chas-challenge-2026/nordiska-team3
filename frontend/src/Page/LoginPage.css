@@ -48,7 +48,7 @@
   position: relative;
   z-index: 2;
   width: 420px;
-  padding-top: 190px;
+  padding-top: 134px;
 }
 
 .login-brand-card {
@@ -311,7 +311,7 @@
   .login-stack {
     width: 100%;
     max-width: 370px;
-    padding-top: 170px;
+    padding-top: 124px;
   }
 
   .theme-toggle {
