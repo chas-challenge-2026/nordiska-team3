@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from 'react'
-import { Moon, Sun } from 'lucide-react'
+import { Eye, EyeOff, Moon, PlusSquare, ShieldCheck, Sun } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import './LoginPage.css'
 import { Button } from '../components/Button'
@@ -17,6 +17,7 @@ function LoginPage() {
     const [bankIdMode, setBankIdMode] = useState('')
     const [personalNumber, setPersonalNumber] = useState('')
     const [pin, setPin] = useState('')
+    const [showPin, setShowPin] = useState(false)
     const [errorMessage, setErrorMessage] = useState('')
 
     function handlePinLogin(event: FormEvent<HTMLFormElement>) {
@@ -77,7 +78,7 @@ function LoginPage() {
 
                 <div className="brand-card">
                     <span>Sparportal</span>
-                    <strong>nordiska.</strong>
+                    <strong>nordiska<span className="brand-dot">.</span></strong>
                 </div>
 
                 <form className="login-card" onSubmit={handlePinLogin}>
@@ -94,13 +95,26 @@ function LoginPage() {
                         onChange={(event) => setPersonalNumber(event.target.value)}
                     />
 
-                    <Input
-                        label="PIN-kod"
-                        type="password"
-                        placeholder="••••••"
-                        value={pin}
-                        onChange={(event) => setPin(event.target.value)}
-                    />
+                    <div className="input-group">
+                        <label className="input-label">PIN-kod</label>
+                        <div className="password-input-wrapper">
+                            <input
+                                className="input"
+                                type={showPin ? 'text' : 'password'}
+                                placeholder="••••••"
+                                value={pin}
+                                onChange={(event) => setPin(event.target.value)}
+                            />
+                            <button
+                                className="password-toggle"
+                                type="button"
+                                aria-label={showPin ? 'Dölj PIN-kod' : 'Visa PIN-kod'}
+                                onClick={() => setShowPin(!showPin)}
+                            >
+                                {showPin ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                        </div>
+                    </div>
 
                     <p className="login-error">
                         {errorMessage}
@@ -121,6 +135,7 @@ function LoginPage() {
                         </div>
                     ) : (
                         <Button type="button" variant="secondary" onClick={handleBankIdLogin} disabled={isStartingBankId}>
+                            {!isStartingBankId && <PlusSquare size={16} />}
                             {isStartingBankId
                                 ? bankIdMode === 'same-device'
                                     ? 'Öppnar BankID...'
@@ -130,7 +145,8 @@ function LoginPage() {
                     )}
 
                     <p className="secure-text">
-                        Inloggning skyddas av BankID och 256-bitars kryptering.
+                        <ShieldCheck size={16} />
+                        <span>Inloggning skyddas av BankID och 256-bitars kryptering.</span>
                     </p>
                 </form>
             </section>
