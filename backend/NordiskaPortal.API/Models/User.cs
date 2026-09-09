@@ -3,8 +3,11 @@
 public class User
 {
     public Guid Id { get; set; } = Guid.NewGuid();
+    public string PersonalNumber { get; set; } // Används vid PIN-inlog, "ÅÅÅÅMMDD-XXXX" format.
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
     public string Email { get; set; }
-    public string PasswordHash { get; set; }
+    public string PinHash { get; set; } // Pin-kod som hashas i AuthService, ska aldrig lagras eller loggas
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
