@@ -25,6 +25,35 @@
 #include <stdio.h>
 #include <string.h>
 
+static int can_read_pdf(const char* pdfPath)
+{
+    FILE* pdfFile = fopen(pdfPath, "rb"); //rb = read binary
+
+    if (pdfFile == NULL)
+    {
+        fprintf(stderr, "Error: cannot open input PDF '%s'\n", pdfPath);
+        return NORDISKA_EXIT_FILE_ERROR;
+    }
+
+    unsigned char buffer[4096];
+    size_t bytesRead;
+
+    while ((bytesRead = fread(buffer, 1, sizeof(buffer), pdfFile)) > 0)
+    {
+        // NAT-36.
+    }
+
+    if (ferror(pdfFile))
+    {
+        fprintf(stderr, "Error: could not read input PDF '%s'\n", pdfPath);
+        fclose(pdfFile);
+        return NORDISKA_EXIT_FILE_ERROR;
+    }
+
+    fclose(pdfFile);
+    return NORDISKA_EXIT_SUCCESS;
+}
+
 int main(int argc, char* argv[]) //argv used later to call real data, I suppose.
 {
     const int expectedArgumentCount = 5;
@@ -45,7 +74,7 @@ int main(int argc, char* argv[]) //argv used later to call real data, I suppose.
 
     const char* operation = argv[1];
 
-    if (strcmp(operation, "sign") == 0) // Checks if the operation is 'sign' returns 0
+    if (strcmp(operation, "sign") == 0) // Checks if the operation is 'sign' returns 0(SUCCESS)
     {
         printf("Operation: sign\n");
         printf("Input PDF: %s\n", argv[2]);
@@ -55,7 +84,7 @@ int main(int argc, char* argv[]) //argv used later to call real data, I suppose.
         return NORDISKA_EXIT_SUCCESS;
     }
 
-    if (strcmp(operation, "verify") == 0) // checks if the operation is 'verify' returns 0
+    if (strcmp(operation, "verify") == 0) // checks if the operation is 'verify' returns 0(SUCCESSb)
     {
         printf("Operation: verify\n");
         printf("Input PDF: %s\n", argv[2]);
