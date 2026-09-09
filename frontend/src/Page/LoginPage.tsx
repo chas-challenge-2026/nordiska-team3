@@ -6,6 +6,7 @@ import { Button } from '../components/Button'
 import { Input } from '../components/Input'
 import { DecorativeCircle } from '../components/DecorativeCircle'
 import { useTheme } from '../context/useTheme'
+import { login } from '../services/authService'
 
 function LoginPage() {
     const navigate = useNavigate()
@@ -20,7 +21,7 @@ function LoginPage() {
     const [showPin, setShowPin] = useState(false)
     const [errorMessage, setErrorMessage] = useState('')
 
-    function handlePinLogin(event: FormEvent<HTMLFormElement>) {
+    async function handlePinLogin(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
         setIsStartingBankId(false)
 
@@ -32,11 +33,14 @@ function LoginPage() {
         setErrorMessage('')
         setIsCheckingPin(true)
 
-        // Mock: simulerar en API-fördröjning innan vi navigerar vidare
-        setTimeout(() => {
-            setIsCheckingPin(false)
+        try {
+            await login(personalNumber, pin)
             navigate('/dashboard')
-        }, 900)
+        } catch (error) {
+            setErrorMessage(error instanceof Error ? error.message : 'Inloggningen misslyckades.')
+        } finally {
+            setIsCheckingPin(false)
+        }
     }
 
     function handleBankIdLogin() {
@@ -46,6 +50,7 @@ function LoginPage() {
         setShowBankIdOptions(true)
     }
 
+    // TODO: Koppla BankID-inloggning till backend när API-stöd finns.
     function startBankIdLogin(mode: 'same-device' | 'other-device') {
         setBankIdMode(mode)
         setShowBankIdOptions(false)
