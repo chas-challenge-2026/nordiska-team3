@@ -302,7 +302,8 @@
 
 .nav-icon--active {
   background: var(--color-primary);
-  color: var(--color-text-primary);
+  color: var(--color-text-inverted);
+  box-shadow: 0 0 24px 4px rgba(245, 169, 15, 0.5);
 }
 /* ================================== */
 /* DecorativeCircle-komponent (Nordiska) */
