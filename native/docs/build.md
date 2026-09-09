@@ -136,31 +136,31 @@ No input will result in a Usage Error:
     ./native/build/pdf_signer/pdf_signer verify 
         <input-pdf> <public-key-pem> <signature-file>
     ```
-    Exit Code: 1
+    Exit Code: NORDISKA_EXIT_INVALID_INPUT
 
 **'sign'** and **'verify'** input results:
 
     ```bash
-    Operation: SIGN
+    Operation: sign
     Input PDF: report.pdf
     Private Key: private_key.pem
     Output Signature: report.sig
     ```
-    Exit Code: 0.
+    Exit Code: NORDISKA_EXIT_SUCCESS
 
     ```bash
-    Operation: VERIFY
+    Operation: verify
     Input PDF: report.pdf
     Public Key: private_key.pem
     Signature: report.sig
     ```
-    Exit code: 0
+    Exit code: NORDISKA_EXIT_SUCCESS
 
 Invalid input result:
     ```bash
     Error: Unknown operation - '(invalid input)'
     ```
-    Exit Code: 1.
+    Exit Code: NORDISKA_EXIT_INVALID_INPUT
 
 Check the exit code:
 
@@ -168,8 +168,7 @@ Check the exit code:
 echo $?
 ```
 
-Exit code `0` means the program completed successfully.
-Exit code `1` means the program has stumbled upon an error.
+All exit codes are contained in native\common\include\nordiska\error_codes.h
 
 ## Rebuild after changing source code
 

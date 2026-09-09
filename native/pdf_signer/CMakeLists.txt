@@ -5,3 +5,6 @@ set_target_properties(pdf_signer PROPERTIES
     C_STANDARD_REQUIRED ON
     C_EXTENSIONS OFF
 )
+
+target_include_directories(pdf_signer PRIVATE
+    "${PROJECT_SOURCE_DIR}/common/include")
