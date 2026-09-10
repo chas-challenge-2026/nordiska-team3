@@ -7,26 +7,24 @@ import { DashboardActions } from '../components/DashboardActions/DashboardAction
 import { RecentEvents } from '../components/RecentEvents/RecentEvents'
 import { mockAccounts } from '../components/DashboardActions/mockAccounts'
 import type { DashboardAction } from '../components/DashboardActions/mockDashboardActions'
+import { getStoredUser, logout } from '../services/authService'
 import { useTheme } from '../context/useTheme'
 
 function DashboardPage() {
     const navigate = useNavigate()
     const { toggleTheme } = useTheme()
 
-    // Hämtar användaren som sparades vid login.
-    // Just nu kommer datan från mockad authService, senare kan den komma från backend via GET /api/auth/me.
-    const storedUser = localStorage.getItem('user')
-
-    // Om det finns en sparad användare använder vi den.
-    // Annars använder vi fallback-data så att dashboarden inte kraschar.
-    const currentUser = storedUser
-        ? JSON.parse(storedUser)
-        : {
-            name: 'Emma Lindström',
-            email: 'emma@exempel.se',
-        }
+    // Hämtar användaren via authService så att dashboarden inte behöver veta hur login-data sparas.
+    const currentUser = getStoredUser() ?? {
+        name: 'Emma Lindström',
+        email: 'emma@exempel.se',
+    }
 
     function handleLogout() {
+        // Rensar token och användardata från localStorage.
+        logout()
+
+        // Skickar användaren tillbaka till login-sidan.
         navigate('/login')
     }
 

@@ -32,3 +32,34 @@ export async function login(
         accessToken: 'mock-access-token',
     }
 }
+
+// Rensar frontendens sparade login-data.
+// Senare kan vi också lägga till ett API-anrop här, till exempel POST /api/auth/logout.
+export function logout() {
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('user')
+}
+
+// Hämtar användaren som sparades vid login.
+// Just nu läser vi från localStorage, men senare kan detta ersättas med GET /api/auth/me.
+export function getStoredUser(): LoginResponse['user'] | null {
+    const storedUser = localStorage.getItem('user')
+
+    if (!storedUser) {
+        return null
+    }
+
+    return JSON.parse(storedUser) as LoginResponse['user']
+}
+
+// Hämtar sparad accessToken från localStorage.
+// Senare används den för att skicka Authorization-headern till skyddade API-anrop.
+export function getStoredAccessToken(): string | null {
+    return localStorage.getItem('accessToken')
+}
+
+// Kollar om det finns en sparad token.
+// Senare kan detta göras mer avancerat, till exempel genom att kontrollera om token har gått ut.
+export function isAuthenticated(): boolean {
+    return Boolean(getStoredAccessToken())
+}
