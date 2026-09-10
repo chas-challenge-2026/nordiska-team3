@@ -1,0 +1,171 @@
+.transact-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 90px var(--space-5) var(--space-7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+/* Brand-card (samma som Login/Dashboard) */
+
+/*jobbar på det*/
+
+/* Toggle pills */
+.pill-toggle-row {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.pill-toggle {
+  border: none;
+  padding: 12px 28px;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.pill-toggle--active {
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
+  color: var(--color-text-primary);
+}
+
+/* Account preview card */
+.account-preview-card {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-5) var(--space-6);
+}
+
+.account-preview-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-2);
+}
+
+.account-preview-value {
+  font-family: monospace;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+/* Form card */
+.transact-form-card {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--color-surface-soft);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.transact-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.transact-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-primary);
+}
+
+.transact-pill-input {
+  width: 100%;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  padding: 14px 20px;
+  font-size: 14px;
+  box-sizing: border-box;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.transact-pill-input:focus {
+  box-shadow: 0 0 0 3px rgba(238, 169, 26, 0.35);
+}
+
+.select-wrapper {
+  position: relative;
+}
+
+.select-chevron {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
+
+.transact-message {
+  font-size: 12px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.transact-message--error {
+  color: var(--color-danger);
+}
+
+.transact-message--success {
+  color: var(--color-success);
+}
+
+.transact-submit-btn {
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 15px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+}
+
+.transact-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 700px) {
+  .transact-content {
+    padding: 100px var(--space-4) var(--space-6);
+  }
+
+  .brand-card {
+    width: 160px;
+    height: 95px;
+  }
+
+  .brand-card strong {
+    font-size: 28px;
+  }
+}
