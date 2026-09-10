@@ -26,17 +26,23 @@ export function RecentEvents({ events = mockRecentEvents }: RecentEventsProps) {
             </div>
 
             <div className="recent-events__content">
-              <h3>{event.title}</h3>
-              <p>
+              <h3 tabIndex={0}>{event.title}</h3>
+              <p tabIndex={0}>
                 {event.accountName} - {event.date}
               </p>
             </div>
 
             <div className="recent-events__meta">
-              <strong className={event.amount >= 0 ? 'is-positive' : 'is-negative'}>
+              <strong
+                className={event.amount >= 0 ? 'is-positive' : 'is-negative'}
+                tabIndex={0}
+              >
                 {formatAmount(event.amount)}
               </strong>
-              <span className={`recent-events__badge recent-events__badge--${event.type}`}>
+              <span
+                className={`recent-events__badge recent-events__badge--${event.type}`}
+                tabIndex={0}
+              >
                 {getEventLabel(event.type)}
               </span>
             </div>
