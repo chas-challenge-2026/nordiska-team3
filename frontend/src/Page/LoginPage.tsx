@@ -6,6 +6,7 @@ import { Button } from '../components/Button'
 import { Input } from '../components/Input'
 import { DecorativeCircle } from '../components/DecorativeCircle'
 import { useTheme } from '../context/useTheme'
+import { login } from '../services/authService'
 
 function LoginPage() {
     const navigate = useNavigate()
@@ -20,10 +21,12 @@ function LoginPage() {
     const [showPin, setShowPin] = useState(false)
     const [errorMessage, setErrorMessage] = useState('')
 
-    function handlePinLogin(event: FormEvent<HTMLFormElement>) {
+    // Körs när användaren skickar PIN-formuläret.
+    async function handlePinLogin(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
         setIsStartingBankId(false)
 
+        // Stoppar inloggningen direkt om något fält är tomt.
         if (!personalNumber || !pin) {
             setErrorMessage('Fyll i personnummer och PIN-kod.')
             return
@@ -32,11 +35,25 @@ function LoginPage() {
         setErrorMessage('')
         setIsCheckingPin(true)
 
-        // Mock: simulerar en API-fördröjning innan vi navigerar vidare
-        setTimeout(() => {
-            setIsCheckingPin(false)
+        try {
+            // Här anropar vi vår tillfälliga authService.
+            // Just nu returnerar den mock-data, men senare ska den prata med backendens login-API.
+            const loginResponse = await login(personalNumber, pin)
+
+            // Sparar token så att frontend senare kan skicka den till backend vid skyddade API-anrop.
+            localStorage.setItem('accessToken', loginResponse.accessToken)
+            // Sparar användaren som text eftersom localStorage bara kan spara strängar.
+            localStorage.setItem('user', JSON.stringify(loginResponse.user))
+
+            // När login lyckas skickas användaren vidare till dashboarden.
             navigate('/dashboard')
-        }, 900)
+        } catch (error) {
+            // Om authService/backend säger att något gick fel visas felet på login-sidan.
+            setErrorMessage(error instanceof Error ? error.message : 'Inloggningen misslyckades.')
+        } finally {
+            // Oavsett om login lyckas eller misslyckas ska laddningsläget stängas av.
+            setIsCheckingPin(false)
+        }
     }
 
     function handleBankIdLogin() {
@@ -46,6 +63,7 @@ function LoginPage() {
         setShowBankIdOptions(true)
     }
 
+    // TODO: Koppla BankID-inloggning till backend när API-stöd finns.
     function startBankIdLogin(mode: 'same-device' | 'other-device') {
         setBankIdMode(mode)
         setShowBankIdOptions(false)
