@@ -4,17 +4,28 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using NordiskaPortal.API.Data;
+using NordiskaPortal.API.Models;
 using NordiskaPortal.API.Repositories;
 using NordiskaPortal.API.Repositories.Interfaces;
+using NordiskaPortal.API.Services;
+using NordiskaPortal.API.Services.Interfaces;
 
 namespace NordiskaPortal.API.Extensions;
 
 public static class ServiceCollectionExtensions
-{
+{ 
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
+        // Repositories
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IAccountRepository, AccountRepository>();
+        services.AddScoped<IRepository<Transaction>, Repository<Transaction>>();
+        services.AddScoped<IRepository<LedgerEntry>, Repository<LedgerEntry>>();
+
+        // Services
+        services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IAccountService, AccountService>();
 
         return services;
     }

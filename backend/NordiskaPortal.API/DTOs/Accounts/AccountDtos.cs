@@ -1,4 +1,4 @@
-namespace Nordiska.API.DTOs.Accounts;
+namespace NordiskaPortal.API.DTOs.Accounts;
 
 // Konto i listan från GET /api/accounts. string balance för att undvika flyttalsavrundning utifrån native-kontrakt.
 public sealed record AccountDto(Guid Id, string AccountNumber, string AccountType, string Status, string Balance);
