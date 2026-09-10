@@ -5,6 +5,7 @@ import { AppNav } from '../components/AppNav'
 import { DecorativeCircle } from '../components/DecorativeCircle'
 import { mockTransactAccounts } from './mockTransactAccounts'
 import { GraduationCap, ChevronDown } from 'lucide-react'
+import { useTheme } from '../context/useTheme'
 
 type Mode = 'deposit' | 'withdraw'
 
@@ -14,6 +15,7 @@ function formatKr(amount: number) {
 
 function TransactPage() {
     const navigate = useNavigate()
+    const { toggleTheme } = useTheme()
 
     const [mode, setMode] = useState<Mode>('deposit')
     const [accountId, setAccountId] = useState(mockTransactAccounts[0].id)
@@ -65,26 +67,25 @@ function TransactPage() {
     }
 
     return (
-        <div className="dashboard-page">
-            <DecorativeCircle color="orange" size={60} left={40} top={150} />
-            <DecorativeCircle color="blue" size={140} left={20} bottom={140} />
-            <DecorativeCircle color="orange" size={170} left={120} bottom={40} />
-            <DecorativeCircle color="green" size={110} right={80} top={70} opacity={0.9} />
-            <DecorativeCircle color="blue" size={190} right={-30} top={30} />
+    <div className="dashboard-page">
+        <DecorativeCircle color="orange" size={60} left={40} top={150} />
+        <DecorativeCircle color="blue" size={140} left={20} bottom={140} />
+        <DecorativeCircle color="orange" size={170} left={120} bottom={40} />
+        <DecorativeCircle color="green" size={110} right={80} top={70} opacity={0.9} />
+        <DecorativeCircle color="blue" size={190} right={-30} top={30} />
 
-            <AppNav onLogout={handleLogout} />
+      <div className="transact-brand-circle">
+    <strong>nordiska<span className="brand-dot">.</span></strong>
+        </div>      
 
-            <main className="dashboard-main">
-                <div className="transact-content">
-                    <div className="transact-brand-card">
-                        <span>Sparportal</span>
-                            <strong>nordiska<span className="brand-dot">.</span></strong>
-                    </div>
+        <AppNav onLogout={handleLogout} onThemeToggle={toggleTheme} />
 
-                    <div className="transact-header">
-                        <h1>Flytta pengar</h1>
-                        <p>Sätt in eller ta ut medel från dina sparkonton.</p>
-                    </div>
+        <main className="dashboard-main">
+            <div className="transact-content">
+                <div className="transact-header">
+                    <h1>Flytta pengar</h1>
+                    <p>Sätt in eller ta ut medel från dina sparkonton.</p>
+                </div>
 
                     <div className="pill-toggle-row">
                         <button
