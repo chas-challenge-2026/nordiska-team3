@@ -3,6 +3,7 @@ export type LoginResponse = {
         id: string
         name: string
         email: string
+        personalNumber: string
     }
     accessToken: string
 }
@@ -26,6 +27,7 @@ export async function login(
             id: 'mock-user-1',
             name: 'Emma Lindström',
             email: 'emma@exempel.se',
+            personalNumber: personalNumber,
         },
         accessToken: 'mock-access-token',
     }

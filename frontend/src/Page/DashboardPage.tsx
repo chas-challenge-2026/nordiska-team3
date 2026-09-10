@@ -13,10 +13,18 @@ function DashboardPage() {
     const navigate = useNavigate()
     const { toggleTheme } = useTheme()
 
-    const currentUser = {
-        name: 'Emma Lindström',
-        email: 'emma@exempel.se',
-    }
+    // Hämtar användaren som sparades vid login.
+    // Just nu kommer datan från mockad authService, senare kan den komma från backend via GET /api/auth/me.
+    const storedUser = localStorage.getItem('user')
+
+    // Om det finns en sparad användare använder vi den.
+    // Annars använder vi fallback-data så att dashboarden inte kraschar.
+    const currentUser = storedUser
+        ? JSON.parse(storedUser)
+        : {
+            name: 'Emma Lindström',
+            email: 'emma@exempel.se',
+        }
 
     function handleLogout() {
         navigate('/login')

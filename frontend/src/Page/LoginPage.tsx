@@ -21,10 +21,12 @@ function LoginPage() {
     const [showPin, setShowPin] = useState(false)
     const [errorMessage, setErrorMessage] = useState('')
 
+    // Körs när användaren skickar PIN-formuläret.
     async function handlePinLogin(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
         setIsStartingBankId(false)
 
+        // Stoppar inloggningen direkt om något fält är tomt.
         if (!personalNumber || !pin) {
             setErrorMessage('Fyll i personnummer och PIN-kod.')
             return
@@ -34,11 +36,22 @@ function LoginPage() {
         setIsCheckingPin(true)
 
         try {
-            await login(personalNumber, pin)
+            // Här anropar vi vår tillfälliga authService.
+            // Just nu returnerar den mock-data, men senare ska den prata med backendens login-API.
+            const loginResponse = await login(personalNumber, pin)
+
+            // Sparar token så att frontend senare kan skicka den till backend vid skyddade API-anrop.
+            localStorage.setItem('accessToken', loginResponse.accessToken)
+            // Sparar användaren som text eftersom localStorage bara kan spara strängar.
+            localStorage.setItem('user', JSON.stringify(loginResponse.user))
+
+            // När login lyckas skickas användaren vidare till dashboarden.
             navigate('/dashboard')
         } catch (error) {
+            // Om authService/backend säger att något gick fel visas felet på login-sidan.
             setErrorMessage(error instanceof Error ? error.message : 'Inloggningen misslyckades.')
         } finally {
+            // Oavsett om login lyckas eller misslyckas ska laddningsläget stängas av.
             setIsCheckingPin(false)
         }
     }
