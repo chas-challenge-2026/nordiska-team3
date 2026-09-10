@@ -10,10 +10,12 @@ namespace NordiskaPortal.API.Controllers;
 public class  AccountsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
+    private readonly ILogger<AccountsController> _logger;
 
-    public AccountsController(ApplicationDbContext context)
+    public AccountsController(ApplicationDbContext context, ILogger<AccountsController> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public record CreateAccountRequest (Guid UserId, string AccountType);
@@ -31,11 +33,15 @@ public class  AccountsController : ControllerBase
         var account = new Account
         {
             UserId = request.UserId,
-            AccountType = request.AccountType
+            AccountType = request.AccountType,
+            AccountNumber = GenerateAccountNumber()
         };
 
         _context.Accounts.Add(account);
         await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Account {AccountId} created for user {UserId} with type {AccountType}",
+            account.Id, account.UserId, account.AccountType);
 
         return Ok(new { account.Id, account.UserId, account.AccountType, account.Status });
     }
@@ -47,6 +53,11 @@ public class  AccountsController : ControllerBase
         return await _context.LedgerEntries
             .Where(l => l.AccountId == accountId)
             .SumAsync(l => l.Amount);
+    }
+    
+    private static string GenerateAccountNumber()
+    {
+        return $"NKM-{Random.Shared.Next(10000, 99999)}";
     }
 
     [HttpGet("{accountId}/balance")]
@@ -98,6 +109,9 @@ public class  AccountsController : ControllerBase
         _context.LedgerEntries.Add(ledgerEntry);
         await _context.SaveChangesAsync();
 
+        _logger.LogInformation("Deposit of {Amount} completed on account {AccountId}, transaction {TransactionId}",
+            request.Amount, accountId, transaction.Id);
+
         return Ok(new { transactionId = transaction.Id, balance = await GetBalance(accountId) });
     }
 
@@ -123,6 +137,9 @@ public class  AccountsController : ControllerBase
         var currentBalance = await GetBalance(accountId);
         if (currentBalance < request.Amount)
         {
+            _logger.LogWarning("Withdrawal denied for account {AccountId}: insufficient funds (balance {Balance}, requested {Amount})", 
+                accountId, currentBalance, request.Amount);
+
             return BadRequest("Insufficient funds.");
         }
 
@@ -149,6 +166,9 @@ public class  AccountsController : ControllerBase
         await _context.SaveChangesAsync();
 
         await dbTransaction.CommitAsync();
+
+        _logger.LogInformation("Withdrawal of {Amount} completed on account {AccountId}, transaction {TransactionId}", 
+            request.Amount, accountId, transaction.Id);
 
         return Ok(new { transactionId = transaction.Id, balance = await GetBalance(accountId) });
     }

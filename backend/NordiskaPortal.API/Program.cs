@@ -1,6 +1,15 @@
 using NordiskaPortal.API.Extensions;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, configuration) =>
+{
+    configuration
+        .MinimumLevel.Information()
+        .Enrich.FromLogContext()
+        .WriteTo.Console();
+});
 
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddCorsPolicy(builder.Configuration);
