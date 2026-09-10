@@ -61,8 +61,9 @@ function DashboardPage() {
                 </div>
 
                 <div className="dashboard-content">
-                    <div className="brand-card">
-                        <strong>nordiska<span className="brand-dot">.</span></strong>
+                    <div className="dashboard-brand-card">
+                        <span>Sparportal</span>
+                        <strong>nordiska<span className="dashboard-brand-dot">.</span></strong>
                     </div>
 
                     <BalanceOverview
@@ -78,7 +79,7 @@ function DashboardPage() {
                     <DashboardActions onActionClick={handleActionClick} />
                 </div>
             </main>
-         </div>
+        </div>
     )
 }
 

@@ -34,15 +34,15 @@
   width: 100%;
   max-width: 560px;
   margin: 0 auto;
-  padding-top: 150px;;
+  padding: 150px var(--space-5) var(--space-7);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-5);
 }
 
-/* Brand-card (identisk med LoginPage.css, oförändrad) */
-.brand-card {
+/* Brand-card (identisk logik som LoginPage.css, unikt namn) */
+.dashboard-brand-card {
   position: absolute;
   top: 64px;
   left: 50%;
@@ -51,7 +51,7 @@
   height: 108px;
   border-radius: 42px;
   background: linear-gradient(
-    180deg,
+    135deg,
     #ffffff 0%,
     #ffffff 28%,
     #fff7e6 46%,
@@ -69,7 +69,7 @@
   z-index: 3;
 }
 
-.brand-card > span {
+.dashboard-brand-card > span {
   text-transform: uppercase;
   font-size: 12px;
   font-weight: 800;
@@ -77,14 +77,14 @@
   color: var(--color-primary);
 }
 
-.brand-card strong {
+.dashboard-brand-card strong {
   font-family: "Poppins", sans-serif;
   font-weight: 700;
   font-size: 36px;
   color: var(--color-yale-blue-900);
 }
 
-.brand-dot {
+.dashboard-brand-dot {
   color: var(--color-primary);
   font: inherit;
 }
@@ -140,13 +140,17 @@
     overflow-x: hidden;
   }
 
+  .dashboard-content {
+    padding: 32px var(--space-4) var(--space-6);
+  }
+
   .dashboard-main {
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
   }
 
-  .brand-card {
+  .dashboard-brand-card {
     position: absolute;
     top: 44px;
     left: 50%;
@@ -165,33 +169,33 @@
     );
   }
 
-  .brand-card strong {
+  .dashboard-brand-card strong {
     font-size: 0;
   }
 
-  .brand-card strong::before {
+  .dashboard-brand-card strong::before {
     content: "n";
     font-size: 84px;
     line-height: 0.75;
   }
 
-  .brand-card > span {
+  .dashboard-brand-card > span {
     order: 2;
     margin-top: 4px;
     font-size: 9px;
     font-weight: 800;
   }
 
-  .brand-card .brand-dot {
+  .dashboard-brand-card .dashboard-brand-dot {
     font-size: 84px;
     line-height: 0.75;
   }
-  
+
   .user-profile {
     display: none;
   }
 
   .dashboard-content {
-   padding-top: 124px;
+    padding-top: 124px;
   }
 }
