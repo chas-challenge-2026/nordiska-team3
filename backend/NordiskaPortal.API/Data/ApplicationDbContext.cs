@@ -25,6 +25,15 @@ public class ApplicationDbContext : DbContext
             .HasIndex(u => u.Email)
             .IsUnique();
 
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.PersonalNumber)
+            .IsUnique();
+
+        // Account constraints
+        modelBuilder.Entity<Account>()
+            .HasIndex(a => a.AccountNumber)
+            .IsUnique();
+
         // Account relationships
         modelBuilder.Entity<Account>()
             .HasOne(a => a.User)
