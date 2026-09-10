@@ -9,18 +9,24 @@ public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
     private readonly ITokenService _tokenService;
+    private readonly ILogger<AuthService> _logger;
 
-    public AuthService(IUserRepository userRepository, ITokenService tokenService)
+    public AuthService(IUserRepository userRepository, ITokenService tokenService, ILogger<AuthService> logger)
     {
         _userRepository = userRepository;
         _tokenService = tokenService;
+        _logger = logger;
     }
 
     public async Task<AuthResult?> LoginWithPinAsync(LoginPinRequestDto request)
     {
         var user = await _userRepository.GetByPersonalNumberAsync(request.PersonalNumber);
 
-        if (user is null || !BCrypt.Net.BCrypt.Verify(request.Pin, user.PinHash)) return null;
+        if (user is null || !BCrypt.Net.BCrypt.Verify(request.Pin, user.PinHash))
+        {
+            _logger.LogWarning("Failed PIN login attempt.");
+            return null;
+        }
 
         var accessToken = _tokenService.GenerateAccessToken(user);
         var refreshToken = _tokenService.GenerateRefreshToken();
@@ -32,6 +38,8 @@ public class AuthService : IAuthService
         await _userRepository.SaveChangesAsync();
 
         var response = new LoginResponseDto(accessToken, MapToUserDto(user));
+
+        _logger.LogInformation("User {UserId} logged in successfully.", user.Id);
 
         return new AuthResult(response, refreshToken, refreshTokenExpiry);
     }

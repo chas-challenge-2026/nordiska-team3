@@ -5,4 +5,10 @@ public sealed record AccountDto(Guid Id, string AccountNumber, string AccountTyp
 
 // Svar från Get /Api/Accounts
 public sealed record AccountsResponseDto(IReadOnlyList<AccountDto> Accounts);
+
+public sealed record CreateAccountRequestDto(string AccountType);
+
+public sealed record TransactionRequestDto(decimal Amount);
+
+public sealed record TransactionResultDto(Guid TransactionId, string Balance);
    
