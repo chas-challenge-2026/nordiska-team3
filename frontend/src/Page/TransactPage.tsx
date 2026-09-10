@@ -5,6 +5,7 @@ import { AppNav } from '../components/AppNav'
 import { DecorativeCircle } from '../components/DecorativeCircle'
 import { mockTransactAccounts } from './mockTransactAccounts'
 import { GraduationCap, ChevronDown } from 'lucide-react'
+import { useTheme } from '../context/useTheme'
 
 type Mode = 'deposit' | 'withdraw'
 
@@ -14,6 +15,7 @@ function formatKr(amount: number) {
 
 function TransactPage() {
     const navigate = useNavigate()
+    const { toggleTheme } = useTheme()
 
     const [mode, setMode] = useState<Mode>('deposit')
     const [accountId, setAccountId] = useState(mockTransactAccounts[0].id)
@@ -76,7 +78,7 @@ function TransactPage() {
     <strong>nordiska<span className="brand-dot">.</span></strong>
         </div>      
 
-        <AppNav onLogout={handleLogout} />
+        <AppNav onLogout={handleLogout} onThemeToggle={toggleTheme} />
 
         <main className="dashboard-main">
             <div className="transact-content">
