@@ -1,12 +1,13 @@
 import './PlaceholderPage.css'
 import { AppNav } from '../components/AppNav'
-import { useNavigate } from 'react-router-dom'
+import { useLogout } from '../hooks/useLogout'
 
 function HistoryPage() {
-    const navigate = useNavigate()
+    const handleLogout = useLogout()
+
     return (
         <div className="placeholder-page">
-            <AppNav onLogout={() => navigate('/login')} />
+            <AppNav onLogout={handleLogout} />
             <main className="placeholder-main">
                 <h1>Historik</h1>
                 <p>Kommer snart.</p>
