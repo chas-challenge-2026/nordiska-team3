@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLogout } from '../hooks/useLogout'
 import './TransactPage.css'
 import { AppNav } from '../components/AppNav'
 import { DecorativeCircle } from '../components/DecorativeCircle'
@@ -14,7 +14,7 @@ function formatKr(amount: number) {
 }
 
 function TransactPage() {
-    const navigate = useNavigate()
+    const handleLogout = useLogout()
     const { toggleTheme } = useTheme()
 
     const [mode, setMode] = useState<Mode>('deposit')
@@ -60,10 +60,6 @@ function TransactPage() {
             )
             setAmount('')
         }, 800)
-    }
-
-    function handleLogout() {
-        navigate('/login')
     }
 
     return (

@@ -35,16 +35,24 @@ export async function login(
     return data
 }
 
-// Rensar frontendens sparade login-data, och meddelar backend (POST /api/auth/logout)
 export async function logout() {
+    // Spara token innan vi rensar localStorage, så backend kan identifiera användaren.
+    const accessToken = getStoredAccessToken()
+
     try {
+        // Backend-logouten kräver JWT i Authorization-headern och refresh-token-cookien via credentials.
         await fetch(`${API_URL}/api/auth/logout`, {
             method: 'POST',
+            headers: accessToken
+                ? { Authorization: `Bearer ${accessToken}` }
+                : {},
             credentials: 'include',
         })
     } catch {
-        // Om anropet misslyckas loggar vi ändå ut lokalt
+        // Även om backend-anropet misslyckas ska användaren loggas ut lokalt.
     }
+
+    // Rensa frontendens sparade inloggningsdata.
     localStorage.removeItem('accessToken')
     localStorage.removeItem('user')
 }
