@@ -1,21 +1,10 @@
 using NordiskaPortal.API.Data;
 using NordiskaPortal.API.Extensions;
-using Serilog;
-
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Host.UseSerilog((context, configuration) =>
-{
-    configuration
-        .MinimumLevel.Information()
-        .Enrich.FromLogContext()
-        .WriteTo.Console();
-});
-
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddSerilogLogging();
 builder.Services.AddExceptionHandling();
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddCorsPolicy(builder.Configuration);
@@ -26,21 +15,16 @@ builder.Services.AddApplicationServices();
 
 var app = builder.Build();
 
-app.UseExceptionHandler();
-
-// Apply any pending EF Core migrations automatically on startup,
-// so no one needs to run `dotnet ef database update` manually.
-using (var scope = app.Services.CreateScope()) 
-{
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate();
-}
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseExceptionHandler();
+
+app.ApplyMigrations();
 
 app.UseHttpsRedirection();
 

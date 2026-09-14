@@ -15,19 +15,22 @@ public class AccountService : IAccountService
     private readonly IRepository<Transaction> _transactionRepository;
     private readonly IRepository<LedgerEntry> _ledgerEntryRepository;
     private readonly ApplicationDbContext _context; // Enbart för row-lock transaktionen i "WithdrawAsync"
+    private readonly ILogger<AccountService> _logger;
 
     public AccountService(
         IAccountRepository accountRepository,
         IUserRepository userRepository,
         IRepository<Transaction> transactionRepository,
         IRepository<LedgerEntry> ledgerEntryRepository,
-        ApplicationDbContext context)
+        ApplicationDbContext context,
+        ILogger<AccountService> logger)
     {
         _accountRepository = accountRepository;
         _userRepository = userRepository;
         _transactionRepository = transactionRepository;
         _ledgerEntryRepository = ledgerEntryRepository;
         _context = context;
+        _logger = logger;
     }
 
     public async Task<AccountDto?> CreateAccountAsync(Guid userId, string accountType)
@@ -44,6 +47,9 @@ public class AccountService : IAccountService
 
         await _accountRepository.AddAsync(account);
         await _accountRepository.SaveChangesAsync();
+
+        _logger.LogInformation("Account {AccountId} created for user {UserId} with type {AccountType}",
+            account.Id, account.UserId, account.AccountType);
 
         return MapToDto(account, balance: 0m);
     }
@@ -62,21 +68,21 @@ public class AccountService : IAccountService
         return new AccountsResponseDto(dtos);
     }
 
-    public async Task<AccountDto?> GetBalanceAsync(Guid accountId)
+    public async Task<AccountDto?> GetBalanceAsync(Guid userId, Guid accountId)
     {
         var account = await _accountRepository.GetByIdAsync(accountId);
-        if (account is null) return null;
+        if (account is null || account.UserId != userId) return null;
 
         var balance = await _accountRepository.GetBalanceAsync(accountId);
         return MapToDto(account, balance);
     }
 
-    public async Task<AccountOperationResult> DepositAsync(Guid accountId, decimal amount)
+    public async Task<AccountOperationResult> DepositAsync(Guid userId, Guid accountId, decimal amount)
     {
         if (amount <= 0) return AccountOperationResult.Failure("Amount must be positive.");
 
         var account = await _accountRepository.GetByIdAsync(accountId);
-        if (account is null) return AccountOperationResult.Failure("Account does not exist.");
+        if (account is null || account.UserId != userId) return AccountOperationResult.Failure("Account does not exist.");
 
         var transaction = new Transaction
         {
@@ -101,15 +107,19 @@ public class AccountService : IAccountService
         await _accountRepository.SaveChangesAsync();
 
         var newBalance = await _accountRepository.GetBalanceAsync(accountId);
+
+        _logger.LogInformation("Deposit of {Amount} completed on account {AccountId}, transaction {TransactionId}",
+            amount, accountId, transaction.Id);
+
         return AccountOperationResult.Success(transaction.Id, newBalance);
     }
 
-    public async Task<AccountOperationResult> WithdrawAsync(Guid accountId, decimal amount)
+    public async Task<AccountOperationResult> WithdrawAsync(Guid userId, Guid accountId, decimal amount)
     {
         if (amount <= 0) return AccountOperationResult.Failure("Amount must be positive.");
 
         var account = await _accountRepository.GetByIdAsync(accountId);
-        if (account is null) return AccountOperationResult.Failure("Account does not exist.");
+        if (account is null || account.UserId != userId) return AccountOperationResult.Failure("Account does not exist.");
 
         await using var dbTransaction = await _context.Database.BeginTransactionAsync();
 
@@ -117,7 +127,13 @@ public class AccountService : IAccountService
             $"SELECT 1 FROM \"Accounts\" WHERE \"Id\" = {accountId} FOR UPDATE");
 
         var currentBalance = await _accountRepository.GetBalanceAsync(accountId);
-        if (currentBalance < amount) return AccountOperationResult.Failure("Insufficient funds.");
+        if (currentBalance < amount)
+        {
+            _logger.LogWarning("Withdrawal denied for account {AccountId}: insufficient funds (balance {Balance}, requested {Amount})",
+                accountId, currentBalance, amount);
+
+            return AccountOperationResult.Failure("Insufficient funds.");
+        }
 
         var transaction = new Transaction
         {
@@ -144,6 +160,10 @@ public class AccountService : IAccountService
         await dbTransaction.CommitAsync();
 
         var newBalance = await _accountRepository.GetBalanceAsync(accountId);
+
+        _logger.LogInformation("Withdrawal of {Amount} completed on account {AccountId}, transaction {TransactionId}",
+            amount, accountId, transaction.Id);
+
         return AccountOperationResult.Success(transaction.Id, newBalance);
     }
 

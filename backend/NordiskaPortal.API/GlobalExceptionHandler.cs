@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
-using Nordiska.API.DTos.ErrorResponse;
+using NordiskaPortal.API.DTOs.ErrorResponse;
 
 namespace NordiskaPortal.API
 {

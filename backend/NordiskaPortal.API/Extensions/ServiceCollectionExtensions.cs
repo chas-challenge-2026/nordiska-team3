@@ -9,11 +9,12 @@ using NordiskaPortal.API.Repositories;
 using NordiskaPortal.API.Repositories.Interfaces;
 using NordiskaPortal.API.Services;
 using NordiskaPortal.API.Services.Interfaces;
+using Serilog;
 
 namespace NordiskaPortal.API.Extensions;
 
 public static class ServiceCollectionExtensions
-{ 
+{
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         // Repositories
@@ -115,5 +116,29 @@ public static class ServiceCollectionExtensions
         services.AddProblemDetails();
 
         return services;
+    }
+
+    public static WebApplicationBuilder AddSerilogLogging(this WebApplicationBuilder builder)
+    {
+        builder.Host.UseSerilog((context, configuration) =>
+        {
+            configuration
+                .MinimumLevel.Information()
+                .Enrich.FromLogContext()
+                .WriteTo.Console();
+        });
+
+        return builder;
+    }
+
+    // Apply any pending EF Core migrations automatically on startup,
+    // so no one needs to run `dotnet ef database update` manually.
+    public static WebApplication ApplyMigrations(this WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        db.Database.Migrate();
+
+        return app;
     }
 }
