@@ -18,7 +18,7 @@
 
     Command to start the program:
     '''bash
-    ./native/build 'prompt' report.pdf private-key.pem report.sig
+    ./native/build/pdf_signer/pdf_signer 'prompt' report.pdf private-key.pem report.sig
     '''
 */ 
 #include "nordiska/error_codes.h"
