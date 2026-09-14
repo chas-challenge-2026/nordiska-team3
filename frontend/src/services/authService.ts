@@ -52,8 +52,12 @@ export async function logout() {
 // Hämtar användaren som sparades vid login.
 export function getStoredUser(): LoginResponse['user'] | null {
     const storedUser = localStorage.getItem('user')
-    if (!storedUser) return null
-    return JSON.parse(storedUser) as LoginResponse['user']
+    if (!storedUser || storedUser === 'undefined') return null
+    try {
+        return JSON.parse(storedUser) as LoginResponse['user']
+    } catch {
+        return null
+    }
 }
 
 // Hämtar sparad accessToken från localStorage.
