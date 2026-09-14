@@ -36,14 +36,8 @@ function LoginPage() {
         setIsCheckingPin(true)
 
         try {
-            // Här anropar vi vår tillfälliga authService.
-            // Just nu returnerar den mock-data, men senare ska den prata med backendens login-API.
-            const loginResponse = await login(personalNumber, pin)
-
-            // Sparar token så att frontend senare kan skicka den till backend vid skyddade API-anrop.
-            localStorage.setItem('accessToken', loginResponse.accessToken)
-            // Sparar användaren som text eftersom localStorage bara kan spara strängar.
-            localStorage.setItem('user', JSON.stringify(loginResponse.user))
+            // authService.login() anropar backend och sparar token/user i localStorage internt.
+            await login(personalNumber, pin)
 
             // När login lyckas skickas användaren vidare till dashboarden.
             navigate('/dashboard')
@@ -101,72 +95,72 @@ function LoginPage() {
                     </div>
 
                     <form className="login-card" onSubmit={handlePinLogin}>
-                    <div>
-                        <h1>Välkommen tillbaka</h1>
-                        <p>Logga in med BankID eller PIN.</p>
-                    </div>
-
-                    <Input
-                        label="Personnummer"
-                        type="text"
-                        placeholder="ÅÅMMDD-XXXX"
-                        value={personalNumber}
-                        onChange={(event) => setPersonalNumber(event.target.value)}
-                    />
-
-                    <div className="input-group">
-                        <label className="input-label">PIN-kod</label>
-                        <div className="password-input-wrapper">
-                            <input
-                                className="input"
-                                type={showPin ? 'text' : 'password'}
-                                placeholder="••••••"
-                                value={pin}
-                                onChange={(event) => setPin(event.target.value)}
-                            />
-                            <button
-                                className="password-toggle"
-                                type="button"
-                                aria-label={showPin ? 'Dölj PIN-kod' : 'Visa PIN-kod'}
-                                onClick={() => setShowPin(!showPin)}
-                            >
-                                {showPin ? <EyeOff size={16} /> : <Eye size={16} />}
-                            </button>
+                        <div>
+                            <h1>Välkommen tillbaka</h1>
+                            <p>Logga in med BankID eller PIN.</p>
                         </div>
-                    </div>
 
-                    <p className="login-error">
-                        {errorMessage}
-                    </p>
+                        <Input
+                            label="Personnummer"
+                            type="text"
+                            placeholder="ÅÅMMDD-XXXX"
+                            value={personalNumber}
+                            onChange={(event) => setPersonalNumber(event.target.value)}
+                        />
 
-                    <Button type="submit" variant="primary" disabled={isCheckingPin}>
-                        {isCheckingPin ? 'Kontrollerar PIN...' : 'Logga in'}
-                    </Button>
-
-                    {showBankIdOptions ? (
-                        <div className="bankid-options">
-                            <button type="button" onClick={() => startBankIdLogin('same-device')}>
-                                Samma enhet
-                            </button>
-                            <button type="button" onClick={() => startBankIdLogin('other-device')}>
-                                Annan enhet
-                            </button>
+                        <div className="input-group">
+                            <label className="input-label">PIN-kod</label>
+                            <div className="password-input-wrapper">
+                                <input
+                                    className="input"
+                                    type={showPin ? 'text' : 'password'}
+                                    placeholder="••••••"
+                                    value={pin}
+                                    onChange={(event) => setPin(event.target.value)}
+                                />
+                                <button
+                                    className="password-toggle"
+                                    type="button"
+                                    aria-label={showPin ? 'Dölj PIN-kod' : 'Visa PIN-kod'}
+                                    onClick={() => setShowPin(!showPin)}
+                                >
+                                    {showPin ? <EyeOff size={16} /> : <Eye size={16} />}
+                                </button>
+                            </div>
                         </div>
-                    ) : (
-                        <Button type="button" variant="secondary" onClick={handleBankIdLogin} disabled={isStartingBankId}>
-                            {!isStartingBankId && <PlusSquare size={16} />}
-                            {isStartingBankId
-                                ? bankIdMode === 'same-device'
-                                    ? 'Öppnar BankID...'
-                                    : 'Väntar på BankID...'
-                                : 'Logga in med BankID'}
+
+                        <p className="login-error">
+                            {errorMessage}
+                        </p>
+
+                        <Button type="submit" variant="primary" disabled={isCheckingPin}>
+                            {isCheckingPin ? 'Kontrollerar PIN...' : 'Logga in'}
                         </Button>
-                    )}
 
-                    <p className="secure-text">
-                        <ShieldCheck size={16} />
-                        <span>Inloggning skyddas av BankID och 256-bitars kryptering.</span>
-                    </p>
+                        {showBankIdOptions ? (
+                            <div className="bankid-options">
+                                <button type="button" onClick={() => startBankIdLogin('same-device')}>
+                                    Samma enhet
+                                </button>
+                                <button type="button" onClick={() => startBankIdLogin('other-device')}>
+                                    Annan enhet
+                                </button>
+                            </div>
+                        ) : (
+                            <Button type="button" variant="secondary" onClick={handleBankIdLogin} disabled={isStartingBankId}>
+                                {!isStartingBankId && <PlusSquare size={16} />}
+                                {isStartingBankId
+                                    ? bankIdMode === 'same-device'
+                                        ? 'Öppnar BankID...'
+                                        : 'Väntar på BankID...'
+                                    : 'Logga in med BankID'}
+                            </Button>
+                        )}
+
+                        <p className="secure-text">
+                            <ShieldCheck size={16} />
+                            <span>Inloggning skyddas av BankID och 256-bitars kryptering.</span>
+                        </p>
                     </form>
                 </div>
             </section>
