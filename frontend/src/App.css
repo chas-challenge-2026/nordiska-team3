@@ -182,3 +182,230 @@
     border-right-color: var(--border);
   }
 }
+
+/* ============================= */
+/* Button-komponent (Nordiska)   */
+/* ============================= */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: 14px;
+  padding: var(--space-3) var(--space-5);
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s, background-color 0.2s;
+}
+
+.button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.button--primary {
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.button--primary:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.button--secondary {
+  background: transparent;
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.button--secondary:hover:not(:disabled) {
+  background-color: var(--color-surface-soft);
+}
+
+/* ============================= */
+/* Input-komponent (Nordiska)    */
+/* ============================= */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.input-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-primary);
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-soft);
+  font-size: 14px;
+  box-sizing: border-box;
+  color: var(--color-text-primary);
+}
+
+.input:focus {
+  box-shadow: 0 0 0 3px rgba(238, 169, 26, 0.35);
+}
+
+.input--error {
+  box-shadow: 0 0 0 1px var(--color-danger);
+}
+
+.input-suffix {
+  position: absolute;
+  right: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.input-error-text {
+  font-size: 12px;
+  color: var(--color-danger);
+  margin: 0;
+}
+
+/* ============================= */
+/* NavIcon-komponent (Nordiska)  */
+/* ============================= */
+.nav-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.nav-icon:hover {
+  background-color: var(--color-surface-soft);
+}
+
+.nav-icon--active {
+  background: var(--color-primary);
+  color: var(--color-text-inverted);
+  box-shadow: 0 0 24px 4px rgba(245, 169, 15, 0.5);
+}
+/* ================================== */
+/* DecorativeCircle-komponent (Nordiska) */
+/* ================================== */
+.decorative-circle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.decorative-circle--orange {
+  background: var(--color-primary-soft);
+}
+
+.decorative-circle--blue {
+  background: var(--color-steel-blue);
+}
+
+.decorative-circle--green {
+  background: var(--color-jungle-teal);
+}
+
+.decorative-circle--white {
+  background: var(--color-surface);
+}
+
+/* ============================= */
+/* BlobCard-komponent (Nordiska) */
+/* ============================= */
+.blob-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+
+.blob-card-icon {
+  margin-bottom: var(--space-2);
+}
+
+.blob-card-label {
+  font-size: 11px;
+  margin: 0 0 4px;
+  opacity: 0.75;
+}
+
+.blob-card-value {
+  font-family: monospace;
+  font-weight: 600;
+  margin: 0;
+}
+
+.blob-card-sublabel {
+  font-size: 10px;
+  margin: 4px 0 0;
+  opacity: 0.6;
+}
+
+.blob-card--lg {
+  width: 240px;
+  padding: var(--space-6);
+  box-shadow: var(--shadow-lg);
+}
+.blob-card--lg .blob-card-value {
+  font-size: 28px;
+}
+
+.blob-card--md {
+  width: 140px;
+}
+.blob-card--md .blob-card-value {
+  font-size: 16px;
+}
+
+.blob-card--sm {
+  width: 110px;
+  padding: var(--space-3);
+}
+.blob-card--sm .blob-card-value {
+  font-size: 14px;
+}
+
+.blob-card--white {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.blob-card--mint {
+  background: var(--color-success-soft);
+  color: var(--color-jungle-teal);
+}
+
+.blob-card--peach {
+  background: var(--color-primary-pale);
+  color: var(--color-chestnut);
+}
+
+.blob-card--dark {
+  background: var(--color-page-bg);
+  color: var(--color-text-inverted);
+}

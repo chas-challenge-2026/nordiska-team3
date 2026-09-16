@@ -1,18 +1,17 @@
 using NordiskaPortal.API.Data;
+using NordiskaPortal.API.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-// Add DbContext
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));
-
+builder.AddSerilogLogging();
+builder.Services.AddExceptionHandling();
+builder.Services.AddJwtAuthentication(builder.Configuration);
+builder.Services.AddCorsPolicy(builder.Configuration);
+builder.Services.AddSwaggerDocs();
+builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddControllers();
+builder.Services.AddApplicationServices();
 
 var app = builder.Build();
 
@@ -23,7 +22,22 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseExceptionHandler();
+
+app.ApplyMigrations();
+
 app.UseHttpsRedirection();
+
+app.UseCors("Frontend");
+
+app.UseDefaultFiles();
+
+app.UseStaticFiles();
+
+app.UseAuthentication();
+
+app.UseAuthorization();
+
 app.MapControllers();
 
 var summaries = new[]
@@ -45,6 +59,8 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast")
 .WithOpenApi();
+
+app.MapFallbackToFile("index.html");
 
 app.Run();
 
