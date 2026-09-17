@@ -3,6 +3,7 @@ using NordiskaPortal.API.Data;
 using NordiskaPortal.API.DTOs.TaxReports;
 using NordiskaPortal.API.Models;
 using NordiskaPortal.API.Services.Interfaces;
+using System.Diagnostics.Eventing.Reader;
 using System.Text;
 using System.Text.Json;
 
@@ -14,20 +15,22 @@ namespace NordiskaPortal.API.Services
         private readonly ITaxReportDataService _taxReportDataService;
         private readonly IConfiguration _configuration;
         private readonly ILogger<TaxReportProcessingService> _logger;
+        private readonly TaxReportQueue _queue;
 
         public TaxReportProcessingService(
             ApplicationDbContext context,
             ITaxReportDataService taxReportDataService,
             IConfiguration configuration,
-            ILogger<TaxReportProcessingService> logger)
+            ILogger<TaxReportProcessingService> logger, TaxReportQueue queue)
         {
              _context = context;
             _taxReportDataService = taxReportDataService;
             _configuration = configuration;
             _logger = logger;
+            _queue = queue;
         }
 
-        public async Task<TaxReport> GenerateReportAsync(Guid userId, int reportYear)
+        public async Task<TaxReport> QueueReportAsync(Guid userId, int reportYear)
         {
             var report = new TaxReport
             {
@@ -39,35 +42,56 @@ namespace NordiskaPortal.API.Services
             _context.TaxReports.Add(report);
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("TaxReport {TaxReportId} queued for user {UserId}, year {ReportYear}", report.Id, userId, reportYear);
+            _logger.LogInformation("TaxReport {TaxreportId} queued for user {UserId}, year {ReportYear}", report.Id, userId, reportYear);
+
+            _queue.Enqueue(report.Id);
+
+            return report;
+        }
+
+        public async Task ProcessReportAsync(Guid reportId)
+        {
+            var report = await _context.TaxReports.FindAsync(reportId);
+            if (report is null) return;
 
             report.Status = "PROCESSING";
             await _context.SaveChangesAsync();
 
-            var input = await _taxReportDataService.GetTaxReportDataAsync(userId, reportYear, report.Id);
-
-            var json = JsonSerializer.Serialize(input, new JsonSerializerOptions
+            try
             {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                Converters = { new Utc8601DateTimeOffsetConverter() }
-            });
+                var input = await _taxReportDataService.GetTaxReportDataAsync(report.UserId, report.ReportYear, report.Id);
 
-            var outputDirectory = _configuration["TaxReport:OutputDirectory"]!;
-            Directory.CreateDirectory(outputDirectory);
+                var json = JsonSerializer.Serialize(input, new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    Converters = { new Utc8601DateTimeOffsetConverter() }
+                });
 
-            var tempPath = Path.Combine(outputDirectory, $"{report.Id}.json.tmp");
-            var finalPath = Path.Combine(outputDirectory, $"{report.Id}.json");
+                var outputDirectory = _configuration["TaxReport:OutputDirectory"]!;
+                Directory.CreateDirectory(outputDirectory);
 
-            var utf8Bom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false); // No BOM, native's JSON parser is C/C++ a leading UTF-8 BOM can cause issues
-            await System.IO.File.WriteAllTextAsync(tempPath, json, utf8Bom);
-            System.IO.File.Move(tempPath, finalPath, overwrite: true);
+                var tempPath = Path.Combine(outputDirectory, $"{report.Id}.json.tmp");
+                var finalPath = Path.Combine(outputDirectory, $"{report.Id}.json");
 
-            _logger.LogInformation("TaxReport {TaxReportId} input written to {Path}", report.Id, finalPath);
+                var utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+                await System.IO.File.WriteAllTextAsync(tempPath, json, utf8NoBom);
+                System.IO.File.Move(tempPath, finalPath, overwrite: true);
 
-            //TODO: Run pdf generator + pdf signer via native executable once natives CLI argument shape is confirmed.
-            // REport stays PROCESSING rather than a misleading READY/FAILED until that exist.
+                _logger.LogInformation("TaxReport {TaxReportId} input written to {Path}", report.Id, finalPath);
 
-            return report;
+                // Stays PROCESSING here (not a misleading READY) the JSON step succeeded,
+                // native just hasn't run yet. Genuine failures are caught below and marked FAILED.
+            }
+
+            catch (Exception ex)
+            {
+                report.Status = "FAILED";
+                report.ErrorMessage = ex.Message;
+                await _context.SaveChangesAsync();
+
+                _logger.LogError(ex, "TaxReport {TaxReportId} failed to process", report.Id);
+                throw;
+            }
         }
 
         public async Task<TaxReport?> GetStatusAsync(Guid userId, Guid reportId)

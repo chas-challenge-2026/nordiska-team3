@@ -23,7 +23,7 @@ namespace NordiskaPortal.API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateTaxReport(CreateTaxReportRequest request)
         {
-            var report = await _taxReportProcessingService.GenerateReportAsync(CurrentUserId, request.ReportYear);
+            var report = await _taxReportProcessingService.QueueReportAsync(CurrentUserId, request.ReportYear);
             return Ok(new { report.Id, report.Status });
         }
 

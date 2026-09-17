@@ -29,6 +29,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<ITaxReportDataService, TaxReportDataService>();
         services.AddScoped<ITaxReportProcessingService, TaxReportProcessingService>();
+        services.AddSingleton<TaxReportQueue>();
+        services.AddHostedService<TaxReportBackgroundWorker>();
 
         return services;
     }
