@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NordiskaPortal.API.Data;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace NordiskaPortal.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260917091253_AddFaqEntriesTable")]
+    partial class AddFaqEntriesTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -181,50 +184,6 @@ namespace NordiskaPortal.API.Migrations
                     b.ToTable("Notifications");
                 });
 
-            modelBuilder.Entity("NordiskaPortal.API.Models.TaxReport", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ErrorMessage")
-                        .HasColumnType("text");
-
-                    b.Property<int?>("NativeExitCode")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("PdfPath")
-                        .HasColumnType("text");
-
-                    b.Property<int>("ReportYear")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Sha256")
-                        .HasColumnType("text");
-
-                    b.Property<string>("SignaturePath")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("TaxReports");
-                });
-
             modelBuilder.Entity("NordiskaPortal.API.Models.Transaction", b =>
                 {
                     b.Property<Guid>("Id")
@@ -348,17 +307,6 @@ namespace NordiskaPortal.API.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("NordiskaPortal.API.Models.TaxReport", b =>
-                {
-                    b.HasOne("NordiskaPortal.API.Models.User", "User")
-                        .WithMany("TaxReports")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("NordiskaPortal.API.Models.Transaction", b =>
                 {
                     b.HasOne("NordiskaPortal.API.Models.Account", "Account")
@@ -387,8 +335,6 @@ namespace NordiskaPortal.API.Migrations
                     b.Navigation("Accounts");
 
                     b.Navigation("Notifications");
-
-                    b.Navigation("TaxReports");
                 });
 #pragma warning restore 612, 618
         }

@@ -12,6 +12,7 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<User> Users { get; set; }
     public DbSet<Account> Accounts { get; set; }
+    public DbSet<FaqEntry> FaqEntries { get; set; } = null!;
     public DbSet<LedgerEntry> LedgerEntries { get; set; }
     public DbSet<Transaction> Transactions { get; set; }
     public DbSet<Notification> Notifications { get; set; }
@@ -69,6 +70,27 @@ public class ApplicationDbContext : DbContext
             .HasForeignKey(n => n.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // Seed data for FAQ
+        modelBuilder.Entity<FaqEntry>().HasData(
+            new FaqEntry
+            {
+                Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+                Question = "How do I open a new account?",
+                Answer = "You can apply for a new account directly through our portal under the Accounts tab.",
+                Category = "Accounts",
+                Keywords = "account, open, apply, create",
+                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+            new FaqEntry
+            {
+                Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+                Question = "What is the interest rate on the savings account?",
+                Answer = "Our current savings account interest rate is 3.5% annually.",
+                Category = "Savings",
+                Keywords = "interest, rate, savings, deposit",
+                CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            }
+        );
         // TaxReport relationships
         modelBuilder.Entity<TaxReport>()
             .HasOne(t => t.User)
