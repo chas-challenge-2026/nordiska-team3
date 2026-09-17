@@ -16,6 +16,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<LedgerEntry> LedgerEntries { get; set; }
     public DbSet<Transaction> Transactions { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<TaxReport> TaxReports { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -90,5 +91,11 @@ public class ApplicationDbContext : DbContext
                 CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             }
         );
+        // TaxReport relationships
+        modelBuilder.Entity<TaxReport>()
+            .HasOne(t => t.User)
+            .WithMany(u => u.TaxReports)
+            .HasForeignKey(t => t.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
