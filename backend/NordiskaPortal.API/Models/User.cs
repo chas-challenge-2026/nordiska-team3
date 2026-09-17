@@ -16,4 +16,5 @@ public class User
 
     public ICollection<Account> Accounts { get; set; } = new List<Account>();
     public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+    public ICollection<TaxReport> TaxReports { get; set; } = new List<TaxReport>();
 }
