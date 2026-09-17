@@ -1,3 +1,4 @@
+using FluentValidation;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +32,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITaxReportProcessingService, TaxReportProcessingService>();
         services.AddSingleton<TaxReportQueue>();
         services.AddHostedService<TaxReportBackgroundWorker>();
+
+        // Validation
+        services.AddValidatorsFromAssemblyContaining<Program>(); // Letar alla klasser som ärver AbstractValidator<T>
 
         return services;
     }

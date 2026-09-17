@@ -33,6 +33,12 @@ public class AccountService : IAccountService
         _logger = logger;
     }
 
+    private static readonly Dictionary<string, string> DefaultAccountNames = new()
+    {
+        ["SAVINGS"] = "Sparkonto",
+        ["CHECKING"] = "Transaktionskonto"
+    };
+
     public async Task<AccountDto?> CreateAccountAsync(Guid userId, string accountType)
     {
         var user = await _userRepository.GetByIdAsync(userId);
@@ -42,6 +48,7 @@ public class AccountService : IAccountService
         {
             UserId = userId,
             AccountType = accountType,
+            Name = DefaultAccountNames.GetValueOrDefault(accountType, accountType),
             AccountNumber = await GenerateUniqueAccountNumberAsync()
         };
 
@@ -52,6 +59,23 @@ public class AccountService : IAccountService
             account.Id, account.UserId, account.AccountType);
 
         return MapToDto(account, balance: 0m);
+    }
+
+    public async Task<AccountDto?> RenameAccountAsync(Guid userId, Guid accountId, string name)
+    {
+        var account = await _accountRepository.GetByIdAsync(accountId);
+        if (account is null || account.UserId != userId) return null;
+
+        account.Name = name;
+        account.UpdatedAt = DateTime.UtcNow;
+
+        await _accountRepository.SaveChangesAsync();
+
+        _logger.LogInformation("Account {AccountId} renamed to {Name} by user {UserId}",
+            account.Id, account.Name, userId);
+
+        var balance = await _accountRepository.GetBalanceAsync(accountId);
+        return MapToDto(account, balance);
     }
 
     public async Task<AccountsResponseDto> GetAccountsForUserAsync(Guid userId)
@@ -185,6 +209,7 @@ public class AccountService : IAccountService
             account.Id,
             account.AccountNumber,
             account.AccountType,
+            account.Name,
             account.Status,
             balance.ToString("F2", CultureInfo.InvariantCulture));
 }

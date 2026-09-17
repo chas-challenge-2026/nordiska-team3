@@ -37,18 +37,6 @@ namespace NordiskaPortal.API.Migrations
                     { new Guid("11111111-1111-1111-1111-111111111111"), "You can apply for a new account directly through our portal under the Accounts tab.", "Accounts", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "account, open, apply, create", "How do I open a new account?" },
                     { new Guid("22222222-2222-2222-2222-222222222222"), "Our current savings account interest rate is 3.5% annually.", "Savings", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "interest, rate, savings, deposit", "What is the interest rate on the savings account?" }
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_PersonalNumber",
-                table: "Users",
-                column: "PersonalNumber",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Accounts_AccountNumber",
-                table: "Accounts",
-                column: "AccountNumber",
-                unique: true);
         }
 
         /// <inheritdoc />
@@ -56,14 +44,6 @@ namespace NordiskaPortal.API.Migrations
         {
             migrationBuilder.DropTable(
                 name: "FaqEntries");
-
-            migrationBuilder.DropIndex(
-                name: "IX_Users_PersonalNumber",
-                table: "Users");
-
-            migrationBuilder.DropIndex(
-                name: "IX_Accounts_AccountNumber",
-                table: "Accounts");
         }
     }
 }

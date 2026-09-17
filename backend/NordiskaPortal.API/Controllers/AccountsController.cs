@@ -73,6 +73,16 @@ public class  AccountsController : ControllerBase
             result.Balance!.Value.ToString("F2", CultureInfo.InvariantCulture)));
     }
 
+    [HttpPatch("{accountId:guid}/name")]
+    public async Task<IActionResult> RenameAccount(Guid accountId, RenameAccountRequestDto request)
+    {
+        var account = await _accountService.RenameAccountAsync(CurrentUserId, accountId, request.Name);
+
+        if (account is null) return NotFound(new ErrorResponseDto("Account does not exist."));
+
+        return Ok(account);
+    }
+
     private Guid CurrentUserId =>
         Guid.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub)!);
 }
