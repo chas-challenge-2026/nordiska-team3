@@ -14,4 +14,8 @@ public sealed record RenameAccountRequestDto(string Name);
 public sealed record TransactionRequestDto(decimal Amount);
 
 public sealed record TransactionResultDto(Guid TransactionId, string Balance);
-   
+
+public sealed record TransactionDto(Guid Id, string TransactionType, string Amount, string Status, DateTime CreatedAt, DateTime? CompletedAt);
+
+// Svar från GET /api/accounts/{id}/transactions
+public sealed record TransactionHistoryResponseDto(IReadOnlyList<TransactionDto> Transactions);
