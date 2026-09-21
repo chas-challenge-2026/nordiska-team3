@@ -23,6 +23,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAccountRepository, AccountRepository>();
         services.AddScoped<IRepository<Transaction>, Repository<Transaction>>();
         services.AddScoped<IRepository<LedgerEntry>, Repository<LedgerEntry>>();
+        services.AddScoped<IRepository<Notification>, Repository<Notification>>();
 
         // Services
         services.AddScoped<ITokenService, TokenService>();
@@ -32,6 +33,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITaxReportProcessingService, TaxReportProcessingService>();
         services.AddSingleton<TaxReportQueue>();
         services.AddHostedService<TaxReportBackgroundWorker>();
+        services.AddScoped<IEmailSender, LoggingEmailSender>();
+        services.AddHostedService<NotificationBackgroundWorker>();
 
         // Validation
         services.AddValidatorsFromAssemblyContaining<Program>(); // Letar alla klasser som ärver AbstractValidator<T>
