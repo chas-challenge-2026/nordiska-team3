@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using NordiskaPortal.API.DTOs.Faq;
 using NordiskaPortal.API.Services.Interfaces;
 
@@ -15,6 +16,7 @@ public class FaqController : ControllerBase
         _faqService = faqService;
     }
 
+    [EnableRateLimiting("SensitiveEndpointsPolicy")]
     [HttpGet("search")]
     public async Task<ActionResult<FaqSearchResultDto>> Search([FromQuery] string query)
     {

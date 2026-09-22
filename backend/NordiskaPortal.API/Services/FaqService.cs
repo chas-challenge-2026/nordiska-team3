@@ -83,26 +83,41 @@ public class FaqService : IFaqService
     private static double CalculateScore(string[] queryTokens, string targetQuestion, string targetKeywords, string targetCategory)
     {
         double score = 0;
-        var questionWords = targetQuestion.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        var keywordsList = targetKeywords.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        
+        var questionWords = targetQuestion.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                                          .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var keywordsList = targetKeywords.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                                         .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        int validTokenCount = 0;
 
         foreach (var token in queryTokens)
         {
-            if (keywordsList.Any(k => k.Contains(token) || token.Contains(k)))
+           
+            if (token.Length < 2) continue;
+
+            validTokenCount++;
+
+           
+            if (keywordsList.Contains(token))
             {
                 score += 0.5;
             }
-            if (questionWords.Any(q => q.Contains(token) || token.Contains(q)))
+            else if (questionWords.Contains(token))
             {
                 score += 0.3;
             }
-            if (targetCategory.Contains(token))
+            else if (targetCategory.Equals(token, StringComparison.OrdinalIgnoreCase))
             {
                 score += 0.2;
             }
         }
 
-        return score / queryTokens.Length;
+        if (validTokenCount == 0) return 0;
+
+        return score / validTokenCount;
     }
 
     private static FaqSearchResultDto FallbackToCustomerService()
