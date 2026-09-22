@@ -12,7 +12,7 @@ public class AccountService : IAccountService
 {
     private readonly IAccountRepository _accountRepository;
     private readonly IUserRepository _userRepository;
-    private readonly IRepository<Transaction> _transactionRepository;
+    private readonly ITransactionRepository _transactionRepository;
     private readonly IRepository<LedgerEntry> _ledgerEntryRepository;
     private readonly IRepository<Notification> _notificationRepository;
     private readonly ApplicationDbContext _context; // Enbart för row-lock transaktionen i "WithdrawAsync"
@@ -21,7 +21,7 @@ public class AccountService : IAccountService
     public AccountService(
         IAccountRepository accountRepository,
         IUserRepository userRepository,
-        IRepository<Transaction> transactionRepository,
+        ITransactionRepository transactionRepository,
         IRepository<LedgerEntry> ledgerEntryRepository,
         IRepository<Notification> notificationRepository,
         ApplicationDbContext context,
@@ -223,6 +223,26 @@ public class AccountService : IAccountService
         }
 
         throw new InvalidOperationException("Could not generate a unique account number after several attempts.");
+    }
+
+    public async Task<TransactionHistoryResponseDto?> GetTransactionHistoryAsync(Guid userId, Guid accountId)
+    {
+        var account = await _accountRepository.GetByIdAsync(accountId);
+        if (account is null || account.UserId != userId) return null;
+
+        var transactions = await _transactionRepository.GetByAccountIdAsync(accountId);
+
+        var dtos = transactions
+            .Select(t => new TransactionDto(
+                t.Id,
+                t.TransactionType,
+                t.Amount.ToString("F2", CultureInfo.InvariantCulture),
+                t.Status,
+                t.CreatedAt,
+                t.CompletedAt))
+            .ToList();
+
+        return new TransactionHistoryResponseDto(dtos);
     }
 
     private static AccountDto MapToDto(Account account, decimal balance) =>

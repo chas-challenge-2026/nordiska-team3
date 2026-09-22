@@ -83,6 +83,17 @@ public class  AccountsController : ControllerBase
         return Ok(account);
     }
 
+    // GET /api/accounts/{accountId}/transactions
+    [HttpGet("{accountId:guid}/transactions")]
+    public async Task<IActionResult> GetTransactionHistory(Guid accountId)
+    {
+        var history = await _accountService.GetTransactionHistoryAsync(CurrentUserId, accountId);
+
+        if (history is null) return NotFound(new ErrorResponseDto("Account does not exist."));
+
+        return Ok(history);
+    }
+
     private Guid CurrentUserId =>
         Guid.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub)!);
 }
