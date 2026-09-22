@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using NordiskaPortal.API.DTOs.Auth;
 using NordiskaPortal.API.DTOs.ErrorResponse;
 using NordiskaPortal.API.Services.Interfaces;
@@ -20,6 +21,7 @@ public class AuthController : ControllerBase
     }
 
     // POST /api/auth/login-pin - Öppen för alla, ingen [Authorize] behövs
+    [EnableRateLimiting("SensitiveEndpointsPolicy")]
     [HttpPost("login-pin")]
     public async Task<IActionResult> LoginPin(LoginPinRequestDto request)
     {
@@ -92,4 +94,4 @@ public class AuthController : ControllerBase
 
     private Guid CurrentUserId =>
         Guid.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub)!);
-};
+}
