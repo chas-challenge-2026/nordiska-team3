@@ -12,18 +12,17 @@
 }
 
 .tax-header h1 {
-  color: var(--color-text-inverted);
+  color: #FFFFFF;
   font-size: 26px;
   margin: 0 0 4px;
 }
 
 .tax-header p {
-  color: var(--color-text-secondary);
+  color: rgba(255, 255, 255, 0.7);
   font-size: 14px;
   margin: 0;
 }
 
-/* Toggle pills (återanvänder samma klasser som TransactPage) */
 .pill-toggle-row {
   display: flex;
   gap: var(--space-2);
@@ -46,7 +45,37 @@
   color: var(--color-text-primary);
 }
 
-/* Summary cards */
+.tax-status-row {
+  display: flex;
+}
+
+.tax-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.tax-status-badge--pending {
+  background: #FEF3C7;
+  color: #92600A;
+}
+
+.tax-status-badge--ready {
+  background: var(--color-success-soft);
+  color: var(--color-jungle-teal);
+}
+
+.tax-status-badge--failed {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
 .tax-summary-row {
   width: 100%;
   display: grid;
@@ -81,7 +110,6 @@
   color: var(--color-jungle-teal);
 }
 
-/* Breakdown card */
 .tax-breakdown-card {
   width: 100%;
   box-sizing: border-box;
@@ -135,12 +163,11 @@
 .tax-breakdown-amount--orange { color: var(--color-primary); }
 .tax-breakdown-amount--purple { color: var(--color-yale-blue-900); }
 
-/* Download button */
 .tax-download-btn {
   width: 100%;
   border: none;
   border-radius: var(--radius-pill);
-  padding: 16px;
+  padding: 15px;
   font-size: 14px;
   font-weight: 800;
   color: #FFFFFF;
@@ -154,11 +181,24 @@
 }
 
 .tax-download-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.7;
   cursor: not-allowed;
 }
 
-/* Brand logo, nedre högra hörnet (som TransactPage) */
+.tax-download-btn--retry {
+  background: linear-gradient(180deg, #FCA5A5, var(--color-danger));
+  box-shadow: none;
+}
+
+.tax-spin {
+  animation: tax-spin-anim 1s linear infinite;
+}
+
+@keyframes tax-spin-anim {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .tax-brand-circle {
   position: absolute;
   bottom: 60px;
@@ -200,6 +240,10 @@
 }
 
 @media (max-width: 700px) {
+  .tax-content {
+    padding: 100px var(--space-4) var(--space-6);
+  }
+
   .tax-summary-row {
     grid-template-columns: 1fr;
   }
