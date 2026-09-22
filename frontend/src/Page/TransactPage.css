@@ -190,9 +190,9 @@
   padding: 15px;
   font-size: 14px;
   font-weight: 800;
-  color: var(--color-text-primary);
+  color: #FFFFFF;
   background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 0 24px 4px rgba(245, 169, 15, 0.5);
   cursor: pointer;
 }
 
