@@ -32,7 +32,6 @@
 }
 
 /* Brand-card (samma som Login/Dashboard) */
-
 .transact-brand-circle {
   position: absolute;
   bottom: 60px;
@@ -87,7 +86,12 @@
   box-shadow: var(--shadow-sm);
 }
 
-.pill-toggle--active {
+.pill-toggle--deposit.pill-toggle--active {
+  background: linear-gradient(180deg, #6FBF9A, var(--color-jungle-teal));
+  color: #FFFFFF;
+}
+
+.pill-toggle--withdraw.pill-toggle--active {
   background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
   color: var(--color-text-primary);
 }
@@ -212,6 +216,16 @@
 .transact-submit-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.transact-submit-btn--deposit {
+  background: linear-gradient(180deg, #6FBF9A, var(--color-jungle-teal));
+  color: #FFFFFF;
+}
+
+.transact-submit-btn--withdraw {
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
+  color: #FFFFFF;
 }
 
 @media (max-width: 700px) {

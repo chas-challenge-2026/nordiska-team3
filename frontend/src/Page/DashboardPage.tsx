@@ -24,6 +24,10 @@ function DashboardPage() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
     const [newAccountName, setNewAccountName] = useState('')
 
+    const [accounts, setAccounts] = useState<Account[]>(mockAccounts)
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+    const [newAccountName, setNewAccountName] = useState('')
+
     function handleAccountClick(accountId: string) {
         console.log('Öppna konto:', accountId)
     }
