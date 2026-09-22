@@ -37,11 +37,16 @@
     transform: translateX(-50%);
     max-width: calc(100vw - 24px);
     box-sizing: border-box;
-    background: var(--color-surface);
+    background: color-mix(in srgb, var(--color-surface) 70%, transparent);
+    backdrop-filter: blur(12px);
     border-radius: var(--radius-pill);
     padding: 6px;
     box-shadow: var(--shadow-lg);
     z-index: 10;
+  }
+
+  [data-theme="dark"] .app-nav--bottom {
+    background: color-mix(in srgb, var(--color-surface) 58%, transparent);
   }
 
   .app-nav--bottom .nav-icon {

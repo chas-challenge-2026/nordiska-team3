@@ -222,11 +222,23 @@
 
 @media (max-width: 520px) {
   .recent-events__item {
-    grid-template-columns: 28px 1fr;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    gap: 12px;
   }
 
   .recent-events__meta {
-    grid-column: 2;
-    align-items: flex-start;
+    grid-column: auto;
+    align-items: flex-end;
+    min-width: 92px;
+  }
+
+  .recent-events__meta strong {
+    font-size: 12px;
+  }
+
+  .recent-events__badge {
+    min-width: 56px;
+    padding: 3px 8px;
+    font-size: 8px;
   }
 }

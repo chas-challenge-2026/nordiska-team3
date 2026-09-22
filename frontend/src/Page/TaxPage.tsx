@@ -2,10 +2,11 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './TaxPage.css'
 import { AppNav } from '../components/AppNav'
+import { UserProfile } from '../components/UserProfile'
 import { DecorativeCircle } from '../components/DecorativeCircle'
 import { useTheme } from '../context/useTheme'
-import { mockTaxReports, type TaxReportStatus } from './mockTaxReport'
-import { Download, Loader2, CheckCircle2, XCircle } from 'lucide-react'
+import { mockTaxReports } from './mockTaxReport'
+import { Download } from 'lucide-react'
 
 function formatKr(amount: number) {
     return `${amount.toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kr`
@@ -15,62 +16,29 @@ function TaxPage() {
     const navigate = useNavigate()
     const { toggleTheme } = useTheme()
 
-    const [reports, setReports] = useState(mockTaxReports)
     const [selectedYear, setSelectedYear] = useState(mockTaxReports[0].year)
+    const [isDownloading, setIsDownloading] = useState(false)
 
-    const report = reports.find((r) => r.year === selectedYear)!
+    const report = mockTaxReports.find((r) => r.year === selectedYear)!
     const calculatedTax = report.totalInterest * report.taxRate
 
     function handleLogout() {
         navigate('/login')
     }
 
-    function handleGenerate() {
-        setReports((prev) =>
-            prev.map((r) => (r.year === selectedYear ? { ...r, status: 'pending' as TaxReportStatus } : r))
-        )
-
-        setTimeout(() => {
-            setReports((prev) =>
-                prev.map((r) => (r.year === selectedYear ? { ...r, status: 'ready' as TaxReportStatus } : r))
-            )
-        }, 1500)
-    }
-
-    function renderActionButton() {
-        if (report.status === 'pending') {
-            return (
-                <button type="button" className="tax-download-btn" disabled>
-                    <Loader2 size={18} className="tax-spin" />
-                    Genererar rapport...
-                </button>
-            )
-        }
-
-        if (report.status === 'failed') {
-            return (
-                <button type="button" className="tax-download-btn tax-download-btn--retry" onClick={handleGenerate}>
-                    <XCircle size={18} />
-                    Misslyckades – försök igen
-                </button>
-            )
-        }
-
-        return (
-            <button type="button" className="tax-download-btn" onClick={handleGenerate}>
-                <Download size={18} />
-                Ladda ner PDF-rapport
-            </button>
-        )
+    function handleDownload() {
+        setIsDownloading(true)
+        // Mock: simulerar nedladdning tills backend finns
+        setTimeout(() => setIsDownloading(false), 1000)
     }
 
     return (
         <div className="dashboard-page">
-            <DecorativeCircle color="orange" size={70} left={430} top={210} />
-            <DecorativeCircle color="blue" size={110} right={330} top={170} />
-            <DecorativeCircle color="green" size={150} right={200} top={140} opacity={0.95} />
-            <DecorativeCircle color="blue" size={110} left={440} bottom={140} />
-            <DecorativeCircle color="orange" size={150} left={500} bottom={80} />
+            <DecorativeCircle color="orange" size={150} left={-30} top={180} />
+            <DecorativeCircle color="blue" size={95} left={40} top={320} opacity={0.9} />
+            <DecorativeCircle color="green" size={150} right={-25} top={145} opacity={0.95} />
+            <DecorativeCircle color="blue" size={115} right={70} bottom={150} />
+            <DecorativeCircle color="orange" size={155} left={190} bottom={70} />
 
             <AppNav onLogout={handleLogout} onThemeToggle={toggleTheme} />
 
@@ -80,14 +48,16 @@ function TaxPage() {
             </div>
 
             <main className="dashboard-main">
+                <UserProfile />
+
                 <div className="tax-content">
                     <div className="tax-header">
-                        <h1>Skatterapport</h1>
+                        <h1 tabIndex={0}>Skatterapport</h1>
                         <p>Sammanställning av ränteintäkter för deklaration.</p>
                     </div>
 
                     <div className="pill-toggle-row">
-                        {reports.map((r) => (
+                        {mockTaxReports.map((r) => (
                             <button
                                 key={r.year}
                                 type="button"
@@ -97,18 +67,6 @@ function TaxPage() {
                                 {r.year}
                             </button>
                         ))}
-                    </div>
-
-                    <div className="tax-status-row">
-                        <span className={`tax-status-badge tax-status-badge--${report.status}`}>
-                            {report.status === 'pending' && 'Genereras'}
-                            {report.status === 'ready' && (
-                                <>
-                                    <CheckCircle2 size={12} /> Klar
-                                </>
-                            )}
-                            {report.status === 'failed' && 'Misslyckad'}
-                        </span>
                     </div>
 
                     <div className="tax-summary-row">
@@ -139,7 +97,15 @@ function TaxPage() {
                         ))}
                     </div>
 
-                    {renderActionButton()}
+                    <button
+                        type="button"
+                        className="tax-download-btn"
+                        onClick={handleDownload}
+                        disabled={isDownloading}
+                    >
+                        <Download size={18} />
+                        {isDownloading ? 'Förbereder rapport...' : 'Ladda ner PDF-rapport'}
+                    </button>
                 </div>
             </main>
         </div>

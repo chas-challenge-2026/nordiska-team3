@@ -1,5 +1,3 @@
-export type TaxReportStatus = 'pending' | 'ready' | 'failed'
-
 export interface TaxAccountBreakdown {
     id: string
     name: string
@@ -12,7 +10,6 @@ export interface TaxReportYear {
     totalInterest: number
     taxRate: number
     accounts: TaxAccountBreakdown[]
-    status: TaxReportStatus
 }
 
 export const mockTaxReports: TaxReportYear[] = [
@@ -20,7 +17,6 @@ export const mockTaxReports: TaxReportYear[] = [
         year: 2024,
         totalInterest: 616.55,
         taxRate: 0.3,
-        status: 'ready',
         accounts: [
             { id: 'education', name: 'Högskolesparande', interest: 120.5, color: 'green' },
             { id: 'vacation', name: 'Semesterfonden', interest: 87.3, color: 'orange' },
@@ -31,7 +27,6 @@ export const mockTaxReports: TaxReportYear[] = [
         year: 2023,
         totalInterest: 402.1,
         taxRate: 0.3,
-        status: 'ready',
         accounts: [
             { id: 'education', name: 'Högskolesparande', interest: 90.2, color: 'green' },
             { id: 'vacation', name: 'Semesterfonden', interest: 61.4, color: 'orange' },

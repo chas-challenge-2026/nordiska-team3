@@ -7,22 +7,30 @@
   padding: 90px var(--space-5) var(--space-7);
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   gap: var(--space-4);
 }
 
+.tax-header {
+  width: 100%;
+}
+
 .tax-header h1 {
-  color: #FFFFFF;
+  margin: 0 0 8px;
+  color: var(--color-text-inverted);
   font-size: 26px;
-  margin: 0 0 4px;
+  font-weight: 800;
+  line-height: 1.12;
 }
 
 .tax-header p {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 14px;
   margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 14px;
+  line-height: 1.35;
 }
 
+/* Toggle pills (återanvänder samma klasser som TransactPage) */
 .pill-toggle-row {
   display: flex;
   gap: var(--space-2);
@@ -45,37 +53,7 @@
   color: var(--color-text-primary);
 }
 
-.tax-status-row {
-  display: flex;
-}
-
-.tax-status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 12px;
-  border-radius: var(--radius-pill);
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.tax-status-badge--pending {
-  background: #FEF3C7;
-  color: #92600A;
-}
-
-.tax-status-badge--ready {
-  background: var(--color-success-soft);
-  color: var(--color-jungle-teal);
-}
-
-.tax-status-badge--failed {
-  background: var(--color-danger-soft);
-  color: var(--color-danger);
-}
-
+/* Summary cards */
 .tax-summary-row {
   width: 100%;
   display: grid;
@@ -84,7 +62,7 @@
 }
 
 .tax-summary-card {
-  background: var(--color-surface);
+  background: var(--dashboard-card-bg, #ffffff);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   padding: var(--space-5);
@@ -110,10 +88,11 @@
   color: var(--color-jungle-teal);
 }
 
+/* Breakdown card */
 .tax-breakdown-card {
   width: 100%;
   box-sizing: border-box;
-  background: var(--color-surface);
+  background: var(--dashboard-card-bg, #ffffff);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   padding: var(--space-5);
@@ -163,11 +142,12 @@
 .tax-breakdown-amount--orange { color: var(--color-primary); }
 .tax-breakdown-amount--purple { color: var(--color-yale-blue-900); }
 
+/* Download button */
 .tax-download-btn {
   width: 100%;
   border: none;
   border-radius: var(--radius-pill);
-  padding: 15px;
+  padding: 16px;
   font-size: 14px;
   font-weight: 800;
   color: #FFFFFF;
@@ -181,24 +161,11 @@
 }
 
 .tax-download-btn:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-.tax-download-btn--retry {
-  background: linear-gradient(180deg, #FCA5A5, var(--color-danger));
-  box-shadow: none;
-}
-
-.tax-spin {
-  animation: tax-spin-anim 1s linear infinite;
-}
-
-@keyframes tax-spin-anim {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
+/* Brand logo, nedre högra hörnet (som TransactPage) */
 .tax-brand-circle {
   position: absolute;
   bottom: 60px;
@@ -241,7 +208,7 @@
 
 @media (max-width: 700px) {
   .tax-content {
-    padding: 100px var(--space-4) var(--space-6);
+    padding: 56px var(--space-4) var(--space-6);
   }
 
   .tax-summary-row {

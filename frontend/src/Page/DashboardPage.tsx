@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { UserProfile } from '../components/UserProfile'
 import './DashboardPage.css'
 import { AppNav } from '../components/AppNav'
 import { DecorativeCircle } from '../components/DecorativeCircle'
@@ -8,7 +9,6 @@ import { RecentEvents } from '../components/RecentEvents/RecentEvents'
 import { mockAccounts } from '../components/DashboardActions/mockAccounts'
 import type { Account } from '../components/DashboardActions/BalanceOverview'
 import type { DashboardAction } from '../components/DashboardActions/mockDashboardActions'
-import { getStoredUser } from '../services/authService'
 import { useLogout } from '../hooks/useLogout'
 import { useTheme } from '../context/useTheme'
 import { Modal } from '../components/Modal'
@@ -20,11 +20,9 @@ function DashboardPage() {
     const handleLogout = useLogout()
     const { toggleTheme } = useTheme()
 
-    // Hämtar användaren via authService så att dashboarden inte behöver veta hur login-data sparas.
-    const currentUser = getStoredUser() ?? {
-        name: 'Emma Lindström',
-        email: 'emma@exempel.se',
-    }
+    const [accounts, setAccounts] = useState<Account[]>(mockAccounts)
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+    const [newAccountName, setNewAccountName] = useState('')
 
     const [accounts, setAccounts] = useState<Account[]>(mockAccounts)
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -76,13 +74,7 @@ function DashboardPage() {
             <AppNav onLogout={handleLogout} onThemeToggle={toggleTheme} />
 
             <main className="dashboard-main">
-                <div className="user-profile">
-                    <div className="user-profile-avatar">{currentUser.name.charAt(0)}</div>
-                    <div className="user-profile-text">
-                        <p className="user-profile-name">{currentUser.name}</p>
-                        <p className="user-profile-email">{currentUser.email}</p>
-                    </div>
-                </div>
+                <UserProfile />
 
                 <div className="dashboard-content">
                     <div className="dashboard-brand-card">

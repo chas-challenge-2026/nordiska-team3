@@ -1,4 +1,5 @@
 import { mockHistoryTransactions, type TransactionType } from './mockHistoryTransaction'
+import { UserProfile } from '../components/UserProfile'
 import './HistoryPage.css'
 import { useState } from 'react'
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react'
@@ -85,11 +86,11 @@ function HistoryPage() {
 
     return (
         <div className="history-page">
-            <DecorativeCircle color="orange" size={86} left={180} top={460} />
-            <DecorativeCircle color="blue" size={150} left={310} top={945} opacity={0.92} />
-            <DecorativeCircle color="orange" size={170} left={380} top={1065} opacity={0.95} />
-            <DecorativeCircle color="green" size={96} right={390} top={500} opacity={0.82} />
-            <DecorativeCircle color="green" size={132} right={300} top={452} opacity={0.82} />
+            <DecorativeCircle color="orange" size={150} left={-35} top={210} />
+            <DecorativeCircle color="blue" size={120} left={55} top={390} opacity={0.92} />
+            <DecorativeCircle color="orange" size={170} left={220} bottom={80} opacity={0.95} />
+            <DecorativeCircle color="green" size={96} right={90} top={250} opacity={0.82} />
+            <DecorativeCircle color="green" size={140} right={-30} top={360} opacity={0.82} />
 
             <div className="history-brand-mark" aria-hidden="true">
                 <strong>
@@ -100,9 +101,11 @@ function HistoryPage() {
             <AppNav onLogout={handleLogout} onThemeToggle={toggleTheme} />
 
             <main className="history-main">
+                <UserProfile />
+
                 <section className="history-content">
                     <header className="history-header">
-                        <h1>Transaktionshistorik</h1>
+                        <h1 tabIndex={0}>Transaktionshistorik</h1>
                         <p>Alla rörelser på dina sparkonton.</p>
                     </header>
 
@@ -194,7 +197,7 @@ function HistoryPage() {
                         <div className="history-list">
                             {Object.entries(groupedTransactions).map(([month, transactions]) => (
                                 <section className="history-month" key={month}>
-                                    <h2>{month}</h2>
+                                    <h2 tabIndex={0}>{month}</h2>
 
                                     {transactions.map((transaction) => (
                                         <article className="transaction-card" key={transaction.id}>
@@ -207,7 +210,7 @@ function HistoryPage() {
                                             </div>
 
                                             <div className="transaction-info">
-                                                <h3>{transaction.title}</h3>
+                                                <h3 tabIndex={0}>{transaction.title}</h3>
                                                 <p>
                                                     {transaction.accountName} · {transaction.date}
                                                 </p>
@@ -233,7 +236,7 @@ function HistoryPage() {
                         </div>
                     ) : (
                         <div className="history-empty">
-                            <h2>Inga transaktioner hittades</h2>
+                            <h2 tabIndex={0}>Inga transaktioner hittades</h2>
                             <p>Det finns inga rörelser för {selectedAccountLabel} som matchar det valda filtret.</p>
                         </div>
                     )}

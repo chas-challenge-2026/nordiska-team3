@@ -16,7 +16,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-card" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
-                    <h2>{title}</h2>
+                    <h2 tabIndex={0}>{title}</h2>
                     <button className="modal-close" onClick={onClose} aria-label="Stäng">
                         <X size={18} />
                     </button>
