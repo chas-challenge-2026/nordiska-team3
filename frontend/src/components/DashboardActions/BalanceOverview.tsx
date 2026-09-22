@@ -40,7 +40,7 @@ export function BalanceOverview({
                         className="account-card"
                         onClick={() => onAccountClick?.(account.id)}
                     >
-                        <div className="account-card-header">
+                        <div className={`account-card-header account-card-header--${account.variant ?? 'default'}`}>
                             {account.icon}
                             <span>{account.label}</span>
                         </div>
@@ -48,7 +48,10 @@ export function BalanceOverview({
                             <p className={`account-card-value account-card-value--${account.variant ?? 'default'}`}>
                                 {account.value}
                             </p>
-                            <ChevronRight size={16} />
+                            <ChevronRight
+                                size={16}
+                                className={`account-card-chevron account-card-chevron--${account.variant ?? 'default'}`}
+                            />
                         </div>
                     </button>
                 ))}

@@ -65,11 +65,11 @@ function TransactPage() {
 
     return (
     <div className="dashboard-page">
-        <DecorativeCircle color="orange" size={60} left={40} top={150} />
-        <DecorativeCircle color="blue" size={140} left={20} bottom={140} />
-        <DecorativeCircle color="orange" size={170} left={120} bottom={40} />
-        <DecorativeCircle color="green" size={110} right={80} top={70} opacity={0.9} />
-        <DecorativeCircle color="blue" size={190} right={-30} top={30} />
+        <DecorativeCircle color="orange" size={80} left={-20} top={170} />
+        <DecorativeCircle color="blue" size={140} left={30} bottom={150} />
+        <DecorativeCircle color="orange" size={170} left={180} bottom={40} />
+        <DecorativeCircle color="green" size={120} right={90} top={110} opacity={0.9} />
+        <DecorativeCircle color="blue" size={190} right={-40} top={40} />
 
       <div className="transact-brand-circle">
     <strong>nordiska<span className="brand-dot">.</span></strong>
@@ -82,7 +82,7 @@ function TransactPage() {
 
         <div className="transact-content">
                 <div className="transact-header">
-                    <h1>Flytta pengar</h1>
+                    <h1 tabIndex={0}>Flytta pengar</h1>
                     <p>Sätt in eller ta ut medel från dina sparkonton.</p>
                 </div>
 

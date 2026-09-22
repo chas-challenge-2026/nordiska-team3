@@ -3,22 +3,23 @@
   max-width: 560px;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  gap: var(--space-4);
 }
 
 .dashboard-actions__button {
-  min-height: 82px;
-  border-radius: var(--radius-sm);
+  min-height: 78px;
+  border-radius: 26px;
   background: var(--dashboard-card-bg, var(--color-surface-soft));
-  color: var(--color-text-primary);
+  color: var(--color-yale-blue-900);
   box-shadow: var(--dashboard-card-shadow, var(--shadow-sm));
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  font-size: 10px;
+  gap: 10px;
+  font-size: 14px;
   font-weight: 800;
+  line-height: 1;
   transition:
     background-color 0.2s,
     box-shadow 0.2s;
@@ -29,20 +30,20 @@
 }
 
 .dashboard-actions__button--primary {
-  background: var(--dashboard-action-withdraw-bg, var(--color-primary-pale));
-  color: var(--color-primary);
+  background: var(--color-primary-pale);
+  color: var(--color-yale-blue-900);
 }
 
 .dashboard-actions__button--secondary {
-  background: var(--dashboard-action-neutral-bg, var(--color-surface-soft));
-  color: var(--color-text-primary);
+  background: #ffffff;
+  color: var(--color-yale-blue-900);
 }
 
 .dashboard-actions__icon {
-  width: 28px;
-  height: 28px;
+  width: 42px;
+  height: 42px;
   border-radius: var(--radius-pill);
-  background: var(--color-text-primary);
+  background: var(--color-yale-blue-900);
   color: var(--color-text-inverted);
   display: grid;
   place-items: center;
@@ -50,32 +51,32 @@
 
 .dashboard-actions__button--primary .dashboard-actions__icon {
   background: var(--color-primary);
-  color: var(--color-yale-blue-900);
+  color: #ffffff;
 }
 
 .dashboard-actions__button--deposit {
-  background: var(--dashboard-action-deposit-bg, var(--color-success-soft));
-  color: #17483d;
+  background: var(--color-success-soft);
+  color: var(--color-yale-blue-900);
 }
 
 .dashboard-actions__button--deposit .dashboard-actions__icon {
   background: #17483d;
-  color: #d9ede1;
+  color: #ffffff;
 }
 
 .dashboard-actions__button--secondary:not(.dashboard-actions__button--deposit) .dashboard-actions__icon {
-  background: #d7e7ef;
-  color: #062f43;
+  background: var(--color-yale-blue-900);
+  color: #ffffff;
 }
 
 [data-theme="dark"] .dashboard-actions__button--deposit {
-  background: #cfe9db;
+  background: #d9ede1;
   color: #17483d;
 }
 
 [data-theme="dark"] .dashboard-actions__button--deposit .dashboard-actions__icon {
   background: #17483d;
-  color: #cfe9db;
+  color: #ffffff;
 }
 
 [data-theme="dark"] .dashboard-actions__button--primary {
@@ -85,7 +86,12 @@
 
 [data-theme="dark"] .dashboard-actions__button--primary .dashboard-actions__icon {
   background: #f5a90f;
-  color: #062f43;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .dashboard-actions__button--secondary {
+  background: #062f43;
+  color: #d7e7ef;
 }
 
 [data-theme="dark"] .dashboard-actions__button--secondary .dashboard-actions__icon {
@@ -93,37 +99,40 @@
   color: #062f43;
 }
 
-[data-theme="dark"] .dashboard-actions__button--secondary {
-  background: #062f43;
-  color: #f5fbff;
-}
-
 [data-theme="dark"] .dashboard-actions__button--secondary.dashboard-actions__button--deposit {
-  background: #cfe9db;
+  background: #d9ede1;
   color: #17483d;
 }
 
 [data-theme="dark"] .dashboard-actions__button--secondary.dashboard-actions__button--deposit .dashboard-actions__icon {
   background: #17483d;
-  color: #cfe9db;
+  color: #ffffff;
 }
 
 @media (min-width: 521px) {
   .dashboard-actions__button {
-    min-height: 70px;
-    border-radius: 12px;
-    padding: 9px 10px;
-    font-size: 9px;
+    min-height: 64px;
+    border-radius: 22px;
+    padding: 12px 10px;
+    font-size: 12px;
   }
 
   .dashboard-actions__icon {
-    width: 24px;
-    height: 24px;
+    width: 30px;
+    height: 30px;
   }
 }
 
 @media (max-width: 520px) {
   .dashboard-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+
+  .dashboard-actions__button {
+    min-height: 104px;
+    border-radius: 28px;
+    font-size: 16px;
+    gap: 14px;
   }
 }

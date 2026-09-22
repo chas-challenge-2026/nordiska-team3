@@ -7,20 +7,27 @@
   padding: 90px var(--space-5) var(--space-7);
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   gap: var(--space-4);
 }
 
+.tax-header {
+  width: 100%;
+}
+
 .tax-header h1 {
+  margin: 0 0 8px;
   color: var(--color-text-inverted);
   font-size: 26px;
-  margin: 0 0 4px;
+  font-weight: 800;
+  line-height: 1.12;
 }
 
 .tax-header p {
-  color: var(--color-text-secondary);
-  font-size: 14px;
   margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 14px;
+  line-height: 1.35;
 }
 
 /* Toggle pills (återanvänder samma klasser som TransactPage) */
@@ -55,7 +62,7 @@
 }
 
 .tax-summary-card {
-  background: var(--color-surface);
+  background: var(--dashboard-card-bg, #ffffff);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   padding: var(--space-5);
@@ -85,7 +92,7 @@
 .tax-breakdown-card {
   width: 100%;
   box-sizing: border-box;
-  background: var(--color-surface);
+  background: var(--dashboard-card-bg, #ffffff);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   padding: var(--space-5);
@@ -200,6 +207,10 @@
 }
 
 @media (max-width: 700px) {
+  .tax-content {
+    padding: 56px var(--space-4) var(--space-6);
+  }
+
   .tax-summary-row {
     grid-template-columns: 1fr;
   }

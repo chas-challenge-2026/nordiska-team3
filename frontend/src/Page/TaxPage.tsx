@@ -34,11 +34,11 @@ function TaxPage() {
 
     return (
         <div className="dashboard-page">
-            <DecorativeCircle color="orange" size={70} left={430} top={210} />
-            <DecorativeCircle color="blue" size={110} right={330} top={170} />
-            <DecorativeCircle color="green" size={150} right={200} top={140} opacity={0.95} />
-            <DecorativeCircle color="blue" size={110} left={440} bottom={140} />
-            <DecorativeCircle color="orange" size={150} left={500} bottom={80} />
+            <DecorativeCircle color="orange" size={150} left={-30} top={180} />
+            <DecorativeCircle color="blue" size={95} left={40} top={320} opacity={0.9} />
+            <DecorativeCircle color="green" size={150} right={-25} top={145} opacity={0.95} />
+            <DecorativeCircle color="blue" size={115} right={70} bottom={150} />
+            <DecorativeCircle color="orange" size={155} left={190} bottom={70} />
 
             <AppNav onLogout={handleLogout} onThemeToggle={toggleTheme} />
 
@@ -52,7 +52,7 @@ function TaxPage() {
 
                 <div className="tax-content">
                     <div className="tax-header">
-                        <h1>Skatterapport</h1>
+                        <h1 tabIndex={0}>Skatterapport</h1>
                         <p>Sammanställning av ränteintäkter för deklaration.</p>
                     </div>
 

@@ -16,7 +16,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--color-primary-soft);
+  background: #f2c466;
   color: var(--color-text-inverted);
   display: flex;
   align-items: center;
@@ -37,6 +37,10 @@
   font-size: 12px;
   color: var(--color-text-secondary);
   margin: 0;
+}
+
+[data-theme="dark"] .user-profile-avatar {
+  color: #134763;
 }
 
 @media (max-width: 700px) {
