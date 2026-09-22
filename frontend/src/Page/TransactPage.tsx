@@ -1,4 +1,5 @@
 import { type FormEvent, useState } from 'react'
+import { UserProfile } from '../components/UserProfile'
 import { useLogout } from '../hooks/useLogout'
 import './TransactPage.css'
 import { AppNav } from '../components/AppNav'
@@ -74,10 +75,12 @@ function TransactPage() {
     <strong>nordiska<span className="brand-dot">.</span></strong>
         </div>      
 
-        <AppNav onLogout={handleLogout} onThemeToggle={toggleTheme} />
+    <AppNav onLogout={handleLogout} onThemeToggle={toggleTheme} />
 
-        <main className="dashboard-main">
-            <div className="transact-content">
+    <main className="dashboard-main">
+        <UserProfile />
+
+        <div className="transact-content">
                 <div className="transact-header">
                     <h1>Flytta pengar</h1>
                     <p>Sätt in eller ta ut medel från dina sparkonton.</p>
