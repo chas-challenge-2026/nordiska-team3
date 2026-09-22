@@ -19,6 +19,19 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
+    // POST /api/auth/register - Öppen för alla, ingen [Authorize] behövs
+    [HttpPost("register")]
+    public async Task<IActionResult> Register(RegisterRequestDto request)
+    {
+        var result = await _authService.RegisterAsync(request);
+
+        if (!result.IsSuccess) return Conflict(new ErrorResponseDto(result.ErrorMessage!));
+
+        SetRefreshTokenCookie(result.AuthResult!.RefreshToken, result.AuthResult.RefreshTokenExpiry);
+
+        return StatusCode(StatusCodes.Status201Created, result.AuthResult.Response);
+    }
+
     // POST /api/auth/login-pin - Öppen för alla, ingen [Authorize] behövs
     [HttpPost("login-pin")]
     public async Task<IActionResult> LoginPin(LoginPinRequestDto request)
