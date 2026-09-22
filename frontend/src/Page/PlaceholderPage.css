@@ -17,3 +17,25 @@
 .placeholder-main p {
   color: var(--color-text-secondary);
 }
+
+.placeholder-main h1 {
+  margin: 0 0 8px;
+  color: var(--color-text-inverted);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.12;
+}
+
+.placeholder-main p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+@media (max-width: 700px) {
+  .placeholder-main {
+    justify-content: flex-start;
+    padding: 56px var(--space-4) var(--space-6);
+  }
+}

@@ -1,0 +1,453 @@
+.history-page {
+    --history-card-bg: #ffffff;
+    --history-card-title: var(--color-yale-blue-900);
+    --history-card-meta: var(--color-yale-blue-900);
+    --history-filter-bg: var(--color-surface-soft);
+    --history-filter-color: var(--color-text-primary);
+
+    position: relative;
+    display: flex;
+    min-height: 100vh;
+    background: var(--color-page-bg);
+    overflow-x: hidden;
+    overflow-y: clip;
+}
+
+[data-theme="dark"] .history-page {
+    --history-card-bg: var(--color-surface);
+    --history-card-title: var(--color-text-primary);
+    --history-card-meta: var(--color-text-secondary);
+    --history-filter-bg: #062f43;
+    --history-filter-color: var(--color-text-inverted);
+}
+
+.history-page .decorative-circle {
+    z-index: 1;
+}
+
+.history-brand-mark {
+    position: absolute;
+    left: 250px;
+    top: 660px;
+    z-index: 1;
+    width: 180px;
+    height: 108px;
+    border-radius: 54px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(
+        180deg,
+        #ffffff 0%,
+        #d7e7ef 48%,
+        #7399ae 78%,
+        #20516b 100%
+    );
+    box-shadow: 0 22px 44px rgba(4, 29, 42, 0.18);
+}
+
+.history-brand-mark strong {
+    font-family: "Poppins", sans-serif;
+    font-size: 33px;
+    font-weight: 700;
+    color: var(--color-yale-blue-900);
+    line-height: 1;
+}
+
+.history-brand-mark span {
+    color: var(--color-primary);
+}
+
+.history-main {
+    position: relative;
+    flex: 1;
+}
+
+.history-content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 90px var(--space-5) var(--space-7);
+}
+
+.history-header {
+    margin-bottom: 22px;
+}
+
+.history-header h1 {
+    margin: 0 0 8px;
+    color: var(--color-text-inverted);
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1.12;
+}
+
+.history-header p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 14px;
+    line-height: 1.35;
+}
+
+.history-controls {
+  margin-bottom: 28px;
+}
+
+.history-controls-desktop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.history-controls-mobile {
+  display: none;
+}
+
+.history-select-filter {
+  position: relative;
+  display: block;
+  min-width: 170px;
+}
+
+.history-select-filter::after {
+  content: "";
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  color: var(--history-filter-color);
+  pointer-events: none;
+  transform: translateY(-65%) rotate(45deg);
+}
+
+.history-select-filter span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.history-select-filter select {
+  min-height: 36px;
+  width: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--history-filter-bg);
+  color: var(--history-filter-color);
+  padding: 0 38px 0 14px;
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 8px 18px rgba(4, 29, 42, 0.14);
+  cursor: pointer;
+  appearance: none;
+}
+
+.history-select-filter--active select {
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
+  color: var(--color-text-primary);
+}
+
+.history-select-filter--active::after {
+  color: var(--color-text-primary);
+}
+
+.history-select-filter select:focus {
+  outline: none;
+}
+
+.history-select-filter select:focus-visible {
+  outline: 3px solid var(--color-primary-soft);
+  outline-offset: 3px;
+}
+
+.history-filter:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.history-filter:focus-visible {
+  outline: 3px solid var(--color-primary-soft);
+  outline-offset: 3px;
+}
+
+.history-filter {
+  min-height: 36px;
+  padding: 0 24px;
+  border-radius: var(--radius-pill);
+  background: var(--history-filter-bg);
+  color: var(--history-filter-color);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 8px 18px rgba(4, 29, 42, 0.14);
+}
+
+.history-filter--active {
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
+  color: var(--color-text-primary);
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.history-month h2 {
+  margin: 0 0 12px;
+  color: var(--color-text-inverted);
+  font-family: "SFMono-Regular", "Roboto Mono", "Cascadia Mono", "Liberation Mono", Menlo, Consolas, monospace;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.transaction-card {
+  min-height: 70px;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 13px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--history-card-bg);
+  box-shadow: 0 10px 22px rgba(4, 29, 42, 0.1);
+}
+
+.transaction-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-pill);
+  display: grid;
+  place-items: center;
+}
+
+.transaction-icon--positive {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.transaction-icon--negative {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+[data-theme="dark"] .transaction-icon--positive {
+  background: #d9ede1;
+  color: #1f4a3d;
+}
+
+[data-theme="dark"] .transaction-icon--negative {
+  background: #fbe3da;
+  color: #b23a2e;
+}
+
+.transaction-info h3 {
+  margin: 0 0 3px;
+  color: var(--history-card-title);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.transaction-info p {
+  margin: 0;
+  color: var(--history-card-meta);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.transaction-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  min-width: 116px;
+  white-space: nowrap;
+  justify-self: end;
+}
+
+.transaction-amount {
+  font-family: "SFMono-Regular", "Roboto Mono", "Cascadia Mono", "Liberation Mono", Menlo, Consolas, monospace;
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+
+.transaction-amount--positive {
+  color: var(--color-pine-teal);
+}
+
+[data-theme="dark"] .transaction-amount--positive {
+  color: var(--color-success);
+}
+
+.transaction-amount--negative {
+  color: var(--color-danger);
+}
+
+.transaction-badge {
+  min-width: 64px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: #d9ede1;
+  color: #1f4a3d;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.transaction-badge--withdrawal {
+  background: #fbe3da;
+  color: #b23a2e;
+}
+
+.transaction-badge--interest {
+  background: #f8e8c7;
+  color: #d28a00;
+}
+
+[data-theme="dark"] .transaction-badge--deposit {
+  background: #3d7a5e;
+  color: #d9ede1;
+}
+
+[data-theme="dark"] .transaction-badge--withdrawal {
+  background: #fbe3da;
+  color: #b23a2e;
+}
+
+[data-theme="dark"] .transaction-badge--interest {
+  background: #f5a90f;
+  color: #062f43;
+}
+
+.history-empty {
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--color-text-inverted);
+  text-align: center;
+}
+
+.history-empty h2 {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-inverted);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.history-empty p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 14px;
+}
+
+@media (max-width: 700px) {
+    .history-page {
+        flex-direction: column;
+        padding-bottom: 96px;
+    }
+
+    .history-page .decorative-circle,
+    .history-brand-mark {
+        display: none;
+    }
+
+    .history-content {
+        max-width: 560px;
+        padding: 56px var(--space-4) var(--space-6);
+    }
+
+    .history-controls {
+        display: block;
+        margin-bottom: 24px;
+    }
+
+    .history-controls-desktop {
+        display: none;
+    }
+
+    .history-controls-mobile {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-2);
+    }
+
+    .history-select-filter {
+        min-width: 0;
+    }
+
+    .history-select-filter select {
+        min-height: 34px;
+        font-size: 12px;
+    }
+
+    .transaction-card {
+        min-height: 58px;
+        grid-template-columns: 30px minmax(0, 1fr) auto;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: var(--radius-lg);
+    }
+
+    .transaction-icon {
+        width: 28px;
+        height: 28px;
+    }
+
+    .transaction-info h3 {
+        margin-bottom: 2px;
+        font-size: 11px;
+    }
+
+    .transaction-info p {
+        font-size: 8px;
+    }
+
+    .transaction-amount {
+        grid-column: auto;
+        font-size: 10px;
+    }
+
+    .transaction-meta {
+        min-width: auto;
+    }
+
+    .transaction-badge {
+        display: block;
+        min-width: 42px;
+        padding: 3px 6px;
+        font-size: 7px;
+    }
+}
+
+@media (max-width: 520px) {
+    .transaction-card {
+        grid-template-columns: 30px minmax(0, 1fr) auto;
+    }
+
+    .transaction-icon {
+        width: 28px;
+        height: 28px;
+    }
+
+    .transaction-meta {
+        grid-column: auto;
+        align-items: flex-end;
+        justify-self: end;
+    }
+}

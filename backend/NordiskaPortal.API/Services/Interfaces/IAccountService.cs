@@ -12,4 +12,6 @@ public interface IAccountService
     Task<AccountOperationResult> WithdrawAsync(Guid userId, Guid accountId, decimal amount);
 
     Task<AccountDto?> RenameAccountAsync(Guid userId, Guid accountId, string name);
+
+    Task<TransactionHistoryResponseDto?> GetTransactionHistoryAsync(Guid userId, Guid accountId);
 }

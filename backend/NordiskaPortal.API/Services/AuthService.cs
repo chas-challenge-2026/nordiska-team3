@@ -28,20 +28,29 @@ public class AuthService : IAuthService
             return null;
         }
 
-        var accessToken = _tokenService.GenerateAccessToken(user);
-        var refreshToken = _tokenService.GenerateRefreshToken();
-        var refreshTokenExpiry = DateTime.UtcNow.AddDays(7);
-
-        user.RefreshToken = refreshToken;
-        user.RefreshTokenExpiryTime = refreshTokenExpiry;
-        _userRepository.Update(user);
-        await _userRepository.SaveChangesAsync();
-
-        var response = new LoginResponseDto(accessToken, MapToUserDto(user));
+        var result = await IssueTokensAsync(user);
 
         _logger.LogInformation("User {UserId} logged in successfully.", user.Id);
 
-        return new AuthResult(response, refreshToken, refreshTokenExpiry);
+        return result;
+
+    }
+
+    public async Task<AuthResult?> RefreshAsync(string refreshToken)
+    {
+        var user = await _userRepository.GetByRefreshTokenAsync(refreshToken);
+
+        if (user is null || user.RefreshTokenExpiryTime is null || user.RefreshTokenExpiryTime < DateTime.UtcNow)
+        {
+            _logger.LogWarning("Refresh token invalid or expired.");
+            return null;
+        }
+
+        var result = await IssueTokensAsync(user);
+
+        _logger.LogInformation("Refreshed access token for user {UserId}.", user.Id);
+
+        return result;
     }
 
     public async Task<MeResponseDto?> GetCurrentUserAsync(Guid userId)
@@ -65,4 +74,20 @@ public class AuthService : IAuthService
 
     private static UserDto MapToUserDto(User user) =>
         new(user.Id, $"{user.FirstName} {user.LastName}", user.Email, user.PersonalNumber);
-}
+
+    private async Task<AuthResult> IssueTokensAsync(User user)
+    {
+        var accessToken = _tokenService.GenerateAccessToken(user);
+        var refreshToken = _tokenService.GenerateRefreshToken();
+        var refreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+
+        user.RefreshToken = refreshToken;
+        user.RefreshTokenExpiryTime = refreshTokenExpiry;
+        _userRepository.Update(user);
+        await _userRepository.SaveChangesAsync();
+
+        var response = new LoginResponseDto(accessToken, MapToUserDto(user));
+
+        return new AuthResult(response, refreshToken, refreshTokenExpiry);
+    }
+};
