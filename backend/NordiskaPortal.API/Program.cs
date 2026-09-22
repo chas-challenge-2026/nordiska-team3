@@ -1,10 +1,23 @@
 using NordiskaPortal.API.Data;
+using NordiskaPortal.API.Services;
 using NordiskaPortal.API.Extensions;
 using Microsoft.EntityFrameworkCore;
 using NordiskaPortal.API.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add services to the container.
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// Add DbContext
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
+builder.Services.AddScoped<TransactionService>();
+
+builder.Services.AddControllers();
 builder.AddSerilogLogging();
 builder.Services.AddExceptionHandling();
 builder.Services.AddJwtAuthentication(builder.Configuration);
