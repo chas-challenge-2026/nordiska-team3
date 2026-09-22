@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './TaxPage.css'
 import { AppNav } from '../components/AppNav'
+import { UserProfile } from '../components/UserProfile'
 import { DecorativeCircle } from '../components/DecorativeCircle'
 import { useTheme } from '../context/useTheme'
 import { mockTaxReports } from './mockTaxReport'
@@ -47,6 +48,8 @@ function TaxPage() {
             </div>
 
             <main className="dashboard-main">
+                <UserProfile />
+
                 <div className="tax-content">
                     <div className="tax-header">
                         <h1>Skatterapport</h1>

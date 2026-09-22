@@ -1,4 +1,5 @@
 import { mockHistoryTransactions, type TransactionType } from './mockHistoryTransaction'
+import { UserProfile } from '../components/UserProfile'
 import './HistoryPage.css'
 import { useState } from 'react'
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react'
@@ -100,6 +101,8 @@ function HistoryPage() {
             <AppNav onLogout={handleLogout} onThemeToggle={toggleTheme} />
 
             <main className="history-main">
+                <UserProfile />
+
                 <section className="history-content">
                     <header className="history-header">
                         <h1>Transaktionshistorik</h1>
