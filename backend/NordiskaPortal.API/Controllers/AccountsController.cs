@@ -73,6 +73,27 @@ public class  AccountsController : ControllerBase
             result.Balance!.Value.ToString("F2", CultureInfo.InvariantCulture)));
     }
 
+    [HttpPatch("{accountId:guid}/name")]
+    public async Task<IActionResult> RenameAccount(Guid accountId, RenameAccountRequestDto request)
+    {
+        var account = await _accountService.RenameAccountAsync(CurrentUserId, accountId, request.Name);
+
+        if (account is null) return NotFound(new ErrorResponseDto("Account does not exist."));
+
+        return Ok(account);
+    }
+
+    // GET /api/accounts/{accountId}/transactions
+    [HttpGet("{accountId:guid}/transactions")]
+    public async Task<IActionResult> GetTransactionHistory(Guid accountId)
+    {
+        var history = await _accountService.GetTransactionHistoryAsync(CurrentUserId, accountId);
+
+        if (history is null) return NotFound(new ErrorResponseDto("Account does not exist."));
+
+        return Ok(history);
+    }
+
     private Guid CurrentUserId =>
         Guid.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub)!);
 }

@@ -1,3 +1,4 @@
+using FluentValidation;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -20,13 +21,23 @@ public static class ServiceCollectionExtensions
         // Repositories
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IAccountRepository, AccountRepository>();
-        services.AddScoped<IRepository<Transaction>, Repository<Transaction>>();
+        services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<IRepository<LedgerEntry>, Repository<LedgerEntry>>();
+        services.AddScoped<IRepository<Notification>, Repository<Notification>>();
 
         // Services
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IAccountService, AccountService>();
+        services.AddScoped<ITaxReportDataService, TaxReportDataService>();
+        services.AddScoped<ITaxReportProcessingService, TaxReportProcessingService>();
+        services.AddSingleton<TaxReportQueue>();
+        services.AddHostedService<TaxReportBackgroundWorker>();
+        services.AddScoped<IEmailSender, LoggingEmailSender>();
+        services.AddHostedService<NotificationBackgroundWorker>();
+
+        // Validation
+        services.AddValidatorsFromAssemblyContaining<Program>(); // Letar alla klasser som ärver AbstractValidator<T>
 
         return services;
     }
