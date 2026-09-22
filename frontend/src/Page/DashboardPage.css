@@ -44,7 +44,7 @@
 /* Brand-card (identisk logik som LoginPage.css, unikt namn) */
 .dashboard-brand-card {
   position: absolute;
-  top: 64px;
+  top: 20px;
   left: 50%;
   transform: translateX(-50%);
   width: 190px;
@@ -131,7 +131,7 @@
 
   .dashboard-brand-card {
     position: absolute;
-    top: 44px;
+    top: 8px;
     left: 50%;
     transform: translateX(-50%);
     width: 188px;

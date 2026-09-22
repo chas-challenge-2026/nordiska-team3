@@ -7,20 +7,28 @@
   padding: 90px var(--space-5) var(--space-7);
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   gap: var(--space-5);
 }
 
 .transact-header {
+  width: 100%;
   text-align: left;
 }
 
 .dashboard-page .transact-header h1 {
-  color: #FFFFFF;
+  margin: 0 0 8px;
+  color: var(--color-text-inverted);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.12;
 }
 
 .dashboard-page .transact-header p {
-  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 14px;
+  line-height: 1.35;
 }
 
 /* Brand-card (samma som Login/Dashboard) */
@@ -88,7 +96,7 @@
 .account-preview-card {
   width: 100%;
   box-sizing: border-box;
-  background: var(--color-surface);
+  background: var(--dashboard-card-bg, #ffffff);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   padding: var(--space-5) var(--space-6);
@@ -117,7 +125,7 @@
 .transact-form-card {
   width: 100%;
   box-sizing: border-box;
-  background: var(--color-surface-soft);
+  background: var(--dashboard-card-bg, #ffffff);
   border-radius: var(--radius-lg);
   padding: var(--space-6);
   display: flex;
@@ -155,6 +163,11 @@
 
 .transact-pill-input:focus {
   box-shadow: 0 0 0 3px rgba(238, 169, 26, 0.35);
+}
+
+[data-theme="dark"] .transact-pill-input {
+  background: var(--color-surface-soft);
+  color: var(--color-text-primary);
 }
 
 .select-wrapper {
@@ -203,7 +216,7 @@
 
 @media (max-width: 700px) {
   .transact-content {
-    padding: 100px var(--space-4) var(--space-6);
+    padding: 56px var(--space-4) var(--space-6);
   }
 
   .brand-card {

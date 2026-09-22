@@ -12,7 +12,7 @@ function FaqPage() {
             <main className="placeholder-main">
                 <UserProfile />
 
-                <h1>FAQ</h1>
+                <h1 tabIndex={0}>FAQ</h1>
                 <p>Kommer snart.</p>
             </main>
         </div>
