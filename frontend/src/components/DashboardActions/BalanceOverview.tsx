@@ -34,11 +34,11 @@ export function BalanceOverview({
     onAccountClick,
 }: BalanceOverviewProps) {
     const totalAmount = parseKrValue(totalValue)
-    const [animatedTotal, setAnimatedTotal] = useState(Number.isFinite(totalAmount) ? 0 : totalValue)
+    const [animatedTotal, setAnimatedTotal] = useState(formatKrValue(0))
+    const displayedTotal = Number.isFinite(totalAmount) ? animatedTotal : totalValue
 
     useEffect(() => {
         if (!Number.isFinite(totalAmount)) {
-            setAnimatedTotal(totalValue)
             return
         }
 
@@ -61,13 +61,13 @@ export function BalanceOverview({
         animationFrameId = requestAnimationFrame(animate)
 
         return () => cancelAnimationFrame(animationFrameId)
-    }, [totalAmount, totalValue])
+    }, [totalAmount])
 
     return (
         <div className="balance-overview">
             <div className="balance-card">
                 <p className="balance-label">{totalLabel}</p>
-                <p className="balance-value">{animatedTotal}</p>
+                <p className="balance-value">{displayedTotal}</p>
                 <p className="balance-sub">{subLabel}</p>
             </div>
 
