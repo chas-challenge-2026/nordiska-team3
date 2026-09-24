@@ -739,14 +739,14 @@
   padding: 15px;
   font-size: 14px;
   font-weight: 800;
-  color: var(--color-text-primary);
+  color: #ffffff;
   background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
   box-shadow: 0 0 24px 4px rgba(245, 169, 15, 0.5);
   cursor: pointer;
 }
 
 [data-theme="dark"] .account-modal .transact-submit-btn {
-  color: #062f43;
+  color: #ffffff;
   box-shadow: 0 0 18px 2px rgba(245, 169, 15, 0.28);
 }
 
