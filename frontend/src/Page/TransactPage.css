@@ -93,7 +93,11 @@
 
 .pill-toggle--withdraw.pill-toggle--active {
   background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
-  color: var(--color-text-primary);
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .pill-toggle--withdraw.pill-toggle--active {
+  color: #062f43;
 }
 
 /* Account preview card */

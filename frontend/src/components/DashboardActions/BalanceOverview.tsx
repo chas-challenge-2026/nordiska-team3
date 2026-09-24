@@ -7,7 +7,7 @@ export interface Account {
     icon: ReactNode
     label: string
     value: string
-    variant?: 'default' | 'accent' | 'success'
+    variant?: 'default' | 'accent' | 'success' | 'danger' | 'purple' | 'pink'
 }
 
 interface BalanceOverviewProps {

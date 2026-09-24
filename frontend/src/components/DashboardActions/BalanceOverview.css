@@ -96,6 +96,18 @@
   color: var(--color-jungle-teal);
 }
 
+.account-card-header--danger {
+  color: var(--color-danger);
+}
+
+.account-card-header--purple {
+  color: #7c3aed;
+}
+
+.account-card-header--pink {
+  color: #db2777;
+}
+
 .account-card-footer {
   display: flex;
   align-items: center;
@@ -118,6 +130,18 @@
   color: var(--color-jungle-teal);
 }
 
+.account-card-value--danger {
+  color: var(--color-danger);
+}
+
+.account-card-value--purple {
+  color: #7c3aed;
+}
+
+.account-card-value--pink {
+  color: #db2777;
+}
+
 .account-card-chevron {
   color: var(--color-text-primary);
   flex-shrink: 0;
@@ -129,6 +153,36 @@
 
 .account-card-chevron--success {
   color: var(--color-jungle-teal);
+}
+
+.account-card-chevron--danger {
+  color: var(--color-danger);
+}
+
+[data-theme="dark"] .account-card-header--danger,
+[data-theme="dark"] .account-card-value--danger,
+[data-theme="dark"] .account-card-chevron--danger {
+  color: var(--color-danger);
+}
+
+.account-card-chevron--purple {
+  color: #7c3aed;
+}
+
+.account-card-chevron--pink {
+  color: #db2777;
+}
+
+[data-theme="dark"] .account-card-header--purple,
+[data-theme="dark"] .account-card-value--purple,
+[data-theme="dark"] .account-card-chevron--purple {
+  color: #c4b5fd;
+}
+
+[data-theme="dark"] .account-card-header--pink,
+[data-theme="dark"] .account-card-value--pink,
+[data-theme="dark"] .account-card-chevron--pink {
+  color: #f9a8d4;
 }
 
 @media (max-width: 700px) {

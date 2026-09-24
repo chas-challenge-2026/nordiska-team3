@@ -60,6 +60,7 @@
 .history-main {
     position: relative;
     flex: 1;
+    margin-left: -64px;
 }
 
 .history-content {
@@ -150,11 +151,11 @@
 
 .history-select-filter--active select {
   background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
-  color: var(--color-text-primary);
+  color: #ffffff;
 }
 
 .history-select-filter--active::after {
-  color: var(--color-text-primary);
+  color: #ffffff;
 }
 
 .history-select-filter select:focus {
@@ -189,7 +190,13 @@
 
 .history-filter--active {
   background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
-  color: var(--color-text-primary);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .history-select-filter--active select,
+[data-theme="dark"] .history-select-filter--active::after,
+[data-theme="dark"] .history-filter--active {
+  color: #062f43;
 }
 
 .history-list {
@@ -360,6 +367,10 @@
     .history-page {
         flex-direction: column;
         padding-bottom: 96px;
+    }
+
+    .history-main {
+        margin-left: 0;
     }
 
     .history-page .decorative-circle,
