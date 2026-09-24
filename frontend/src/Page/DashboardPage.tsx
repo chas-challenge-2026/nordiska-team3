@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { UserProfile } from '../components/UserProfile'
 import './DashboardPage.css'
 import { AppNav } from '../components/AppNav'
@@ -98,6 +99,7 @@ function formatAccountName(value: string) {
 }
 
 function DashboardPage() {
+    const navigate = useNavigate()
     const handleLogout = useLogout()
     const { toggleTheme } = useTheme()
 
@@ -110,9 +112,18 @@ function DashboardPage() {
     const [modalTransactionType, setModalTransactionType] = useState<'deposit' | 'withdrawal'>('deposit')
     const [modalAmount, setModalAmount] = useState('')
     const [modalTransactionMessage, setModalTransactionMessage] = useState('')
+    const [dashboardTransactionType, setDashboardTransactionType] = useState<'deposit' | 'withdrawal' | null>(null)
+    const [dashboardTransactionAccountId, setDashboardTransactionAccountId] = useState(mockAccounts[0]?.id ?? '')
+    const [dashboardTransactionAmount, setDashboardTransactionAmount] = useState('')
+    const [dashboardTransactionMessage, setDashboardTransactionMessage] = useState('')
     const [accountTransactions, setAccountTransactions] = useState<DashboardAccountTransaction[]>(
         mockDashboardAccountTransactions
     )
+
+    const dashboardTransactionAccount =
+        accounts.find((account) => account.id === dashboardTransactionAccountId) ?? accounts[0] ?? null
+    const dashboardTransactionTitle = dashboardTransactionType === 'deposit' ? 'Sätt in pengar' : 'Ta ut pengar'
+    const dashboardTransactionButtonLabel = dashboardTransactionType === 'deposit' ? 'Sätt in' : 'Ta ut'
 
     const selectedAccountTransactions = selectedAccount
         ? accountTransactions.filter((transaction) => transaction.accountId === selectedAccount.id)
@@ -141,17 +152,32 @@ function DashboardPage() {
         setModalTransactionMessage('')
     }
 
+    function openDashboardTransactionModal(type: 'deposit' | 'withdrawal') {
+        setDashboardTransactionType(type)
+        setDashboardTransactionAccountId((currentAccountId) => currentAccountId || accounts[0]?.id || '')
+        setDashboardTransactionAmount('')
+        setDashboardTransactionMessage('')
+    }
+
+    function closeDashboardTransactionModal() {
+        setDashboardTransactionType(null)
+        setDashboardTransactionAmount('')
+        setDashboardTransactionMessage('')
+    }
+
     function handleActionClick(action: DashboardAction['action']) {
         switch (action) {
             case 'deposit':
+                openDashboardTransactionModal('deposit')
+                break
             case 'withdraw':
-                console.log('Navigera till insättning/uttag:', action)
+                openDashboardTransactionModal('withdrawal')
                 break
             case 'history':
-                console.log('Navigera till historik')
+                navigate('/historik')
                 break
             case 'tax':
-                console.log('Navigera till skatterapport')
+                navigate('/skatt')
                 break
         }
     }
@@ -224,6 +250,54 @@ function DashboardPage() {
         )
 
         setModalAmount('')
+    }
+
+    function handleDashboardTransaction() {
+        if (!dashboardTransactionType || !dashboardTransactionAccount) return
+
+        const amount = Number(dashboardTransactionAmount.replace(',', '.'))
+
+        if (!dashboardTransactionAmount || Number.isNaN(amount) || amount <= 0) {
+            setDashboardTransactionMessage('Ange ett giltigt belopp större än 0 kr.')
+            return
+        }
+
+        const currentBalance = parseKr(dashboardTransactionAccount.value)
+
+        if (dashboardTransactionType === 'withdrawal' && amount > currentBalance) {
+            setDashboardTransactionMessage('Beloppet överstiger tillgängligt saldo.')
+            return
+        }
+
+        const balanceChange = dashboardTransactionType === 'deposit' ? amount : -amount
+        const updatedAccount: Account = {
+            ...dashboardTransactionAccount,
+            value: formatKr(currentBalance + balanceChange),
+        }
+
+        const newTransaction: DashboardAccountTransaction = {
+            id: crypto.randomUUID(),
+            accountId: dashboardTransactionAccount.id,
+            title: dashboardTransactionType === 'deposit' ? 'Insättning' : 'Uttag',
+            date: new Intl.DateTimeFormat('sv-SE', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+            }).format(new Date()),
+            amount: balanceChange,
+            type: dashboardTransactionType,
+        }
+
+        setAccounts((prevAccounts) =>
+            prevAccounts.map((account) => (account.id === dashboardTransactionAccount.id ? updatedAccount : account))
+        )
+        setAccountTransactions((prevTransactions) => [newTransaction, ...prevTransactions])
+        setDashboardTransactionMessage(
+            dashboardTransactionType === 'deposit'
+                ? `${formatKr(amount)} har satts in på ${formatAccountName(dashboardTransactionAccount.label)}.`
+                : `${formatKr(amount)} har tagits ut från ${formatAccountName(dashboardTransactionAccount.label)}.`
+        )
+        setDashboardTransactionAmount('')
     }
 
     return (
@@ -407,6 +481,58 @@ function DashboardPage() {
                                             {modalTransactionType === 'deposit' ? 'Sätt in pengar' : 'Ta ut pengar'}
                                         </button>
                                     </div>
+                                </div>
+                            </div>
+                        )}
+                    </Modal>
+                    <Modal
+                        isOpen={dashboardTransactionType !== null}
+                        onClose={closeDashboardTransactionModal}
+                        title={dashboardTransactionTitle}
+                    >
+                        {dashboardTransactionAccount && (
+                            <div className="dashboard-transaction-modal">
+                                <label className="dashboard-transaction-modal__field">
+                                    <span>Konto</span>
+                                    <select
+                                        value={dashboardTransactionAccount.id}
+                                        onChange={(e) => {
+                                            setDashboardTransactionAccountId(e.target.value)
+                                            setDashboardTransactionMessage('')
+                                        }}
+                                    >
+                                        {accounts.map((account) => (
+                                            <option key={account.id} value={account.id}>
+                                                {formatAccountName(account.label)}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </label>
+
+                                <Input
+                                    label="Belopp"
+                                    type="amount"
+                                    placeholder="0"
+                                    value={dashboardTransactionAmount}
+                                    onChange={(e) => {
+                                        setDashboardTransactionAmount(e.target.value)
+                                        setDashboardTransactionMessage('')
+                                    }}
+                                />
+
+                                {dashboardTransactionMessage && (
+                                    <p className="dashboard-transaction-modal__message">
+                                        {dashboardTransactionMessage}
+                                    </p>
+                                )}
+
+                                <div className="dashboard-transaction-modal__actions">
+                                    <Button type="button" variant="secondary" onClick={closeDashboardTransactionModal}>
+                                        Avbryt
+                                    </Button>
+                                    <Button type="button" variant="primary" onClick={handleDashboardTransaction}>
+                                        {dashboardTransactionButtonLabel}
+                                    </Button>
                                 </div>
                             </div>
                         )}

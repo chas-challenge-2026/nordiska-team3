@@ -1,4 +1,5 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { isAuthenticated } from './services/authService'
 import LoginPage from './Page/LoginPage'
 import DashboardPage from './Page/DashboardPage'
@@ -17,57 +18,70 @@ function ProtectedRoute({ children }: { children: JSX.Element }) {
   return children
 }
 
+function ScrollToTop() {
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [pathname])
+
+  return null
+}
+
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="/login" element={<LoginPage />} />
+    <>
+      <ScrollToTop />
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<LoginPage />} />
 
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <DashboardPage />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/transaktioner"
-        element={
-          <ProtectedRoute>
-            <TransactPage />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/transaktioner"
+          element={
+            <ProtectedRoute>
+              <TransactPage />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/historik"
-        element={
-          <ProtectedRoute>
-            <HistoryPage />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/historik"
+          element={
+            <ProtectedRoute>
+              <HistoryPage />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/skatt"
-        element={
-          <ProtectedRoute>
-            <TaxPage />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/skatt"
+          element={
+            <ProtectedRoute>
+              <TaxPage />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/faq"
-        element={
-          <ProtectedRoute>
-            <FaqPage />
-          </ProtectedRoute>
-        }
-      />
-    </Routes>
+        <Route
+          path="/faq"
+          element={
+            <ProtectedRoute>
+              <FaqPage />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </>
   )
 }
 export default App

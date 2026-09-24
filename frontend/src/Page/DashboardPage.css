@@ -127,6 +127,181 @@
   color: #062f43;
 }
 
+.modal-card:has(.dashboard-transaction-modal) {
+  width: min(420px, calc(100vw - 32px));
+  border: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-card:has(.dashboard-transaction-modal) .modal-header {
+  margin-bottom: var(--space-4);
+}
+
+.modal-card:has(.dashboard-transaction-modal) .modal-header h2 {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.dashboard-transaction-modal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  color: var(--color-text-primary);
+}
+
+.dashboard-transaction-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.dashboard-transaction-modal__field span {
+  color: var(--color-text-primary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.dashboard-transaction-modal__field select {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  border-radius: var(--radius-pill);
+  background-color: #ffffff;
+  background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m6 9 6 6 6-6' stroke='%237399ae' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-position: right 20px center;
+  background-repeat: no-repeat;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 14px;
+  padding: 14px 48px 14px 20px;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+
+.dashboard-transaction-modal__field select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(238, 169, 26, 0.28);
+}
+
+.dashboard-transaction-modal .input-group {
+  margin: 0;
+}
+
+.dashboard-transaction-modal .input-label {
+  color: var(--color-text-primary);
+  letter-spacing: 0.06em;
+}
+
+.dashboard-transaction-modal .input-wrapper {
+  border-radius: var(--radius-pill);
+}
+
+.dashboard-transaction-modal .input {
+  min-height: 48px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  padding-right: 48px;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+
+.dashboard-transaction-modal .input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(238, 169, 26, 0.28);
+}
+
+.dashboard-transaction-modal .input-suffix {
+  color: var(--color-yale-blue-900);
+  font-weight: 800;
+}
+
+.dashboard-transaction-modal__message {
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-primary-pale) 70%, #ffffff);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+  margin: 0;
+  padding: var(--space-3);
+}
+
+.dashboard-transaction-modal__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-1);
+}
+
+.dashboard-transaction-modal__actions .button {
+  min-height: 48px;
+  border-radius: var(--radius-pill);
+  font-weight: 800;
+  transition: box-shadow 0.2s, background-color 0.2s, opacity 0.2s;
+}
+
+.dashboard-transaction-modal__actions .button--primary {
+  color: #ffffff;
+  box-shadow: 0 10px 22px rgba(238, 169, 26, 0.28);
+}
+
+.dashboard-transaction-modal__actions .button--secondary {
+  border-color: color-mix(in srgb, var(--color-border) 86%, transparent);
+  background: #ffffff;
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.dashboard-transaction-modal__actions .button--secondary:hover:not(:disabled) {
+  background: var(--color-surface-soft);
+}
+
+[data-theme="dark"] .dashboard-transaction-modal__field select {
+  background-color: var(--color-surface-soft);
+  border-color: rgba(197, 215, 223, 0.12);
+  box-shadow: none;
+}
+
+[data-theme="dark"] .dashboard-transaction-modal .input {
+  background: var(--color-surface-soft);
+  border-color: rgba(197, 215, 223, 0.12);
+}
+
+[data-theme="dark"] .dashboard-transaction-modal .input::placeholder {
+  color: rgba(245, 251, 255, 0.72);
+}
+
+[data-theme="dark"] .dashboard-transaction-modal .input-suffix {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .dashboard-transaction-modal__message {
+  background: rgba(245, 169, 15, 0.14);
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .dashboard-transaction-modal__actions .button--primary {
+  color: #062f43;
+}
+
+[data-theme="dark"] .dashboard-transaction-modal__actions .button--secondary {
+  background: var(--color-surface-soft);
+  border-color: rgba(197, 215, 223, 0.14);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 420px) {
+  .dashboard-transaction-modal__actions {
+    grid-template-columns: 1fr;
+  }
+}
+
 .modal-card:has(.create-account-modal) {
   width: min(440px, calc(100vw - 32px));
   max-height: calc(100vh - 48px);
