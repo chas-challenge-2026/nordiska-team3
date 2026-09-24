@@ -9,7 +9,8 @@ export function UserProfile() {
   const currentUser = getStoredUser() ?? {
     name: 'Emma Lindström',
     email: 'emma@exempel.se',
-  }
+    personalNumber: '19900101-1234',
+}
 
   return (
     <>
