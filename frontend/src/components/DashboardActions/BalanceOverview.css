@@ -64,11 +64,48 @@
 .account-card-header {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  font-size: 10px;
+  justify-content: flex-start;
+  gap: 5px;
+  margin-left: -4px;
+  font-size: 9px;
   font-weight: 800;
-  letter-spacing: 0.04em;
-  color: var(--color-text-secondary);
+  letter-spacing: 0.01em;
+  color: var(--color-text-primary);
+  text-align: left;
+}
+
+.account-card-header svg {
+  color: currentColor;
+  flex-shrink: 0;
+  display: block;
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.6;
+}
+
+.account-card-header span {
+  line-height: 1.2;
+  min-width: 0;
+}
+
+.account-card-header--accent {
+  color: var(--color-primary);
+}
+
+.account-card-header--success {
+  color: var(--color-jungle-teal);
+}
+
+.account-card-header--danger {
+  color: var(--color-danger);
+}
+
+.account-card-header--purple {
+  color: #7c3aed;
+}
+
+.account-card-header--pink {
+  color: #db2777;
 }
 
 .account-card-footer {
@@ -93,9 +130,105 @@
   color: var(--color-jungle-teal);
 }
 
+.account-card-value--danger {
+  color: var(--color-danger);
+}
+
+.account-card-value--purple {
+  color: #7c3aed;
+}
+
+.account-card-value--pink {
+  color: #db2777;
+}
+
+.account-card-chevron {
+  color: var(--color-text-primary);
+  flex-shrink: 0;
+}
+
+.account-card-chevron--accent {
+  color: var(--color-primary);
+}
+
+.account-card-chevron--success {
+  color: var(--color-jungle-teal);
+}
+
+.account-card-chevron--danger {
+  color: var(--color-danger);
+}
+
+[data-theme="dark"] .account-card-header--danger,
+[data-theme="dark"] .account-card-value--danger,
+[data-theme="dark"] .account-card-chevron--danger {
+  color: var(--color-danger);
+}
+
+.account-card-chevron--purple {
+  color: #7c3aed;
+}
+
+.account-card-chevron--pink {
+  color: #db2777;
+}
+
+[data-theme="dark"] .account-card-header--purple,
+[data-theme="dark"] .account-card-value--purple,
+[data-theme="dark"] .account-card-chevron--purple {
+  color: #c4b5fd;
+}
+
+[data-theme="dark"] .account-card-header--pink,
+[data-theme="dark"] .account-card-value--pink,
+[data-theme="dark"] .account-card-chevron--pink {
+  color: #f9a8d4;
+}
+
 @media (max-width: 700px) {
   .accounts-row {
+    width: min(100%, 292px);
     grid-template-columns: 1fr;
+    justify-content: center;
+    gap: var(--space-3);
+    margin: 0 auto;
+  }
+
+  .account-card {
+    position: relative;
+    min-height: 86px;
+    padding: var(--space-3) var(--space-4);
+    gap: var(--space-3);
+    text-align: center;
+  }
+
+  .account-card-header {
+    justify-content: center;
+    gap: var(--space-2);
+    margin-left: 0;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-align: center;
+  }
+
+  .account-card-header svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .account-card-value {
+    font-size: 18px;
+  }
+
+  .account-card-footer {
+    justify-content: center;
+    gap: var(--space-2);
+  }
+
+  .account-card-chevron {
+    position: absolute;
+    right: var(--space-4);
+    bottom: var(--space-3);
   }
 
   .balance-value {

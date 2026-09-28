@@ -4,7 +4,7 @@ import type { Account } from './BalanceOverview'
 export const mockAccounts: Account[] = [
     {
         id: 'education',
-        icon: <GraduationCap size={16} />,
+        icon: <GraduationCap size={16} strokeWidth={2.6} />,
         label: 'HÖGSKOLESPARANDE',
         value: '45 231 kr',
         variant: 'default',

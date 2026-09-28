@@ -19,6 +19,19 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
+    // POST /api/auth/register - Öppen för alla, ingen [Authorize] behövs
+    [HttpPost("register")]
+    public async Task<IActionResult> Register(RegisterRequestDto request)
+    {
+        var result = await _authService.RegisterAsync(request);
+
+        if (!result.IsSuccess) return Conflict(new ErrorResponseDto(result.ErrorMessage!));
+
+        SetRefreshTokenCookie(result.AuthResult!.RefreshToken, result.AuthResult.RefreshTokenExpiry);
+
+        return StatusCode(StatusCodes.Status201Created, result.AuthResult.Response);
+    }
+
     // POST /api/auth/login-pin - Öppen för alla, ingen [Authorize] behövs
     [HttpPost("login-pin")]
     public async Task<IActionResult> LoginPin(LoginPinRequestDto request)
@@ -27,13 +40,29 @@ public class AuthController : ControllerBase
 
         if (result is null) return Unauthorized(new ErrorResponseDto("Invalid personal number or PIN."));
 
-        Response.Cookies.Append("refreshToken", result.RefreshToken, new CookieOptions
+        SetRefreshTokenCookie(result.RefreshToken, result.RefreshTokenExpiry);
+
+        return Ok(result.Response);
+    }
+
+    // POST /api/auth/refresh
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh()
+    {
+        var refreshToken = Request.Cookies["refreshToken"];
+
+        if (string.IsNullOrEmpty(refreshToken))
+            return Unauthorized(new ErrorResponseDto("No refresh token provided."));
+
+        var result = await _authService.RefreshAsync(refreshToken);
+
+        if (result is null)
         {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Expires = result.RefreshTokenExpiry
-        });
+            Response.Cookies.Delete("refreshToken", new CookieOptions { Path = "/api/Auth" });
+            return Unauthorized(new ErrorResponseDto("Invalid or expired refresh token."));
+        }
+
+        SetRefreshTokenCookie(result.RefreshToken, result.RefreshTokenExpiry);
 
         return Ok(result.Response);
     }
@@ -57,9 +86,21 @@ public class AuthController : ControllerBase
     {
         await _authService.LogoutAsync(CurrentUserId);
 
-        Response.Cookies.Delete("refreshToken");
+        Response.Cookies.Delete("refreshToken", new CookieOptions { Path = "/api/Auth" });
 
         return NoContent();
+    }
+
+    private void SetRefreshTokenCookie(string refreshToken, DateTime expiry)
+    {
+        Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = Request.IsHttps,
+            SameSite = SameSiteMode.Strict,
+            Path = "/api/Auth",
+            Expires = expiry
+        });
     }
 
     private Guid CurrentUserId =>

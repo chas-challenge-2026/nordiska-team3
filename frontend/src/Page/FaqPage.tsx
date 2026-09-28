@@ -1,5 +1,6 @@
 import './PlaceholderPage.css'
 import { AppNav } from '../components/AppNav'
+import { UserProfile } from '../components/UserProfile'
 import { useLogout } from '../hooks/useLogout'
 
 function FaqPage() {
@@ -9,7 +10,9 @@ function FaqPage() {
         <div className="placeholder-page">
             <AppNav onLogout={handleLogout} />
             <main className="placeholder-main">
-                <h1>FAQ</h1>
+                <UserProfile />
+
+                <h1 tabIndex={0}>FAQ</h1>
                 <p>Kommer snart.</p>
             </main>
         </div>

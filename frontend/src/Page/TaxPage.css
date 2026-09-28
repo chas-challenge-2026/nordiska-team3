@@ -1,0 +1,363 @@
+.tax-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 90px var(--space-5) var(--space-7);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-4);
+}
+
+.tax-header {
+  width: 100%;
+}
+
+.tax-header h1 {
+  margin: 0 0 8px;
+  color: var(--color-text-inverted);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.12;
+}
+
+.tax-header p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+/* Toggle pills (återanvänder samma klasser som TransactPage) */
+.pill-toggle-row {
+ display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-2);
+}
+
+.pill-toggle {
+  border: none;
+  padding: 10px 24px;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pill-toggle--active {
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
+  color: #ffffff;
+}
+
+[data-theme="dark"] .pill-toggle--active {
+  color: #062f43;
+}
+
+/* Statusprick på årsknappen */
+.pill-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pill-status-dot--ready {
+  background: var(--color-jungle-teal);
+}
+
+.pill-toggle--active .pill-status-dot--ready {
+  background: #ffffff;
+}
+
+.pill-status-dot--pending {
+  background: #ffffff;
+  opacity: 0.9;
+  animation: tax-pulse 1s ease-in-out infinite;
+}
+
+.pill-status-dot--failed {
+  background: #c14f4f;
+}
+
+@keyframes tax-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* Summary cards */
+.tax-summary-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.tax-summary-card {
+  background: var(--dashboard-card-bg, #ffffff);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-5);
+}
+
+.tax-summary-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-2);
+}
+
+.tax-summary-value {
+  font-family: monospace;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.tax-summary-value--green {
+  color: var(--color-jungle-teal);
+}
+
+/* Breakdown card */
+.tax-breakdown-card {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--dashboard-card-bg, #ffffff);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-5);
+}
+
+.tax-breakdown-title {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-3);
+}
+
+.tax-breakdown-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) 0;
+}
+
+.tax-breakdown-name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+
+.tax-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tax-dot--green { background: var(--color-jungle-teal); }
+.tax-dot--orange { background: var(--color-primary); }
+.tax-dot--purple { background: var(--color-yale-blue-900); }
+
+.tax-breakdown-amount {
+  font-family: monospace;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.tax-breakdown-amount--green { color: var(--color-jungle-teal); }
+.tax-breakdown-amount--orange { color: var(--color-primary); }
+.tax-breakdown-amount--purple { color: var(--color-yale-blue-900); }
+
+/* Download button */
+.tax-download-btn {
+  width: 100%;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 16px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #FFFFFF;
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
+  box-shadow: 0 0 24px 4px rgba(245, 169, 15, 0.5);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.tax-download-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Rapporthistorik */
+.tax-history-card {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--dashboard-card-bg, #ffffff);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-5);
+}
+
+.tax-history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) 0;
+}
+
+.tax-history-year {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.tax-status-badge {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+}
+
+.tax-status-badge--ready {
+  background: rgba(46, 175, 130, 0.12);
+  color: var(--color-jungle-teal);
+}
+
+.tax-status-badge--pending {
+  background: rgba(245, 169, 15, 0.15);
+  color: var(--color-primary);
+}
+
+.tax-status-badge--failed {
+  background: rgba(193, 79, 79, 0.14);
+  color: #c14f4f;
+}
+
+.tax-history-download {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.tax-history-download:hover:not(:disabled) {
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
+  color: #ffffff;
+}
+
+.tax-history-download:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.tax-spin {
+  animation: tax-spin 1s linear infinite;
+}
+
+@keyframes tax-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Begär ny rapport */
+.tax-request-btn {
+  width: 100%;
+  border: 1.5px dashed rgba(255, 255, 255, 0.3);
+  background: transparent;
+  color: var(--color-text-inverted);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tax-request-btn:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Brand logo, nedre högra hörnet (som TransactPage) */
+.tax-brand-circle {
+   position: absolute;
+    left: 250px;
+    top: 660px;
+    z-index: 1;
+    width: 180px;
+    height: 108px;
+    border-radius: 54px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(
+        180deg,
+        #ffffff 0%,
+        #d7e7ef 48%,
+        #7399ae 78%,
+        #20516b 100%
+    );
+    box-shadow: 0 22px 44px rgba(4, 29, 42, 0.18);
+}
+
+.tax-brand-circle strong {
+  font-family: "Poppins", sans-serif;
+    font-size: 33px;
+    font-weight: 700;
+    color: var(--color-yale-blue-900);
+    line-height: 1;
+}
+
+.tax-brand-circle .tax-brand-dot {
+  color: var(--color-primary);
+}
+
+@media (max-width: 700px) {
+  .tax-content {
+    padding: 56px var(--space-4) var(--space-6);
+  }
+
+  .tax-summary-row {
+    grid-template-columns: 1fr;
+  }
+
+  .tax-brand-circle {
+    display: none;
+  }
+
+  .pill-toggle-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+}

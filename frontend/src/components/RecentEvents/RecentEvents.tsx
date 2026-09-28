@@ -9,7 +9,7 @@ type RecentEventsProps = {
 export function RecentEvents({ events = mockRecentEvents }: RecentEventsProps) {
   return (
     <section className="recent-events">
-      <h2 className="recent-events__title">Senaste händelser</h2>
+      <h2 className="recent-events__title" tabIndex={0}>Senaste händelser</h2>
 
       <div className="recent-events__list">
         {events.map((event) => (

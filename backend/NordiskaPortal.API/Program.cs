@@ -1,6 +1,7 @@
 using NordiskaPortal.API.Data;
 using NordiskaPortal.API.Extensions;
 using Microsoft.EntityFrameworkCore;
+using NordiskaPortal.API.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,8 +11,11 @@ builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddCorsPolicy(builder.Configuration);
 builder.Services.AddSwaggerDocs();
 builder.Services.AddDatabase(builder.Configuration);
-builder.Services.AddControllers();
 builder.Services.AddApplicationServices();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<ValidationFilter>();
+});
 
 var app = builder.Build();
 

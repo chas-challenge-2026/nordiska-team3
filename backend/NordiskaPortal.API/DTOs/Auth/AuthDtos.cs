@@ -10,7 +10,10 @@ public sealed record LoginPinRequestDto(string PersonalNumber, string Pin);
 public sealed record UserDto(Guid Id, string Name, string Email, string PersonalNumber);
 
 // Svar från Post /api/auth/login-pin vid lyckad inloggning
-public sealed record LoginResponseDto(string AccessToken, UserDto USer);
+public sealed record LoginResponseDto(string AccessToken, UserDto User);
 
 // Svar från GET /api/auth/me
 public sealed record MeResponseDto(UserDto User);
+
+// Skickas till POST /api/auth/register
+public sealed record RegisterRequestDto(string PersonalNumber, string FirstName, string LastName, string Email, string Pin);

@@ -279,6 +279,31 @@
   margin: 0;
 }
 
+.button:focus-visible,
+.nav-icon:focus-visible,
+.account-card:focus-visible,
+.dashboard-actions__button:focus-visible,
+.create-account-btn:focus-visible,
+.pill-toggle:focus-visible,
+.transact-pill-input:focus-visible,
+.transact-submit-btn:focus-visible,
+.tax-download-btn:focus-visible,
+.theme-toggle:focus-visible,
+.password-toggle:focus-visible,
+.bankid-options button:focus-visible,
+.modal-close:focus-visible {
+  outline: 3px solid var(--color-primary-soft);
+  outline-offset: 4px;
+}
+
+h1[tabindex="0"]:focus-visible,
+h2[tabindex="0"]:focus-visible,
+h3[tabindex="0"]:focus-visible {
+  border-radius: 6px;
+  outline: 3px solid var(--color-primary-soft);
+  outline-offset: 4px;
+}
+
 /* ============================= */
 /* NavIcon-komponent (Nordiska)  */
 /* ============================= */
@@ -328,6 +353,12 @@
 
 .decorative-circle--white {
   background: var(--color-surface);
+}
+
+@media (max-width: 700px) {
+  .decorative-circle {
+    display: none;
+  }
 }
 
 /* ============================= */
