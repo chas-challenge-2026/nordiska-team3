@@ -21,3 +21,12 @@ target_include_directories(pdf_generator PRIVATE # alllows for #include <hpdf.h>
 target_link_libraries(pdf_generator PRIVATE
     "${LIBHARU_LIBRARY}"
 )
+
+add_custom_command(
+    TARGET pdf_generator POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+        "$<TARGET_FILE_DIR:pdf_generator>/assets"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/DejaVuSans.ttf"
+        "$<TARGET_FILE_DIR:pdf_generator>/assets/DejaVuSans.ttf"
+)
