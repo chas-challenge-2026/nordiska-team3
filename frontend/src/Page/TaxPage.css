@@ -46,6 +46,9 @@
   background: var(--color-surface);
   color: var(--color-text-primary);
   box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .pill-toggle--active {
@@ -55,6 +58,37 @@
 
 [data-theme="dark"] .pill-toggle--active {
   color: #062f43;
+}
+
+/* Statusprick på årsknappen */
+.pill-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pill-status-dot--ready {
+  background: var(--color-jungle-teal);
+}
+
+.pill-toggle--active .pill-status-dot--ready {
+  background: #ffffff;
+}
+
+.pill-status-dot--pending {
+  background: #ffffff;
+  opacity: 0.9;
+  animation: tax-pulse 1s ease-in-out infinite;
+}
+
+.pill-status-dot--failed {
+  background: #c14f4f;
+}
+
+@keyframes tax-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
 }
 
 /* Summary cards */
@@ -167,6 +201,112 @@
 .tax-download-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Rapporthistorik */
+.tax-history-card {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--dashboard-card-bg, #ffffff);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-5);
+}
+
+.tax-history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) 0;
+}
+
+.tax-history-year {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.tax-status-badge {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+}
+
+.tax-status-badge--ready {
+  background: rgba(46, 175, 130, 0.12);
+  color: var(--color-jungle-teal);
+}
+
+.tax-status-badge--pending {
+  background: rgba(245, 169, 15, 0.15);
+  color: var(--color-primary);
+}
+
+.tax-status-badge--failed {
+  background: rgba(193, 79, 79, 0.14);
+  color: #c14f4f;
+}
+
+.tax-history-download {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.tax-history-download:hover:not(:disabled) {
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
+  color: #ffffff;
+}
+
+.tax-history-download:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.tax-spin {
+  animation: tax-spin 1s linear infinite;
+}
+
+@keyframes tax-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Begär ny rapport */
+.tax-request-btn {
+  width: 100%;
+  border: 1.5px dashed rgba(255, 255, 255, 0.3);
+  background: transparent;
+  color: var(--color-text-inverted);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tax-request-btn:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /* Brand logo, nedre högra hörnet (som TransactPage) */
