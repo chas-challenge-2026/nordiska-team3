@@ -4,15 +4,16 @@
 :root {
   --color-yale-blue-900: #134763;
   --color-yale-blue-800: #20516b;
-  --color-steel-blue: #7399ae;
+  --color-steel-blue: #3f6b80;
   --color-alice-blue: #d7e7ef;
 
   --color-amber-honey: #eea91a;
+  --color-amber-honey-deep: #7d570a;
   --color-tuscan-sun: #f2c466;
   --color-pearl-beige: #f8e8c7;
 
   --color-pine-teal: #1f4a3d;
-  --color-jungle-teal: #3d7a5e;
+  --color-jungle-teal: #2f6b50;
   --color-honeydew: #d9ede1;
 
   --color-chestnut: #7a2b1f;
@@ -29,6 +30,8 @@
   --color-text-placeholder: rgba(19, 71, 99, 0.55);
 
   --color-primary: var(--color-amber-honey);
+  --color-primary-text: var(--color-amber-honey-deep);
+  --color-on-primary: var(--color-yale-blue-900);
   --color-primary-soft: var(--color-tuscan-sun);
   --color-primary-pale: var(--color-pearl-beige);
 
@@ -50,6 +53,8 @@
   --space-7: 48px;
   --space-8: 64px;
 
+  --desktop-content-width: 560px;
+
   --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 18px;
@@ -70,7 +75,9 @@
   --color-text-inverted: #ffffff;
   --color-text-placeholder: rgba(245, 251, 255, 0.68);
 
-  --color-primary: #f5a90f;
+  --color-primary: #ffc94d;
+  --color-primary-text: #ffd77a;
+  --color-on-primary: #062f43;
   --color-primary-soft: #ffd77a;
   --color-primary-pale: #ffe2a3;
 
@@ -80,12 +87,116 @@
   --color-danger: #ff8f88;
   --color-danger-soft: #452c35;
 
-  --color-border: rgba(197, 215, 223, 0.24);
+  --color-border: rgba(197, 215, 223, 0.7);
   --color-shadow: rgba(0, 20, 31, 0.5);
 
   --shadow-sm: 0 8px 18px rgba(0, 20, 31, 0.24);
   --shadow-md: 0 18px 38px rgba(0, 20, 31, 0.32);
   --shadow-lg: 0 24px 50px rgba(0, 20, 31, 0.42);
+}
+
+.dashboard-brand-card.brand-logo,
+.login-brand-card.brand-logo,
+.history-brand-mark.brand-logo,
+.tax-brand-circle.brand-logo,
+.transact-brand-circle.brand-logo {
+  width: 188px;
+  height: 104px;
+  border-radius: 52px;
+  background: linear-gradient(
+    0deg,
+    var(--color-text-inverted) 0%,
+    var(--color-text-inverted) 28%,
+    var(--color-primary-pale) 46%,
+    var(--color-primary-pale) 64%,
+    var(--color-primary-soft) 86%,
+    var(--color-primary) 100%
+  );
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  line-height: 1;
+}
+
+.dashboard-brand-card.brand-logo > span,
+.login-brand-card.brand-logo > span,
+.history-brand-mark.brand-logo > span,
+.tax-brand-circle.brand-logo > span,
+.transact-brand-circle.brand-logo > span {
+  order: 2;
+  margin-top: 4px;
+  color: var(--color-amber-honey-deep);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.dashboard-brand-card.brand-logo strong,
+.login-brand-card.brand-logo strong,
+.history-brand-mark.brand-logo strong,
+.tax-brand-circle.brand-logo strong,
+.transact-brand-circle.brand-logo strong {
+  color: var(--color-yale-blue-900);
+  font-family: "Poppins", sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.dashboard-brand-card.brand-logo strong::before,
+.login-brand-card.brand-logo strong::before,
+.history-brand-mark.brand-logo strong::before,
+.tax-brand-circle.brand-logo strong::before,
+.transact-brand-circle.brand-logo strong::before {
+  content: none;
+}
+
+.dashboard-brand-card.brand-logo strong span,
+.login-brand-card.brand-logo strong span,
+.history-brand-mark.brand-logo strong span,
+.tax-brand-circle.brand-logo strong span,
+.transact-brand-circle.brand-logo strong span {
+  color: var(--color-primary);
+  font-size: inherit;
+  line-height: inherit;
+}
+
+@media (max-width: 700px) {
+  .login-brand-card.brand-logo,
+  .history-brand-mark.brand-logo,
+  .tax-brand-circle.brand-logo,
+  .transact-brand-circle.brand-logo {
+    display: none;
+  }
+
+  .dashboard-brand-card.brand-logo strong,
+  .login-brand-card.brand-logo strong,
+  .history-brand-mark.brand-logo strong,
+  .tax-brand-circle.brand-logo strong,
+  .transact-brand-circle.brand-logo strong {
+    font-size: 0;
+  }
+
+  .dashboard-brand-card.brand-logo strong::before,
+  .login-brand-card.brand-logo strong::before,
+  .history-brand-mark.brand-logo strong::before,
+  .tax-brand-circle.brand-logo strong::before,
+  .transact-brand-circle.brand-logo strong::before {
+    content: "n";
+    font-size: 84px;
+    line-height: 0.75;
+  }
+
+  .dashboard-brand-card.brand-logo strong span,
+  .login-brand-card.brand-logo strong span,
+  .history-brand-mark.brand-logo strong span,
+  .tax-brand-circle.brand-logo strong span,
+  .transact-brand-circle.brand-logo strong span {
+    font-size: 84px;
+    line-height: 0.75;
+  }
 }
 
 * {

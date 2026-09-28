@@ -314,7 +314,7 @@ function DashboardPage() {
                 <UserProfile />
 
                 <div className="dashboard-content">
-                    <div className="dashboard-brand-card">
+                    <div className="dashboard-brand-card brand-logo">
                         <span>Sparportal</span>
                         <strong>nordiska<span className="dashboard-brand-dot">.</span></strong>
                     </div>

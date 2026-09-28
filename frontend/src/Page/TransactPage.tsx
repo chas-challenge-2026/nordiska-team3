@@ -71,7 +71,8 @@ function TransactPage() {
         <DecorativeCircle color="green" size={120} right={90} top={110} opacity={0.9} />
         <DecorativeCircle color="blue" size={190} right={-40} top={40} />
 
-      <div className="transact-brand-circle">
+            <div className="transact-brand-circle brand-logo">
+        <span>Sparportal</span>
     <strong>nordiska<span className="brand-dot">.</span></strong>
         </div>      
 

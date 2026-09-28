@@ -1,6 +1,6 @@
 .balance-overview {
   width: 100%;
-  max-width: 560px;
+  max-width: var(--desktop-content-width);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -22,7 +22,7 @@
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.06em;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   margin: 0 0 var(--space-2);
 }
 
@@ -89,7 +89,7 @@
 }
 
 .account-card-header--accent {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .account-card-header--success {
@@ -101,11 +101,11 @@
 }
 
 .account-card-header--purple {
-  color: #7c3aed;
+  color: var(--color-yale-blue-800);
 }
 
 .account-card-header--pink {
-  color: #db2777;
+  color: var(--color-danger);
 }
 
 .account-card-footer {
@@ -123,7 +123,7 @@
 }
 
 .account-card-value--accent {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .account-card-value--success {
@@ -135,11 +135,11 @@
 }
 
 .account-card-value--purple {
-  color: #7c3aed;
+  color: var(--color-yale-blue-800);
 }
 
 .account-card-value--pink {
-  color: #db2777;
+  color: var(--color-danger);
 }
 
 .account-card-chevron {
@@ -148,7 +148,13 @@
 }
 
 .account-card-chevron--accent {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
+}
+
+[data-theme="dark"] .account-card-header--success,
+[data-theme="dark"] .account-card-value--success,
+[data-theme="dark"] .account-card-chevron--success {
+  color: var(--color-success);
 }
 
 .account-card-chevron--success {
@@ -166,23 +172,23 @@
 }
 
 .account-card-chevron--purple {
-  color: #7c3aed;
+  color: var(--color-yale-blue-800);
 }
 
 .account-card-chevron--pink {
-  color: #db2777;
+  color: var(--color-danger);
 }
 
 [data-theme="dark"] .account-card-header--purple,
 [data-theme="dark"] .account-card-value--purple,
 [data-theme="dark"] .account-card-chevron--purple {
-  color: #c4b5fd;
+  color: var(--color-alice-blue);
 }
 
 [data-theme="dark"] .account-card-header--pink,
 [data-theme="dark"] .account-card-value--pink,
 [data-theme="dark"] .account-card-chevron--pink {
-  color: #f9a8d4;
+  color: var(--color-danger-soft);
 }
 
 @media (max-width: 700px) {
