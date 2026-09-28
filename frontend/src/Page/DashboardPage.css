@@ -24,7 +24,7 @@
 .dashboard-main {
   position: relative;
   flex: 1;
-  margin-left: -64px;
+  padding-left: 64px;
   overflow: visible;
 }
 
@@ -795,6 +795,7 @@
 
   .dashboard-main {
     margin-left: 0;
+    padding-left: 0;
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;

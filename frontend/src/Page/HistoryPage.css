@@ -60,7 +60,7 @@
 .history-main {
     position: relative;
     flex: 1;
-    margin-left: -64px;
+    padding-left: 64px;
 }
 
 .history-content {
@@ -371,6 +371,7 @@
 
     .history-main {
         margin-left: 0;
+        padding-left: 0;
     }
 
     .history-page .decorative-circle,
