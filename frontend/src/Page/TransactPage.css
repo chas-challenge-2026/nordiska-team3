@@ -2,7 +2,7 @@
   position: relative;
   z-index: 2;
   width: 100%;
-  max-width: 560px;
+  max-width: var(--desktop-content-width);
   margin: 0 auto;
   padding: 90px var(--space-5) var(--space-7);
   display: flex;
@@ -26,7 +26,7 @@
 
 .dashboard-page .transact-header p {
   margin: 0;
-  color: rgba(255, 255, 255, 0.75);
+  color: color-mix(in srgb, var(--color-text-inverted) 75%, transparent);
   font-size: 14px;
   line-height: 1.35;
 }
@@ -40,12 +40,7 @@
   width: 150px;
   height: 96px;
   border-radius: 60px;
-  background: linear-gradient(
-    160deg,
-    var(--color-primary-pale) 0%,
-    var(--color-primary-soft) 55%,
-    var(--color-primary) 100%
-  );
+  background: var(--color-primary-pale);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -59,7 +54,7 @@
 }
 
 .transact-brand-circle .brand-dot {
-  color: var(--color-primary);
+  color: var(--color-amber-honey-deep);
 }
 
 @media (max-width: 700px) {
@@ -87,24 +82,29 @@
 }
 
 .pill-toggle--deposit.pill-toggle--active {
-  background: linear-gradient(180deg, #6FBF9A, var(--color-jungle-teal));
-  color: #FFFFFF;
+  background: var(--color-success-soft);
+  color: var(--color-pine-teal);
+}
+
+[data-theme="dark"] .pill-toggle--deposit.pill-toggle--active {
+  background: var(--color-success-soft);
+  color: var(--color-success);
 }
 
 .pill-toggle--withdraw.pill-toggle--active {
   background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
-  color: #FFFFFF;
+  color: var(--color-on-primary);
 }
 
 [data-theme="dark"] .pill-toggle--withdraw.pill-toggle--active {
-  color: #062f43;
+  color: var(--color-on-primary);
 }
 
 /* Account preview card */
 .account-preview-card {
   width: 100%;
   box-sizing: border-box;
-  background: var(--dashboard-card-bg, #ffffff);
+  background: var(--dashboard-card-bg, var(--color-text-inverted));
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   padding: var(--space-5) var(--space-6);
@@ -133,7 +133,7 @@
 .transact-form-card {
   width: 100%;
   box-sizing: border-box;
-  background: var(--dashboard-card-bg, #ffffff);
+  background: var(--dashboard-card-bg, var(--color-text-inverted));
   border-radius: var(--radius-lg);
   padding: var(--space-6);
   display: flex;
@@ -170,7 +170,7 @@
 }
 
 .transact-pill-input:focus {
-  box-shadow: 0 0 0 3px rgba(238, 169, 26, 0.35);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 35%, transparent);
 }
 
 [data-theme="dark"] .transact-pill-input {
@@ -211,9 +211,9 @@
   padding: 15px;
   font-size: 14px;
   font-weight: 800;
-  color: #FFFFFF;
+  color: var(--color-on-primary);
   background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
-  box-shadow: 0 0 24px 4px rgba(245, 169, 15, 0.5);
+  box-shadow: 0 0 24px 4px color-mix(in srgb, var(--color-primary) 50%, transparent);
   cursor: pointer;
 }
 
@@ -223,13 +223,18 @@
 }
 
 .transact-submit-btn--deposit {
-  background: linear-gradient(180deg, #6FBF9A, var(--color-jungle-teal));
-  color: #FFFFFF;
+  background: var(--color-success-soft);
+  color: var(--color-pine-teal);
+}
+
+[data-theme="dark"] .transact-submit-btn--deposit {
+  background: var(--color-success-soft);
+  color: var(--color-success);
 }
 
 .transact-submit-btn--withdraw {
   background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
-  color: #FFFFFF;
+  color: var(--color-on-primary);
 }
 
 @media (max-width: 700px) {

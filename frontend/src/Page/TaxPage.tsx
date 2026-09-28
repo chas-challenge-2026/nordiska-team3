@@ -127,7 +127,8 @@ function TaxPage() {
 
             <AppNav onLogout={handleLogout} onThemeToggle={toggleTheme} />
 
-            <div className="tax-brand-circle">
+            <div className="tax-brand-circle brand-logo">
+                <span>Sparportal</span>
                 <strong>nordiska<span className="tax-brand-dot">.</span></strong>
             </div>
 

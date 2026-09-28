@@ -92,7 +92,8 @@ function HistoryPage() {
             <DecorativeCircle color="green" size={96} right={90} top={250} opacity={0.82} />
             <DecorativeCircle color="green" size={140} right={-30} top={360} opacity={0.82} />
 
-            <div className="history-brand-mark" aria-hidden="true">
+            <div className="history-brand-mark brand-logo" aria-hidden="true">
+                <span>Sparportal</span>
                 <strong>
                     nordiska<span>.</span>
                 </strong>

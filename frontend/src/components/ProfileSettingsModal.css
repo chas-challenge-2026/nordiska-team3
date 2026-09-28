@@ -9,7 +9,7 @@
   height: 56px;
   border-radius: 50%;
   background: var(--color-primary-soft);
-  color: var(--color-text-inverted);
+  color: var(--color-on-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -31,6 +31,10 @@
   padding: 10px 14px;
   border-radius: var(--radius-pill);
   margin: 0;
+}
+
+.profile-settings .profile-settings-readonly {
+  color: var(--color-text-secondary);
 }
 
 .profile-settings-success {
