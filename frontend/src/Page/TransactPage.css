@@ -31,6 +31,22 @@
   line-height: 1.35;
 }
 
+.transact-empty-card {
+  width: 100%;
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--color-text-inverted);
+  text-align: center;
+}
+
+.transact-empty-card h2 {
+  margin: 0;
+  color: var(--color-text-inverted);
+  font-size: 18px;
+  font-weight: 800;
+}
+
 /* Brand-card (samma som Login/Dashboard) */
 .transact-brand-circle {
   position: absolute;

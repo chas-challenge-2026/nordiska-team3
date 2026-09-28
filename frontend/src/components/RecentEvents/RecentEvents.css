@@ -19,6 +19,12 @@
   box-shadow: var(--dashboard-card-shadow, var(--shadow-sm));
 }
 
+.recent-events__list--empty {
+  border-radius: var(--radius-lg);
+  background: transparent;
+  box-shadow: none;
+}
+
 .recent-events__item {
   min-height: 76px;
   display: grid;
@@ -32,6 +38,22 @@
 
 .recent-events__item:last-child {
   border-bottom: none;
+}
+
+.recent-events__empty {
+  width: 100%;
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--color-text-inverted);
+  text-align: center;
+}
+
+.recent-events__empty h3 {
+  margin: 0;
+  color: var(--color-text-inverted);
+  font-size: 18px;
+  font-weight: 800;
 }
 
 .recent-events__icon {
@@ -135,6 +157,14 @@
 }
 
 [data-theme="dark"] .recent-events__content p {
+  color: #c5d7df;
+}
+
+[data-theme="dark"] .recent-events__empty h3 {
+  color: #f5fbff;
+}
+
+[data-theme="dark"] .recent-events__empty p {
   color: #c5d7df;
 }
 

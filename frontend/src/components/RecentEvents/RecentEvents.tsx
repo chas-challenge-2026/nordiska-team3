@@ -1,53 +1,59 @@
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react'
 import './RecentEvents.css'
-import { mockRecentEvents, type RecentEvent } from './mockRecentEvents'
+import { type RecentEvent } from './mockRecentEvents'
 
 type RecentEventsProps = {
   events?: RecentEvent[]
 }
 
-export function RecentEvents({ events = mockRecentEvents }: RecentEventsProps) {
+export function RecentEvents({ events = [] }: RecentEventsProps) {
   return (
     <section className="recent-events">
       <h2 className="recent-events__title" tabIndex={0}>Senaste händelser</h2>
 
-      <div className="recent-events__list">
-        {events.map((event) => (
-          <article className="recent-events__item" key={event.id}>
-            <div
-            className={`recent-events__icon ${event.amount < 0 ? 'recent-events__icon--negative' : ''}`}
-            aria-hidden="true"
-            >
-              {event.amount >= 0 ? (
-                <ArrowDownLeft size={14} strokeWidth={2.5} />
-              ) : (
-                <ArrowUpRight size={14} strokeWidth={2.5} />
-              )}
-            </div>
-
-            <div className="recent-events__content">
-              <h3 tabIndex={0}>{event.title}</h3>
-              <p tabIndex={0}>
-                {event.accountName} - {event.date}
-              </p>
-            </div>
-
-            <div className="recent-events__meta">
-              <strong
-                className={event.amount >= 0 ? 'is-positive' : 'is-negative'}
-                tabIndex={0}
+      <div className={`recent-events__list ${events.length === 0 ? 'recent-events__list--empty' : ''}`}>
+        {events.length === 0 ? (
+          <div className="recent-events__empty">
+            <h3 tabIndex={0}>Inga händelser ännu</h3>
+          </div>
+        ) : (
+          events.map((event) => (
+            <article className="recent-events__item" key={event.id}>
+              <div
+              className={`recent-events__icon ${event.amount < 0 ? 'recent-events__icon--negative' : ''}`}
+              aria-hidden="true"
               >
-                {formatAmount(event.amount)}
-              </strong>
-              <span
-                className={`recent-events__badge recent-events__badge--${event.type}`}
-                tabIndex={0}
-              >
-                {getEventLabel(event.type)}
-              </span>
-            </div>
-          </article>
-        ))}
+                {event.amount >= 0 ? (
+                  <ArrowDownLeft size={14} strokeWidth={2.5} />
+                ) : (
+                  <ArrowUpRight size={14} strokeWidth={2.5} />
+                )}
+              </div>
+
+              <div className="recent-events__content">
+                <h3 tabIndex={0}>{event.title}</h3>
+                <p tabIndex={0}>
+                  {event.accountName} - {event.date}
+                </p>
+              </div>
+
+              <div className="recent-events__meta">
+                <strong
+                  className={event.amount >= 0 ? 'is-positive' : 'is-negative'}
+                  tabIndex={0}
+                >
+                  {formatAmount(event.amount)}
+                </strong>
+                <span
+                  className={`recent-events__badge recent-events__badge--${event.type}`}
+                  tabIndex={0}
+                >
+                  {getEventLabel(event.type)}
+                </span>
+              </div>
+            </article>
+          ))
+        )}
       </div>
     </section>
   )
