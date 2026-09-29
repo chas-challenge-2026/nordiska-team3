@@ -47,6 +47,7 @@ Inside WSL:
 ```bash
 cd "/mnt/d/nordiska 3/nordiska-team3"
 ```
+or the folder your project is contained in.
 
 The quotation marks are required because the folder path contains spaces.
 
@@ -91,14 +92,23 @@ The `--parallel` option allows independent build operations to run at the same t
 
 ## Run the PDF generator
 
+The generator currently uses an example tax-report JSON file produced by the backend.
+Run this command from the repository root inside WSL:
+
 ```bash
-./native/build/pdf_generator/pdf_generator
+./native/build/pdf_generator/pdf_generator \
+  backend/NordiskaPortal.API/tax-reports/0b7fcd6c-eb3e-45b0-865a-f4ff4fbbba31.json \
+  /tmp/nordiska-api-report.pdf
 ```
+
+0b7fcd6c-eb3e-45b0-865a-f4ff4fbbba31.json
+is used as primary .json for test.
+Can be changed to any other .json for further testing.
 
 Expected output:
 
 ```text
-Nordiska PDF generator ready
+Created PDF: /tmp/nordiska-api-report.pdf
 ```
 
 Check its exit code immediately:
@@ -112,32 +122,83 @@ Expected exit code:
 ```text
 0
 ```
+
+The generated PDF is stored in WSL at:
+
+```text
+/tmp/nordiska-api-report.pdf
+```
+
+You may choose another output path, provided its parent folder exists and is writable.
+The generator does not overwrite an existing PDF file.
+
+The current PDF contains:
+
+- Report title
+- Bank name and organisation number
+- Customer name
+- Tax-report year
+- JSON creation time in UTC
+- Currency
+- Account number and type
+- Opening and closing account balances
 
 ## Run the PDF signer
+  
+Currently contains a simple program that takes the 
+input of 'user' and gives out the assigned arguments. 
+There are total 5 arguments expected. 
+Currently serves as a small draft of a complete function.
+
+### Run the program:
 
 ```bash
-./native/build/pdf_signer/pdf_signer
+./native/build 'task' report.pdf private-key.pem report.sig
 ```
 
-Expected output:
+In **'task'** write either **'sign'** or **'verify'**.
 
-```text
-Nordiska PDF signer ready
-```
+No input will result in a Usage Error:
+    ```bash
+    Usage:
+    ./native/build/pdf_signer/pdf_signer sign
+        <input-pdf> <private-key-pem> <output-signature>
+    ./native/build/pdf_signer/pdf_signer verify 
+        <input-pdf> <public-key-pem> <signature-file>
+    ```
+    Exit Code: NORDISKA_EXIT_INVALID_INPUT
 
-Check its exit code immediately:
+**'sign'** and **'verify'** input results:
+
+    ```bash
+    Operation: sign
+    Input PDF: report.pdf
+    Private Key: private_key.pem
+    Output Signature: report.sig
+    ```
+    Exit Code: NORDISKA_EXIT_SUCCESS
+
+    ```bash
+    Operation: verify
+    Input PDF: report.pdf
+    Public Key: private_key.pem
+    Signature: report.sig
+    ```
+    Exit code: NORDISKA_EXIT_SUCCESS
+
+Invalid input result:
+    ```bash
+    Error: Unknown operation - '(invalid input)'
+    ```
+    Exit Code: NORDISKA_EXIT_INVALID_INPUT
+
+Check the exit code:
 
 ```bash
 echo $?
 ```
 
-Expected exit code:
-
-```text
-0
-```
-
-Exit code `0` means the program completed successfully.
+All exit codes are contained in native\common\include\nordiska\error_codes.h
 
 ## Rebuild after changing source code
 
