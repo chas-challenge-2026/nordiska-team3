@@ -6,8 +6,13 @@ import { AppNav } from '../components/AppNav'
 import { DecorativeCircle } from '../components/DecorativeCircle'
 import { type TransactAccount } from './mockTransactAccounts'
 import { deposit, getAccounts, withdraw, type BackendAccount } from '../services/accountService'
-import { GraduationCap, ChevronDown } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import { useTheme } from '../context/useTheme'
+import {
+    getAccountIcon,
+    getAccountPresentation,
+    type AccountPresentation,
+} from '../utils/accountPresentation'
 
 type Mode = 'deposit' | 'withdraw'
 
@@ -19,11 +24,16 @@ function parseBackendBalance(balance: string) {
     return Number(balance.replace(/\s/g, '').replace(',', '.'))
 }
 
-function mapBackendAccountToTransactAccount(account: BackendAccount): TransactAccount {
+function mapBackendAccountToTransactAccount(
+    account: BackendAccount,
+    presentation: AccountPresentation
+): TransactAccount {
     return {
         id: account.id,
         name: account.name,
         balance: parseBackendBalance(account.balance),
+        icon: getAccountIcon(presentation.iconId),
+        variant: presentation.variant,
     }
 }
 
@@ -55,7 +65,9 @@ function TransactPage() {
 
                 if (!isMounted) return
 
-                const mappedAccounts = backendAccounts.map(mapBackendAccountToTransactAccount)
+                const mappedAccounts = backendAccounts.map((account, index) =>
+                    mapBackendAccountToTransactAccount(account, getAccountPresentation(account.id, index))
+                )
 
                 setAccounts(mappedAccounts)
                 setAccountId(mappedAccounts[0]?.id ?? '')
@@ -186,12 +198,14 @@ function TransactPage() {
                             <h2 tabIndex={0}>{accountsError}</h2>
                         </div>
                     ) : selectedAccount ? (
-                        <div className="account-preview-card">
-                            <div className="account-preview-header">
-                                <GraduationCap size={16} />
+                        <div className={`account-preview-card account-preview-card--${selectedAccount.variant ?? 'default'}`}>
+                            <div className={`account-preview-header account-preview-header--${selectedAccount.variant ?? 'default'}`}>
+                                {selectedAccount.icon}
                                 <span>{selectedAccount.name.toUpperCase()}</span>
                             </div>
-                            <p className="account-preview-value">{formatKr(selectedAccount.balance)}</p>
+                            <p className={`account-preview-value account-preview-value--${selectedAccount.variant ?? 'default'}`}>
+                                {formatKr(selectedAccount.balance)}
+                            </p>
                         </div>
                     ) : (
                         <div className="transact-empty-card">
