@@ -42,6 +42,42 @@ export async function getAccounts(): Promise<BackendAccount[]> {
     return data.accounts
 }
 
+export async function createAccount(accountType: string): Promise<BackendAccount> {
+    const response = await fetch(`${API_URL}/api/accounts`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders(),
+        },
+        credentials: 'include',
+        body: JSON.stringify({ accountType }),
+    })
+
+    if (!response.ok) {
+        throw new Error('Kunde inte skapa konto.')
+    }
+
+    return response.json()
+}
+
+export async function renameAccount(accountId: string, name: string): Promise<BackendAccount> {
+    const response = await fetch(`${API_URL}/api/accounts/${accountId}/name`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders(),
+        },
+        credentials: 'include',
+        body: JSON.stringify({ name }),
+    })
+
+    if (!response.ok) {
+        throw new Error('Kunde inte namnge konto.')
+    }
+
+    return response.json()
+}
+
 export type TransactionResult = {
     transactionId: string
     balance: string
