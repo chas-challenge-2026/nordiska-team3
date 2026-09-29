@@ -1,6 +1,6 @@
 .faq-page {
-    --faq-card-bg: #ffffff;
-    --faq-card-shadow: 0 10px 24px rgba(4, 29, 42, 0.1);
+    --faq-card-bg: var(--color-text-inverted);
+    --faq-card-shadow: var(--shadow-sm);
 
     position: relative;
     display: flex;
@@ -11,7 +11,7 @@
 
 [data-theme="dark"] .faq-page {
     --faq-card-bg: var(--color-surface);
-    --faq-card-shadow: 0 16px 34px rgba(0, 20, 31, 0.34);
+    --faq-card-shadow: var(--shadow-md);
 }
 
 .faq-page .decorative-circle {
@@ -48,7 +48,7 @@
     position: relative;
     z-index: 2;
     width: 100%;
-    max-width: 560px;
+    max-width: var(--desktop-content-width);
     margin: 0 auto;
     padding: 90px var(--space-5) var(--space-6);
     display: flex;
@@ -61,29 +61,25 @@
     right: 8%;
     top: 440px;
     z-index: 2;
-    width: 150px;
-    height: 96px;
-    border-radius: 60px;
-    background: linear-gradient(
-        160deg,
-        var(--color-primary-pale) 0%,
-        var(--color-primary-soft) 55%,
-        var(--color-primary) 100%
-    );
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 180px;
+    height: 108px;
+    border-radius: 54px;
+    display: grid;
+    place-items: center;
+    background: var(--color-primary-pale);
+    box-shadow: 0 22px 44px var(--color-shadow);
 }
 
 .faq-brand-circle strong {
     font-family: "Poppins", sans-serif;
+    font-size: 33px;
     font-weight: 700;
-    font-size: 28px;
     color: var(--color-yale-blue-900);
+    line-height: 1;
 }
 
 .faq-brand-dot {
-    color: var(--color-primary);
+    color: var(--color-amber-honey-deep);
 }
 
 .faq-header {
@@ -100,7 +96,7 @@
 
 .faq-header p {
     margin: 0;
-    color: rgba(255, 255, 255, 0.75);
+    color: color-mix(in srgb, var(--color-text-inverted) 75%, transparent);
     font-size: 14px;
     line-height: 1.35;
 }
@@ -194,7 +190,7 @@
 
 [data-theme="dark"] .faq-answer {
     background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
-    color: #062f43;
+        color: var(--color-on-primary);
 }
 
 .faq-no-results {
@@ -235,8 +231,8 @@
 }
 
 .faq-contact__inner {
-    width: min(calc(100% - 64px), 560px);
-    margin: 0 auto 0 calc(64px + ((100% - 64px - min(calc(100% - 64px), 560px)) / 2));
+    width: min(calc(100% - 64px), var(--desktop-content-width));
+    margin: 0 auto 0 calc(64px + ((100% - 64px - min(calc(100% - 64px), var(--desktop-content-width))) / 2));
     padding: var(--space-4) var(--space-5);
 }
 
@@ -266,13 +262,13 @@
 
 .faq-chat-card button {
     background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
-    color: #ffffff;
+    color: var(--color-on-primary);
     font-size: 13px;
     font-weight: 900;
 }
 
 [data-theme="dark"] .faq-chat-card button {
-    color: #062f43;
+    color: var(--color-on-primary);
 }
 
 .faq-chat-card p {
@@ -310,6 +306,13 @@
     font-size: 12px;
     font-weight: 800;
     text-decoration: none;
+}
+
+[data-theme="dark"] .faq-search,
+[data-theme="dark"] .faq-item,
+[data-theme="dark"] .faq-no-results,
+[data-theme="dark"] .faq-chat-card {
+    border: 1px solid var(--color-border);
 }
 
 @media (max-width: 700px) {

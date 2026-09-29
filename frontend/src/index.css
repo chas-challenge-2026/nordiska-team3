@@ -98,6 +98,7 @@
 .dashboard-brand-card.brand-logo,
 .login-brand-card.brand-logo,
 .history-brand-mark.brand-logo,
+.faq-brand-circle.brand-logo,
 .tax-brand-circle.brand-logo,
 .transact-brand-circle.brand-logo {
   width: 188px;
@@ -123,6 +124,7 @@
 .dashboard-brand-card.brand-logo > span,
 .login-brand-card.brand-logo > span,
 .history-brand-mark.brand-logo > span,
+.faq-brand-circle.brand-logo > span,
 .tax-brand-circle.brand-logo > span,
 .transact-brand-circle.brand-logo > span {
   order: 2;
@@ -137,6 +139,7 @@
 .dashboard-brand-card.brand-logo strong,
 .login-brand-card.brand-logo strong,
 .history-brand-mark.brand-logo strong,
+.faq-brand-circle.brand-logo strong,
 .tax-brand-circle.brand-logo strong,
 .transact-brand-circle.brand-logo strong {
   color: var(--color-yale-blue-900);
@@ -148,6 +151,7 @@
 .dashboard-brand-card.brand-logo strong::before,
 .login-brand-card.brand-logo strong::before,
 .history-brand-mark.brand-logo strong::before,
+.faq-brand-circle.brand-logo strong::before,
 .tax-brand-circle.brand-logo strong::before,
 .transact-brand-circle.brand-logo strong::before {
   content: none;
@@ -156,6 +160,7 @@
 .dashboard-brand-card.brand-logo strong span,
 .login-brand-card.brand-logo strong span,
 .history-brand-mark.brand-logo strong span,
+.faq-brand-circle.brand-logo strong span,
 .tax-brand-circle.brand-logo strong span,
 .transact-brand-circle.brand-logo strong span {
   color: var(--color-primary);
@@ -166,6 +171,7 @@
 @media (max-width: 700px) {
   .login-brand-card.brand-logo,
   .history-brand-mark.brand-logo,
+  .faq-brand-circle.brand-logo,
   .tax-brand-circle.brand-logo,
   .transact-brand-circle.brand-logo {
     display: none;
@@ -174,6 +180,7 @@
   .dashboard-brand-card.brand-logo strong,
   .login-brand-card.brand-logo strong,
   .history-brand-mark.brand-logo strong,
+  .faq-brand-circle.brand-logo strong,
   .tax-brand-circle.brand-logo strong,
   .transact-brand-circle.brand-logo strong {
     font-size: 0;
@@ -182,6 +189,7 @@
   .dashboard-brand-card.brand-logo strong::before,
   .login-brand-card.brand-logo strong::before,
   .history-brand-mark.brand-logo strong::before,
+  .faq-brand-circle.brand-logo strong::before,
   .tax-brand-circle.brand-logo strong::before,
   .transact-brand-circle.brand-logo strong::before {
     content: "n";
@@ -192,6 +200,7 @@
   .dashboard-brand-card.brand-logo strong span,
   .login-brand-card.brand-logo strong span,
   .history-brand-mark.brand-logo strong span,
+  .faq-brand-circle.brand-logo strong span,
   .tax-brand-circle.brand-logo strong span,
   .transact-brand-circle.brand-logo strong span {
     font-size: 84px;

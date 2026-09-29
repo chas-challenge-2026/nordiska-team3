@@ -72,7 +72,8 @@ function FaqPage() {
             <section className="faq-main">
                 <UserProfile />
 
-                <div className="faq-brand-circle" aria-hidden="true">
+                <div className="faq-brand-circle brand-logo" aria-hidden="true">
+                    <span>Sparportal</span>
                     <strong>nordiska<span className="faq-brand-dot">.</span></strong>
                 </div>
 
