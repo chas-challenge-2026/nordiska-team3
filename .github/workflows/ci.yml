@@ -11,17 +11,20 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: backend/NordiskaPortal.API
+        working-directory: backend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore NordiskaPortal.API/NordiskaPortal.API.csproj
       - name: Build
-        run: dotnet build --no-restore --configuration Release
-      # TODO: add 'dotnet test' once a working test project exists on dev
+        run: dotnet build NordiskaPortal.API/NordiskaPortal.API.csproj --no-restore --configuration Release
+      - name: Restore tests
+        run: dotnet restore NordiskaPortal.Tests/NordiskaPortal.Tests.csproj
+      - name: Test
+        run: dotnet test NordiskaPortal.Tests/NordiskaPortal.Tests.csproj --configuration Release
 
   frontend:
     runs-on: ubuntu-latest

@@ -89,7 +89,7 @@ function LoginPage() {
                 </button>
 
                 <div className="login-stack">
-                    <div className="login-brand-card">
+                    <div className="login-brand-card brand-logo">
                         <span>Sparportal</span>
                         <strong>nordiska<span className="login-brand-dot">.</span></strong>
                     </div>

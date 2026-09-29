@@ -1,12 +1,18 @@
-import { type FormEvent, useState } from 'react'
+import { type FormEvent, useEffect, useState } from 'react'
 import { UserProfile } from '../components/UserProfile'
 import { useLogout } from '../hooks/useLogout'
 import './TransactPage.css'
 import { AppNav } from '../components/AppNav'
 import { DecorativeCircle } from '../components/DecorativeCircle'
-import { mockTransactAccounts } from './mockTransactAccounts'
-import { GraduationCap, ChevronDown } from 'lucide-react'
+import { type TransactAccount } from './mockTransactAccounts'
+import { deposit, getAccounts, withdraw, type BackendAccount } from '../services/accountService'
+import { ChevronDown } from 'lucide-react'
 import { useTheme } from '../context/useTheme'
+import {
+    getAccountIcon,
+    getAccountPresentation,
+    type AccountPresentation,
+} from '../utils/accountPresentation'
 
 type Mode = 'deposit' | 'withdraw'
 
@@ -14,18 +20,74 @@ function formatKr(amount: number) {
     return `${amount.toLocaleString('sv-SE')} kr`
 }
 
+function parseBackendBalance(balance: string) {
+    return Number(balance.replace(/\s/g, '').replace(',', '.'))
+}
+
+function mapBackendAccountToTransactAccount(
+    account: BackendAccount,
+    presentation: AccountPresentation
+): TransactAccount {
+    return {
+        id: account.id,
+        name: account.name,
+        balance: parseBackendBalance(account.balance),
+        icon: getAccountIcon(presentation.iconId),
+        variant: presentation.variant,
+    }
+}
+
 function TransactPage() {
     const handleLogout = useLogout()
     const { toggleTheme } = useTheme()
 
     const [mode, setMode] = useState<Mode>('deposit')
-    const [accountId, setAccountId] = useState(mockTransactAccounts[0].id)
+    const [accounts, setAccounts] = useState<TransactAccount[]>([])
+    const [accountId, setAccountId] = useState('')
+    const [isLoadingAccounts, setIsLoadingAccounts] = useState(true)
+    const [accountsError, setAccountsError] = useState('')
     const [amount, setAmount] = useState('')
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
 
-    const selectedAccount = mockTransactAccounts.find((acc) => acc.id === accountId)!
+    const selectedAccount = accounts.find((acc) => acc.id === accountId) ?? accounts[0] ?? null
+
+    useEffect(() => {
+        let isMounted = true
+
+        async function loadAccounts() {
+            try {
+                setIsLoadingAccounts(true)
+                setAccountsError('')
+
+                const backendAccounts = await getAccounts()
+
+                if (!isMounted) return
+
+                const mappedAccounts = backendAccounts.map((account, index) =>
+                    mapBackendAccountToTransactAccount(account, getAccountPresentation(account.id, index))
+                )
+
+                setAccounts(mappedAccounts)
+                setAccountId(mappedAccounts[0]?.id ?? '')
+            } catch {
+                if (!isMounted) return
+
+                setAccountsError('Kunde inte hämta konton.')
+            } finally {
+                if (isMounted) {
+                    setIsLoadingAccounts(false)
+                }
+            }
+        }
+
+        loadAccounts()
+
+        return () => {
+            isMounted = false
+        }
+    }, [])
 
     function handleModeChange(newMode: Mode) {
         setMode(newMode)
@@ -33,9 +95,14 @@ function TransactPage() {
         setSuccess('')
     }
 
-    function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
         setSuccess('')
+
+        if (!selectedAccount) {
+            setError('Inget konto är valt.')
+            return
+        }
 
         const numericAmount = Number(amount.replace(',', '.'))
 
@@ -52,15 +119,33 @@ function TransactPage() {
         setError('')
         setIsSubmitting(true)
 
-        setTimeout(() => {
-            setIsSubmitting(false)
+        try {
+            const result =
+                mode === 'deposit'
+                    ? await deposit(selectedAccount.id, numericAmount)
+                    : await withdraw(selectedAccount.id, numericAmount)
+
+            const updatedBalance = parseBackendBalance(result.balance)
+
+            setAccounts((currentAccounts) =>
+                currentAccounts.map((account) =>
+                    account.id === selectedAccount.id
+                        ? { ...account, balance: updatedBalance }
+                        : account
+                )
+            )
+
             setSuccess(
                 mode === 'deposit'
                     ? `${formatKr(numericAmount)} har satts in på ${selectedAccount.name}.`
                     : `${formatKr(numericAmount)} har tagits ut från ${selectedAccount.name}.`
             )
             setAmount('')
-        }, 800)
+        } catch (error) {
+            setError(error instanceof Error ? error.message : 'Transaktionen misslyckades.')
+        } finally {
+            setIsSubmitting(false)
+        }
     }
 
     return (
@@ -71,7 +156,8 @@ function TransactPage() {
         <DecorativeCircle color="green" size={120} right={90} top={110} opacity={0.9} />
         <DecorativeCircle color="blue" size={190} right={-40} top={40} />
 
-      <div className="transact-brand-circle">
+            <div className="transact-brand-circle brand-logo">
+        <span>Sparportal</span>
     <strong>nordiska<span className="brand-dot">.</span></strong>
         </div>      
 
@@ -103,13 +189,29 @@ function TransactPage() {
                         </button>
                     </div>
 
-                    <div className="account-preview-card">
-                        <div className="account-preview-header">
-                            <GraduationCap size={16} />
-                            <span>{selectedAccount.name.toUpperCase()}</span>
+                    {isLoadingAccounts ? (
+                        <div className="transact-empty-card">
+                            <h2 tabIndex={0}>Laddar konton</h2>
                         </div>
-                        <p className="account-preview-value">{formatKr(selectedAccount.balance)}</p>
-                    </div>
+                    ) : accountsError ? (
+                        <div className="transact-empty-card">
+                            <h2 tabIndex={0}>{accountsError}</h2>
+                        </div>
+                    ) : selectedAccount ? (
+                        <div className={`account-preview-card account-preview-card--${selectedAccount.variant ?? 'default'}`}>
+                            <div className={`account-preview-header account-preview-header--${selectedAccount.variant ?? 'default'}`}>
+                                {selectedAccount.icon}
+                                <span>{selectedAccount.name.toUpperCase()}</span>
+                            </div>
+                            <p className={`account-preview-value account-preview-value--${selectedAccount.variant ?? 'default'}`}>
+                                {formatKr(selectedAccount.balance)}
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="transact-empty-card">
+                            <h2 tabIndex={0}>Inga konton hittades</h2>
+                        </div>
+                    )}
 
                     <form onSubmit={handleSubmit} className="transact-form-card">
                         <div className="transact-field">
@@ -120,11 +222,11 @@ function TransactPage() {
                                     value={accountId}
                                     onChange={(e) => setAccountId(e.target.value)}
                                 >
-                                    {mockTransactAccounts.map((acc) => (
-                                        <option key={acc.id} value={acc.id}>
-                                            {acc.name} — {formatKr(acc.balance)}
-                                        </option>
-                                    ))}
+                                {accounts.map((acc) => (
+                                    <option key={acc.id} value={acc.id}>
+                                        {acc.name} — {formatKr(acc.balance)}
+                                    </option>
+                                ))}
                                 </select>
                                 <ChevronDown size={16} className="select-chevron" />
                             </div>

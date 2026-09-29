@@ -1,7 +1,13 @@
-import { mockHistoryTransactions, type TransactionType } from './mockHistoryTransaction'
+import { type HistoryTransaction, type TransactionType } from './mockHistoryTransaction'
 import { UserProfile } from '../components/UserProfile'
 import './HistoryPage.css'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import {
+    getAccounts,
+    getTransactionsForAccount,
+    type BackendAccount,
+    type BackendTransaction,
+} from '../services/accountService'
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react'
 import { AppNav } from '../components/AppNav'
 import { DecorativeCircle } from '../components/DecorativeCircle'
@@ -47,15 +53,124 @@ function getTransactionLabel(type: TransactionType) {
     return 'Ränta'
 }
 
+function parseBackendAmount(amount: string) {
+    return Number(amount.replace(/\s/g, '').replace(',', '.'))
+}
+
+function mapBackendTransactionType(transactionType: string): TransactionType {
+    if (transactionType === 'DEPOSIT') {
+        return 'deposit'
+    }
+
+    if (transactionType === 'WITHDRAWAL') {
+        return 'withdrawal'
+    }
+
+    return 'interest'
+}
+
+function formatTransactionDate(date: string) {
+    return new Intl.DateTimeFormat('sv-SE', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+    }).format(new Date(date))
+}
+
+function formatTransactionMonth(date: string) {
+    const formatted = new Intl.DateTimeFormat('sv-SE', {
+        month: 'long',
+        year: 'numeric',
+    }).format(new Date(date))
+
+    return formatted.charAt(0).toUpperCase() + formatted.slice(1)
+}
+
+function getTransactionTitle(type: TransactionType) {
+    if (type === 'deposit') {
+        return 'Insättning'
+    }
+
+    if (type === 'withdrawal') {
+        return 'Uttag'
+    }
+
+    return 'Ränta'
+}
+
+function mapBackendTransactionToHistoryTransaction(
+    transaction: BackendTransaction,
+    account: BackendAccount
+) {
+    const type = mapBackendTransactionType(transaction.transactionType)
+    const rawAmount = parseBackendAmount(transaction.amount)
+    const amount = type === 'withdrawal' ? -Math.abs(rawAmount) : rawAmount
+    const date = transaction.completedAt ?? transaction.createdAt
+
+    return {
+        id: transaction.id,
+        title: getTransactionTitle(type),
+        accountName: account.name,
+        date: formatTransactionDate(date),
+        month: formatTransactionMonth(date),
+        amount,
+        type,
+    }
+}
+
 function HistoryPage() {
     const handleLogout = useLogout()
     const { toggleTheme } = useTheme()
     const [activeFilter, setActiveFilter] = useState<HistoryFilter>('all')
     const [activeAccount, setActiveAccount] = useState<AccountFilter>('all')
+    const [transactions, setTransactions] = useState<HistoryTransaction[]>([])
+    const [isLoadingTransactions, setIsLoadingTransactions] = useState(true)
+    const [transactionsError, setTransactionsError] = useState('')
 
-    const accountFilters = Array.from(new Set(mockHistoryTransactions.map((transaction) => transaction.accountName)))
+    useEffect(() => {
+        let isMounted = true
 
-    const visibleTransactions = mockHistoryTransactions.filter((transaction) => {
+        async function loadTransactions() {
+            try {
+                setIsLoadingTransactions(true)
+                setTransactionsError('')
+
+                const accounts = await getAccounts()
+
+                const transactionGroups = await Promise.all(
+                    accounts.map(async (account) => {
+                        const accountTransactions = await getTransactionsForAccount(account.id)
+
+                        return accountTransactions.map((transaction) =>
+                            mapBackendTransactionToHistoryTransaction(transaction, account)
+                        )
+                    })
+                )
+
+                if (!isMounted) return
+
+                setTransactions(transactionGroups.flat())
+            } catch {
+                if (!isMounted) return
+
+                setTransactionsError('Kunde inte hämta transaktioner.')
+            } finally {
+                if (isMounted) {
+                    setIsLoadingTransactions(false)
+                }
+            }
+        }
+
+        loadTransactions()
+
+        return () => {
+            isMounted = false
+        }
+    }, [])
+
+    const accountFilters = Array.from(new Set(transactions.map((transaction) => transaction.accountName)))
+
+    const visibleTransactions = transactions.filter((transaction) => {
         const matchesType = activeFilter === 'all' || transaction.type === activeFilter
         const matchesAccount = activeAccount === 'all' || transaction.accountName === activeAccount
 
@@ -72,7 +187,7 @@ function HistoryPage() {
 
     const selectedAccountLabel = activeAccount === 'all' ? 'Alla konton' : activeAccount
 
-    const groupedTransactions = visibleTransactions.reduce<Record<string, typeof mockHistoryTransactions>>(
+    const groupedTransactions = visibleTransactions.reduce<Record<string, typeof transactions>>(
         (groups, transaction) => {
             if (!groups[transaction.month]) {
                 groups[transaction.month] = []
@@ -92,7 +207,8 @@ function HistoryPage() {
             <DecorativeCircle color="green" size={96} right={90} top={250} opacity={0.82} />
             <DecorativeCircle color="green" size={140} right={-30} top={360} opacity={0.82} />
 
-            <div className="history-brand-mark" aria-hidden="true">
+            <div className="history-brand-mark brand-logo" aria-hidden="true">
+                <span>Sparportal</span>
                 <strong>
                     nordiska<span>.</span>
                 </strong>
@@ -193,7 +309,17 @@ function HistoryPage() {
                         </div>
                     </div>
 
-                    {visibleTransactions.length > 0 ? (
+                    {isLoadingTransactions ? (
+                        <div className="history-empty">
+                            <h2 tabIndex={0}>Laddar transaktioner</h2>
+                            <p>Hämtar historik för dina konton.</p>
+                        </div>
+                    ) : transactionsError ? (
+                        <div className="history-empty">
+                            <h2 tabIndex={0}>Historiken kunde inte hämtas</h2>
+                            <p>{transactionsError}</p>
+                        </div>
+                    ) : visibleTransactions.length > 0 ? (
                         <div className="history-list">
                             {Object.entries(groupedTransactions).map(([month, transactions]) => (
                                 <section className="history-month" key={month}>

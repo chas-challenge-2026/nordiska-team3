@@ -1,17 +1,23 @@
-import { useState } from 'react'
+import { type DashboardAccountTransaction } from '../components/DashboardActions/mockDashboardAccountTransactions'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { UserProfile } from '../components/UserProfile'
 import './DashboardPage.css'
 import { AppNav } from '../components/AppNav'
+import {
+    createAccount,
+    deposit,
+    getAccounts,
+    getTransactionsForAccount,
+    renameAccount,
+    withdraw,
+    type BackendAccount,
+    type BackendTransaction,
+} from '../services/accountService'
 import { DecorativeCircle } from '../components/DecorativeCircle'
 import { BalanceOverview } from '../components/DashboardActions/BalanceOverview'
 import { DashboardActions } from '../components/DashboardActions/DashboardActions'
 import { RecentEvents } from '../components/RecentEvents/RecentEvents'
-import { mockAccounts } from '../components/DashboardActions/mockAccounts'
-import {
-    mockDashboardAccountTransactions,
-    type DashboardAccountTransaction,
-} from '../components/DashboardActions/mockDashboardAccountTransactions'
 import type { Account } from '../components/DashboardActions/BalanceOverview'
 import type { DashboardAction } from '../components/DashboardActions/mockDashboardActions'
 import { useLogout } from '../hooks/useLogout'
@@ -19,72 +25,20 @@ import { useTheme } from '../context/useTheme'
 import { Modal } from '../components/Modal'
 import { Input } from '../components/Input'
 import { Button } from '../components/Button'
+import { Plus } from 'lucide-react'
 import {
-    Banknote,
-    Briefcase,
-    Car,
-    Gem,
-    Gift,
-    GraduationCap,
-    Heart,
-    Home,
-    Landmark,
-    Laptop,
-    PiggyBank,
-    Plane,
-    Plus,
-    Shield,
-    Target,
-    Umbrella,
-    Wallet,
-} from 'lucide-react'
+    accountIconOptions,
+    accountVariantOptions,
+    getAccountIcon,
+    getAccountPresentation,
+    setAccountPresentation,
+    type AccountIconId,
+    type AccountPresentation,
+    type AccountVariant,
+} from '../utils/accountPresentation'
 
-type CreateAccountIconId =
-    | 'piggyBank'
-    | 'graduationCap'
-    | 'plane'
-    | 'shield'
-    | 'wallet'
-    | 'home'
-    | 'car'
-    | 'gift'
-    | 'heart'
-    | 'briefcase'
-    | 'laptop'
-    | 'target'
-    | 'umbrella'
-    | 'landmark'
-    | 'banknote'
-    | 'gem'
-type CreateAccountVariant = NonNullable<Account['variant']>
-
-const createAccountIconOptions: { id: CreateAccountIconId; label: string; icon: JSX.Element }[] = [
-    { id: 'piggyBank', label: 'Sparande', icon: <PiggyBank size={16} /> },
-    { id: 'graduationCap', label: 'Studier', icon: <GraduationCap size={16} /> },
-    { id: 'plane', label: 'Resa', icon: <Plane size={16} /> },
-    { id: 'shield', label: 'Buffert', icon: <Shield size={16} /> },
-    { id: 'wallet', label: 'Plånbok', icon: <Wallet size={16} /> },
-    { id: 'home', label: 'Bostad', icon: <Home size={16} /> },
-    { id: 'car', label: 'Bil', icon: <Car size={16} /> },
-    { id: 'gift', label: 'Presenter', icon: <Gift size={16} /> },
-    { id: 'heart', label: 'Familj', icon: <Heart size={16} /> },
-    { id: 'briefcase', label: 'Jobb', icon: <Briefcase size={16} /> },
-    { id: 'laptop', label: 'Teknik', icon: <Laptop size={16} /> },
-    { id: 'target', label: 'Mål', icon: <Target size={16} /> },
-    { id: 'umbrella', label: 'Trygghet', icon: <Umbrella size={16} /> },
-    { id: 'landmark', label: 'Bank', icon: <Landmark size={16} /> },
-    { id: 'banknote', label: 'Pengar', icon: <Banknote size={16} /> },
-    { id: 'gem', label: 'Lyx', icon: <Gem size={16} /> },
-]
-
-const createAccountVariantOptions: { value: CreateAccountVariant; label: string }[] = [
-    { value: 'default', label: 'Blå' },
-    { value: 'accent', label: 'Orange' },
-    { value: 'success', label: 'Grön' },
-    { value: 'danger', label: 'Röd' },
-    { value: 'purple', label: 'Lila' },
-    { value: 'pink', label: 'Rosa' },
-]
+type CreateAccountIconId = AccountIconId
+type CreateAccountVariant = AccountVariant
 
 function parseKr(value: string) {
     return Number(value.replace(/\s/g, '').replace('kr', '').replace(',', '.'))
@@ -92,6 +46,71 @@ function parseKr(value: string) {
 
 function formatKr(amount: number) {
     return `${amount.toLocaleString('sv-SE')} kr`
+}
+
+function parseBackendBalance(balance: string) {
+    return Number(balance.replace(/\s/g, '').replace(',', '.'))
+}
+
+function formatBackendBalance(balance: string) {
+    const numericBalance = parseBackendBalance(balance)
+
+    if (Number.isNaN(numericBalance)) {
+        return '0 kr'
+    }
+
+    return formatKr(numericBalance)
+}
+
+function mapBackendAccountToDashboardAccount(account: BackendAccount, index: number): Account {
+    const presentation = getAccountPresentation(account.id, index)
+
+    return {
+        id: account.id,
+        icon: getAccountIcon(presentation.iconId),
+        label: account.name.toUpperCase(),
+        value: formatBackendBalance(account.balance),
+        variant: presentation.variant,
+    }
+}
+
+function mapBackendTransactionType(transactionType: string): DashboardAccountTransaction['type'] {
+    if (transactionType === 'DEPOSIT') {
+        return 'deposit'
+    }
+
+    if (transactionType === 'WITHDRAWAL') {
+        return 'withdrawal'
+    }
+
+    return 'interest'
+}
+
+function formatDashboardTransactionDate(date: string) {
+    return new Intl.DateTimeFormat('sv-SE', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+    }).format(new Date(date))
+}
+
+function mapBackendTransactionToDashboardTransaction(
+    transaction: BackendTransaction,
+    accountId: string
+): DashboardAccountTransaction {
+    const type = mapBackendTransactionType(transaction.transactionType)
+    const rawAmount = parseBackendBalance(transaction.amount)
+    const amount = type === 'withdrawal' ? -Math.abs(rawAmount) : rawAmount
+    const date = transaction.completedAt ?? transaction.createdAt
+
+    return {
+        id: transaction.id,
+        accountId,
+        title: type === 'deposit' ? 'Insättning' : type === 'withdrawal' ? 'Uttag' : 'Ränta',
+        date: formatDashboardTransactionDate(date),
+        amount,
+        type,
+    }
 }
 
 function formatAccountName(value: string) {
@@ -103,7 +122,9 @@ function DashboardPage() {
     const handleLogout = useLogout()
     const { toggleTheme } = useTheme()
 
-    const [accounts, setAccounts] = useState<Account[]>(mockAccounts)
+    const [accounts, setAccounts] = useState<Account[]>([])
+    const [isLoadingAccounts, setIsLoadingAccounts] = useState(true)
+    const [accountsError, setAccountsError] = useState('')
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
     const [newAccountName, setNewAccountName] = useState('')
     const [newAccountIconId, setNewAccountIconId] = useState<CreateAccountIconId>('piggyBank')
@@ -113,12 +134,53 @@ function DashboardPage() {
     const [modalAmount, setModalAmount] = useState('')
     const [modalTransactionMessage, setModalTransactionMessage] = useState('')
     const [dashboardTransactionType, setDashboardTransactionType] = useState<'deposit' | 'withdrawal' | null>(null)
-    const [dashboardTransactionAccountId, setDashboardTransactionAccountId] = useState(mockAccounts[0]?.id ?? '')
+    const [dashboardTransactionAccountId, setDashboardTransactionAccountId] = useState('')
     const [dashboardTransactionAmount, setDashboardTransactionAmount] = useState('')
     const [dashboardTransactionMessage, setDashboardTransactionMessage] = useState('')
-    const [accountTransactions, setAccountTransactions] = useState<DashboardAccountTransaction[]>(
-        mockDashboardAccountTransactions
-    )
+    const [accountTransactions, setAccountTransactions] = useState<DashboardAccountTransaction[]>([])
+
+    useEffect(() => {
+        let isMounted = true
+
+        async function loadAccounts() {
+            try {
+                setIsLoadingAccounts(true)
+                setAccountsError('')
+
+                const backendAccounts = await getAccounts()
+
+                const transactionGroups = await Promise.all(
+                    backendAccounts.map(async (account) => {
+                        const transactions = await getTransactionsForAccount(account.id)
+
+                        return transactions.map((transaction) =>
+                            mapBackendTransactionToDashboardTransaction(transaction, account.id)
+                        )
+                    })
+                )
+
+                if (!isMounted) return
+
+                setAccounts(backendAccounts.map(mapBackendAccountToDashboardAccount))
+                setAccountTransactions(transactionGroups.flat())
+                setDashboardTransactionAccountId(backendAccounts[0]?.id ?? '')
+            } catch {
+                if (!isMounted) return
+
+                setAccountsError('Kunde inte hämta konton.')
+            } finally {
+                if (isMounted) {
+                    setIsLoadingAccounts(false)
+                }
+            }
+        }
+
+        loadAccounts()
+
+        return () => {
+            isMounted = false
+        }
+    }, [])
 
     const dashboardTransactionAccount =
         accounts.find((account) => account.id === dashboardTransactionAccountId) ?? accounts[0] ?? null
@@ -137,6 +199,21 @@ function DashboardPage() {
         amount: transaction.amount,
         type: transaction.type,
     }))
+
+    const recentDashboardEvents = accountTransactions
+        .map((transaction) => {
+            const account = accounts.find((item) => item.id === transaction.accountId)
+
+            return {
+                id: transaction.id,
+                title: transaction.title,
+                accountName: account ? formatAccountName(account.label) : '',
+                date: transaction.date,
+                amount: transaction.amount,
+                type: transaction.type,
+            }
+        })
+        .slice(0, 5)
 
     function handleAccountClick(accountId: string) {
         const account = accounts.find((account) => account.id === accountId)
@@ -182,27 +259,39 @@ function DashboardPage() {
         }
     }
 
-    function handleCreateAccount() {
-        if (!newAccountName.trim()) return
+    async function handleCreateAccount() {
+        const trimmedName = newAccountName.trim()
+        if (!trimmedName) return
 
-        const selectedIcon = createAccountIconOptions.find((option) => option.id === newAccountIconId)
-
-        const newAccount: Account = {
-            id: crypto.randomUUID(),
-            icon: selectedIcon?.icon ?? <PiggyBank size={16} />,
-            label: newAccountName.toUpperCase(),
-            value: '0 kr',
+        const presentation: AccountPresentation = {
+            iconId: newAccountIconId,
             variant: newAccountVariant,
         }
 
-        setAccounts((prev) => [...prev, newAccount])
-        setNewAccountName('')
-        setNewAccountIconId('piggyBank')
-        setNewAccountVariant('default')
-        setIsCreateModalOpen(false)
+        try {
+            const createdAccount = await createAccount('SAVINGS')
+            const accountWithName = await renameAccount(createdAccount.id, trimmedName)
+
+            const newAccount: Account = {
+                id: accountWithName.id,
+                icon: getAccountIcon(presentation.iconId),
+                label: accountWithName.name.toUpperCase(),
+                value: formatBackendBalance(accountWithName.balance),
+                variant: presentation.variant,
+            }
+
+            setAccountPresentation(accountWithName.id, presentation)
+            setAccounts((prev) => [...prev, newAccount])
+            setNewAccountName('')
+            setNewAccountIconId('piggyBank')
+            setNewAccountVariant('default')
+            setIsCreateModalOpen(false)
+        } catch (error) {
+            setAccountsError(error instanceof Error ? error.message : 'Kunde inte skapa konto.')
+        }
     }
 
-    function handleModalTransaction() {
+    async function handleModalTransaction() {
         if (!selectedAccount) return
 
         const amount = Number(modalAmount.replace(',', '.'))
@@ -219,40 +308,48 @@ function DashboardPage() {
             return
         }
 
-        const balanceChange = modalTransactionType === 'deposit' ? amount : -amount
-        const updatedAccount: Account = {
-            ...selectedAccount,
-            value: formatKr(currentBalance + balanceChange),
+        try {
+            const result =
+                modalTransactionType === 'deposit'
+                    ? await deposit(selectedAccount.id, amount)
+                    : await withdraw(selectedAccount.id, amount)
+            const balanceChange = modalTransactionType === 'deposit' ? amount : -amount
+            const updatedAccount: Account = {
+                ...selectedAccount,
+                value: formatBackendBalance(result.balance),
+            }
+
+            const newTransaction: DashboardAccountTransaction = {
+                id: result.transactionId,
+                accountId: selectedAccount.id,
+                title: modalTransactionType === 'deposit' ? 'Insättning' : 'Uttag',
+                date: new Intl.DateTimeFormat('sv-SE', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                }).format(new Date()),
+                amount: balanceChange,
+                type: modalTransactionType,
+            }
+
+            setAccounts((prevAccounts) =>
+                prevAccounts.map((account) => (account.id === selectedAccount.id ? updatedAccount : account))
+            )
+            setSelectedAccount(updatedAccount)
+            setAccountTransactions((prevTransactions) => [newTransaction, ...prevTransactions])
+            setModalTransactionMessage(
+                modalTransactionType === 'deposit'
+                    ? `${formatKr(amount)} har satts in på kontot.`
+                    : `${formatKr(amount)} har tagits ut från kontot.`
+            )
+
+            setModalAmount('')
+        } catch (error) {
+            setModalTransactionMessage(error instanceof Error ? error.message : 'Transaktionen misslyckades.')
         }
-
-        const newTransaction: DashboardAccountTransaction = {
-            id: crypto.randomUUID(),
-            accountId: selectedAccount.id,
-            title: modalTransactionType === 'deposit' ? 'Insättning' : 'Uttag',
-            date: new Intl.DateTimeFormat('sv-SE', {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric',
-            }).format(new Date()),
-            amount: balanceChange,
-            type: modalTransactionType,
-        }
-
-        setAccounts((prevAccounts) =>
-            prevAccounts.map((account) => (account.id === selectedAccount.id ? updatedAccount : account))
-        )
-        setSelectedAccount(updatedAccount)
-        setAccountTransactions((prevTransactions) => [newTransaction, ...prevTransactions])
-        setModalTransactionMessage(
-            modalTransactionType === 'deposit'
-                ? `${formatKr(amount)} har satts in på kontot.`
-                : `${formatKr(amount)} har tagits ut från kontot.`
-        )
-
-        setModalAmount('')
     }
 
-    function handleDashboardTransaction() {
+    async function handleDashboardTransaction() {
         if (!dashboardTransactionType || !dashboardTransactionAccount) return
 
         const amount = Number(dashboardTransactionAmount.replace(',', '.'))
@@ -269,35 +366,43 @@ function DashboardPage() {
             return
         }
 
-        const balanceChange = dashboardTransactionType === 'deposit' ? amount : -amount
-        const updatedAccount: Account = {
-            ...dashboardTransactionAccount,
-            value: formatKr(currentBalance + balanceChange),
-        }
+        try {
+            const result =
+                dashboardTransactionType === 'deposit'
+                    ? await deposit(dashboardTransactionAccount.id, amount)
+                    : await withdraw(dashboardTransactionAccount.id, amount)
+            const balanceChange = dashboardTransactionType === 'deposit' ? amount : -amount
+            const updatedAccount: Account = {
+                ...dashboardTransactionAccount,
+                value: formatBackendBalance(result.balance),
+            }
 
-        const newTransaction: DashboardAccountTransaction = {
-            id: crypto.randomUUID(),
-            accountId: dashboardTransactionAccount.id,
-            title: dashboardTransactionType === 'deposit' ? 'Insättning' : 'Uttag',
-            date: new Intl.DateTimeFormat('sv-SE', {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric',
-            }).format(new Date()),
-            amount: balanceChange,
-            type: dashboardTransactionType,
-        }
+            const newTransaction: DashboardAccountTransaction = {
+                id: result.transactionId,
+                accountId: dashboardTransactionAccount.id,
+                title: dashboardTransactionType === 'deposit' ? 'Insättning' : 'Uttag',
+                date: new Intl.DateTimeFormat('sv-SE', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                }).format(new Date()),
+                amount: balanceChange,
+                type: dashboardTransactionType,
+            }
 
-        setAccounts((prevAccounts) =>
-            prevAccounts.map((account) => (account.id === dashboardTransactionAccount.id ? updatedAccount : account))
-        )
-        setAccountTransactions((prevTransactions) => [newTransaction, ...prevTransactions])
-        setDashboardTransactionMessage(
-            dashboardTransactionType === 'deposit'
-                ? `${formatKr(amount)} har satts in på ${formatAccountName(dashboardTransactionAccount.label)}.`
-                : `${formatKr(amount)} har tagits ut från ${formatAccountName(dashboardTransactionAccount.label)}.`
-        )
-        setDashboardTransactionAmount('')
+            setAccounts((prevAccounts) =>
+                prevAccounts.map((account) => (account.id === dashboardTransactionAccount.id ? updatedAccount : account))
+            )
+            setAccountTransactions((prevTransactions) => [newTransaction, ...prevTransactions])
+            setDashboardTransactionMessage(
+                dashboardTransactionType === 'deposit'
+                    ? `${formatKr(amount)} har satts in på ${formatAccountName(dashboardTransactionAccount.label)}.`
+                    : `${formatKr(amount)} har tagits ut från ${formatAccountName(dashboardTransactionAccount.label)}.`
+            )
+            setDashboardTransactionAmount('')
+        } catch (error) {
+            setDashboardTransactionMessage(error instanceof Error ? error.message : 'Transaktionen misslyckades.')
+        }
     }
 
     return (
@@ -314,18 +419,36 @@ function DashboardPage() {
                 <UserProfile />
 
                 <div className="dashboard-content">
-                    <div className="dashboard-brand-card">
+                    <div className="dashboard-brand-card brand-logo">
                         <span>Sparportal</span>
                         <strong>nordiska<span className="dashboard-brand-dot">.</span></strong>
                     </div>
 
-                    <BalanceOverview
-                        totalLabel="TOTALT SPARAT"
-                        totalValue="136 571 kr"
-                        subLabel="3 konton · snitt 3,2 % ränta"
-                        accounts={accounts}
-                        onAccountClick={handleAccountClick}
-                    />
+                    {isLoadingAccounts ? (
+                        <div className="dashboard-empty-card">
+                            <h2 tabIndex={0}>Laddar konton</h2>
+                            <p>Hämtar dina konton från backend.</p>
+                        </div>
+                    ) : accountsError ? (
+                        <div className="dashboard-empty-card">
+                            <h2 tabIndex={0}>Konton kunde inte hämtas</h2>
+                        </div>
+                    ) : accounts.length === 0 ? (
+                        <div className="dashboard-empty-card">
+                            <h2 tabIndex={0}>Inga konton hittades</h2>
+                            <p>När backend har testdata visas dina konton här.</p>
+                        </div>
+                    ) : (
+                        <BalanceOverview
+                            totalLabel="TOTALT SPARAT"
+                            totalValue={formatKr(
+                                accounts.reduce((sum, account) => sum + parseKr(account.value), 0)
+                            )}
+                            subLabel={`${accounts.length} konton`}
+                            accounts={accounts}
+                            onAccountClick={handleAccountClick}
+                        />
+                    )}
 
                     <button
                         type="button"
@@ -353,7 +476,7 @@ function DashboardPage() {
                             <div className="create-account-modal__field">
                                 <p>Ikon</p>
                                 <div className="create-account-modal__option-grid">
-                                    {createAccountIconOptions.map((option) => (
+                                    {accountIconOptions.map((option) => (
                                         <button
                                             type="button"
                                             key={option.id}
@@ -373,7 +496,7 @@ function DashboardPage() {
                             <div className="create-account-modal__field">
                                 <p>Färg</p>
                                 <div className="create-account-modal__color-row">
-                                    {createAccountVariantOptions.map((option) => (
+                                    {accountVariantOptions.map((option) => (
                                         <button
                                             type="button"
                                             key={option.value}
@@ -537,7 +660,7 @@ function DashboardPage() {
                             </div>
                         )}
                     </Modal>
-                    <RecentEvents />
+                    <RecentEvents events={recentDashboardEvents} />
 
                     <DashboardActions onActionClick={handleActionClick} />
                 </div>

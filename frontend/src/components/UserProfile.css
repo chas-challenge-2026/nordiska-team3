@@ -16,8 +16,8 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #f2c466;
-  color: var(--color-text-inverted);
+  background: var(--color-primary-soft);
+  color: var(--color-on-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -39,8 +39,16 @@
   margin: 0;
 }
 
+.user-profile .user-profile-name {
+  color: var(--color-text-primary);
+}
+
+.user-profile .user-profile-email {
+  color: var(--color-text-secondary);
+}
+
 [data-theme="dark"] .user-profile-avatar {
-  color: #134763;
+  color: var(--color-yale-blue-900);
 }
 
 .user-profile--clickable {
