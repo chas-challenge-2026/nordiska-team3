@@ -1,3 +1,11 @@
+// main.cpp
+
+/*
+    The program inits libharu for PDF generation,
+    nlohmann/json for json parsing and prints out
+    an input json. Right now uses example .json from NordiskaAPI.
+*/
+
 #include "nordiska/error_codes.h"
 
 #include <hpdf.h>
@@ -79,7 +87,10 @@ int main(int argc, char* argv[])
         !report_data["bank"].is_object() ||
 
         !report_data.contains("customer") ||
-        !report_data["customer"].is_object()
+        !report_data["customer"].is_object() ||
+
+        !report_data.contains("accounts") ||
+        !report_data["accounts"].is_array()
     )
     {
         std::cerr << "Error: tax-report JSON has an invalid header\n";
@@ -88,6 +99,7 @@ int main(int argc, char* argv[])
 
     const auto& bank = report_data["bank"];
     const auto& customer = report_data["customer"];
+    const auto& accounts = report_data["accounts"];
 
     if
     (
@@ -100,6 +112,22 @@ int main(int argc, char* argv[])
         return NORDISKA_EXIT_INVALID_INPUT;
     }
 
+    for (const auto& account : accounts)
+    {
+        if 
+        (
+            !has_string_field(account, "displayNumber") ||
+            !has_string_field(account, "accountType") ||
+            !has_string_field(account, "openingBalance") ||
+            !has_string_field(account, "closingBalance")
+        )
+        {
+            std::cerr << "Error: tax-report JSON has an invalid account\n";
+            return NORDISKA_EXIT_INVALID_INPUT;
+        }
+        
+    }
+
     const std::string bank_name = bank["name"].get<std::string>();
     const std::string organization_number = bank["organizationNumber"].get<std::string>();
     const std::string customer_name = customer["displayName"].get<std::string>();
@@ -107,11 +135,15 @@ int main(int argc, char* argv[])
     const std::string generated_at = report_data["generatedAt"].get<std::string>();
     const std::string currency = report_data["currency"].get<std::string>();
 
+    const bool ends_with_utc_offset = 
+                            generated_at.size() >= 6 && 
+                                generated_at.compare(generated_at.size() - 6, 6, "+00:00") == 0;
+
     if 
     (
         generated_at.size() < 17 ||
         generated_at[10] != 'T' ||
-        generated_at.back() != 'Z'
+      (generated_at.back() != 'Z' && !ends_with_utc_offset)
     )
     {
         std::cerr << "Error: invalid generatedAt timestamp\n";
@@ -203,6 +235,28 @@ int main(int argc, char* argv[])
     HPDF_Page_TextOut(page, 50, 682, year_line.c_str());
     HPDF_Page_TextOut(page, 50, 664, generated_line.c_str());
     HPDF_Page_TextOut(page, 50, 646, currency_line.c_str());
+    
+    HPDF_Page_SetFontAndSize(page, font, 14);
+    HPDF_Page_TextOut(page, 50, 610, "Konton");
+
+    HPDF_Page_SetFontAndSize(page, font, 12);
+
+    float account_y = 588;
+
+    for (const auto& account : accounts)
+    {
+        const std::string display_number = account["displayNumber"].get<std::string>();        
+        const std::string account_type = account["accountType"].get<std::string>();
+        const std::string opening_balance = account["openingBalance"].get<std::string>();
+        const std::string closing_balance = account["closingBalance"].get<std::string>();        
+        const std::string account_line = display_number + " (" + account_type + ")";
+        const std::string balance_line = "Ingående saldo: " + opening_balance + "   Utgående saldo: " + closing_balance;
+
+        HPDF_Page_TextOut(page, 50, account_y, account_line.c_str());
+        HPDF_Page_TextOut(page, 50, account_y - 18, balance_line.c_str());
+
+        account_y -= 54;
+    }
 
     HPDF_Page_EndText(page);
 

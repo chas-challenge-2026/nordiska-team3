@@ -92,13 +92,13 @@ The `--parallel` option allows independent build operations to run at the same t
 ## Run the PDF generator
 
 ```bash
-./native/build/pdf_generator/pdf_generator
+./native/build/pdf_generator/pdf_generator backend/NordiskaPortal.API/tax-reports/0b7fcd6c-eb3e-45b0-865a-f4ff4fbbba31.json /tmp/nordiska-api-report.pdf
 ```
 
 Expected output:
 
 ```text
-Nordiska PDF generator ready
+Created PDF: /tmp/nordiska-api-report.pdf
 ```
 
 Check its exit code immediately:
