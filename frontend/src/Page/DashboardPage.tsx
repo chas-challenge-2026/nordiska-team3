@@ -7,13 +7,12 @@ import { AppNav } from '../components/AppNav'
 import {
     createAccount,
     deposit,
-    getAccounts,
-    getTransactionsForAccount,
     renameAccount,
     withdraw,
     type BackendAccount,
     type BackendTransaction,
 } from '../services/accountService'
+import { getAccountsWithTransactions } from '../services/accountOverviewService'
 import { DecorativeCircle } from '../components/DecorativeCircle'
 import { BalanceOverview } from '../components/DashboardActions/BalanceOverview'
 import { DashboardActions } from '../components/DashboardActions/DashboardActions'
@@ -150,16 +149,13 @@ function DashboardPage() {
                 setIsLoadingAccounts(true)
                 setAccountsError('')
 
-                const backendAccounts = await getAccounts()
+                const accountTransactionGroups = await getAccountsWithTransactions()
+                const backendAccounts = accountTransactionGroups.map(({ account }) => account)
 
-                const transactionGroups = await Promise.all(
-                    backendAccounts.map(async (account) => {
-                        const transactions = await getTransactionsForAccount(account.id)
-
-                        return transactions.map((transaction) =>
-                            mapBackendTransactionToDashboardTransaction(transaction, account.id)
-                        )
-                    })
+                const transactionGroups = accountTransactionGroups.map(({ account, transactions }) =>
+                    transactions.map((transaction) =>
+                        mapBackendTransactionToDashboardTransaction(transaction, account.id)
+                    )
                 )
 
                 if (!isMounted) return
