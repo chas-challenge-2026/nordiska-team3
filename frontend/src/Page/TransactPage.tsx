@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-=======
 import { z } from 'zod'
->>>>>>> dev
 import { type FormEvent, useEffect, useState } from 'react'
 import { UserProfile } from '../components/UserProfile'
 import { useLogout } from '../hooks/useLogout'
@@ -10,11 +7,7 @@ import { AppNav } from '../components/AppNav'
 import { DecorativeCircle } from '../components/DecorativeCircle'
 import { type TransactAccount } from './mockTransactAccounts'
 import { deposit, getAccounts, withdraw, type BackendAccount } from '../services/accountService'
-<<<<<<< HEAD
-import { GraduationCap, ChevronDown } from 'lucide-react'
-=======
 import { ChevronDown } from 'lucide-react'
->>>>>>> dev
 import { useTheme } from '../context/useTheme'
 import {
     getAccountIcon,
@@ -45,23 +38,16 @@ function parseBackendBalance(balance: string) {
     return Number(balance.replace(/\s/g, '').replace(',', '.'))
 }
 
-<<<<<<< HEAD
-function mapBackendAccountToTransactAccount(account: BackendAccount): TransactAccount {
-=======
 function mapBackendAccountToTransactAccount(
     account: BackendAccount,
     presentation: AccountPresentation
 ): TransactAccount {
->>>>>>> dev
     return {
         id: account.id,
         name: account.name,
         balance: parseBackendBalance(account.balance),
-<<<<<<< HEAD
-=======
         icon: getAccountIcon(presentation.iconId),
         variant: presentation.variant,
->>>>>>> dev
     }
 }
 
@@ -93,13 +79,9 @@ function TransactPage() {
 
                 if (!isMounted) return
 
-<<<<<<< HEAD
-                const mappedAccounts = backendAccounts.map(mapBackendAccountToTransactAccount)
-=======
                 const mappedAccounts = backendAccounts.map((account, index) =>
                     mapBackendAccountToTransactAccount(account, getAccountPresentation(account.id, index))
                 )
->>>>>>> dev
 
                 setAccounts(mappedAccounts)
                 setAccountId(mappedAccounts[0]?.id ?? '')
@@ -131,19 +113,10 @@ function TransactPage() {
         event.preventDefault()
         setSuccess('')
 
-<<<<<<< HEAD
-        if (!selectedAccount) {
-            setError('Inget konto är valt.')
-            return
-        }
-
-        const numericAmount = Number(amount.replace(',', '.'))
-=======
         const validation = transactSchema.safeParse({
             accountId,
             amount,
         })
->>>>>>> dev
 
         if (!validation.success) {
             setError(validation.error.issues[0]?.message ?? 'Kontrollera transaktionen.')
@@ -244,14 +217,6 @@ function TransactPage() {
                             <h2 tabIndex={0}>{accountsError}</h2>
                         </div>
                     ) : selectedAccount ? (
-<<<<<<< HEAD
-                        <div className="account-preview-card">
-                            <div className="account-preview-header">
-                                <GraduationCap size={16} />
-                                <span>{selectedAccount.name.toUpperCase()}</span>
-                            </div>
-                            <p className="account-preview-value">{formatKr(selectedAccount.balance)}</p>
-=======
                         <div className={`account-preview-card account-preview-card--${selectedAccount.variant ?? 'default'}`}>
                             <div className={`account-preview-header account-preview-header--${selectedAccount.variant ?? 'default'}`}>
                                 {selectedAccount.icon}
@@ -260,7 +225,6 @@ function TransactPage() {
                             <p className={`account-preview-value account-preview-value--${selectedAccount.variant ?? 'default'}`}>
                                 {formatKr(selectedAccount.balance)}
                             </p>
->>>>>>> dev
                         </div>
                     ) : (
                         <div className="transact-empty-card">
