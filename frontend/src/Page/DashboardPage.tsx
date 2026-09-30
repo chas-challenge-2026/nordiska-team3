@@ -5,17 +5,11 @@ import { UserProfile } from '../components/UserProfile'
 import './DashboardPage.css'
 import { AppNav } from '../components/AppNav'
 import {
-<<<<<<< HEAD
-    deposit,
-    getAccounts,
-    getTransactionsForAccount,
-=======
     createAccount,
     deposit,
     getAccounts,
     getTransactionsForAccount,
     renameAccount,
->>>>>>> dev
     withdraw,
     type BackendAccount,
     type BackendTransaction,
@@ -69,16 +63,6 @@ function formatBackendBalance(balance: string) {
 }
 
 function mapBackendAccountToDashboardAccount(account: BackendAccount, index: number): Account {
-<<<<<<< HEAD
-    const variants: CreateAccountVariant[] = ['default', 'accent', 'success', 'danger', 'purple', 'pink']
-
-    return {
-        id: account.id,
-        icon: createAccountIconOptions[index % createAccountIconOptions.length].icon,
-        label: account.name.toUpperCase(),
-        value: formatBackendBalance(account.balance),
-        variant: variants[index % variants.length],
-=======
     const presentation = getAccountPresentation(account.id, index)
 
     return {
@@ -87,7 +71,6 @@ function mapBackendAccountToDashboardAccount(account: BackendAccount, index: num
         label: account.name.toUpperCase(),
         value: formatBackendBalance(account.balance),
         variant: presentation.variant,
->>>>>>> dev
     }
 }
 
