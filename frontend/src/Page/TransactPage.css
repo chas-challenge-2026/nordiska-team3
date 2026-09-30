@@ -271,9 +271,15 @@
 }
 
 .transact-message {
+  min-height: 16px;
   font-size: 12px;
   font-weight: 700;
+  line-height: 16px;
   margin: 0;
+}
+
+.transact-message--empty {
+  visibility: hidden;
 }
 
 .transact-message--error {

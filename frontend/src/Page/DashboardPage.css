@@ -247,6 +247,10 @@
   padding: var(--space-3);
 }
 
+.dashboard-transaction-modal__message--empty {
+  visibility: hidden;
+}
+
 .dashboard-transaction-modal__actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -326,6 +330,15 @@
 .create-account-modal {
   display: flex;
   flex-direction: column;
+}
+
+.create-account-modal__message {
+  min-height: 16px;
+  margin: 6px 0 0;
+  color: var(--color-danger);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 16px;
 }
 
 .create-account-modal__field {
@@ -747,9 +760,11 @@
 }
 
 .account-modal .transact-message {
+  min-height: 16px;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.01em;
+  line-height: 16px;
   margin: 0;
 }
 
@@ -788,6 +803,10 @@
 
 .account-modal__message {
   color: var(--color-text-secondary);
+}
+
+.account-modal__message--empty {
+  visibility: hidden;
 }
 
 .account-modal__empty {
@@ -898,6 +917,13 @@
     min-height: 42px;
     padding: 10px 16px;
     font-size: 14px;
+  }
+
+  .create-account-modal__message {
+    min-height: 14px;
+    margin-top: 4px;
+    font-size: 10px;
+    line-height: 14px;
   }
 
   .create-account-modal__field {
