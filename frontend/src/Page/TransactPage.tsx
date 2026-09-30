@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import { type FormEvent, useEffect, useState } from 'react'
 import { UserProfile } from '../components/UserProfile'
 import { useLogout } from '../hooks/useLogout'
@@ -13,6 +14,19 @@ import {
     getAccountPresentation,
     type AccountPresentation,
 } from '../utils/accountPresentation'
+
+const transactSchema = z.object({
+    accountId: z.string().trim().min(1, 'Välj ett konto.'),
+    amount: z
+        .string()
+        .trim()
+        .min(1, 'Ange ett belopp.')
+        .refine((value) => {
+            const numericAmount = Number(value.replace(',', '.'))
+
+            return !Number.isNaN(numericAmount) && numericAmount > 0
+        }, 'Ange ett giltigt belopp större än 0.'),
+})
 
 type Mode = 'deposit' | 'withdraw'
 
@@ -99,17 +113,22 @@ function TransactPage() {
         event.preventDefault()
         setSuccess('')
 
+        const validation = transactSchema.safeParse({
+            accountId,
+            amount,
+        })
+
+        if (!validation.success) {
+            setError(validation.error.issues[0]?.message ?? 'Kontrollera transaktionen.')
+            return
+        }
+
         if (!selectedAccount) {
             setError('Inget konto är valt.')
             return
         }
 
-        const numericAmount = Number(amount.replace(',', '.'))
-
-        if (!amount || Number.isNaN(numericAmount) || numericAmount <= 0) {
-            setError('Ange ett giltigt belopp större än 0.')
-            return
-        }
+        const numericAmount = Number(validation.data.amount.replace(',', '.'))
 
         if (mode === 'withdraw' && numericAmount > selectedAccount.balance) {
             setError('Beloppet överstiger tillgängligt saldo.')
