@@ -2,12 +2,8 @@ import { type HistoryTransaction, type TransactionType } from './mockHistoryTran
 import { UserProfile } from '../components/UserProfile'
 import './HistoryPage.css'
 import { useEffect, useState } from 'react'
-import {
-    getAccounts,
-    getTransactionsForAccount,
-    type BackendAccount,
-    type BackendTransaction,
-} from '../services/accountService'
+import { type BackendAccount, type BackendTransaction } from '../services/accountService'
+import { getAccountsWithTransactions } from '../services/accountOverviewService'
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react'
 import { AppNav } from '../components/AppNav'
 import { DecorativeCircle } from '../components/DecorativeCircle'
@@ -135,16 +131,12 @@ function HistoryPage() {
                 setIsLoadingTransactions(true)
                 setTransactionsError('')
 
-                const accounts = await getAccounts()
+                const accountTransactionGroups = await getAccountsWithTransactions()
 
-                const transactionGroups = await Promise.all(
-                    accounts.map(async (account) => {
-                        const accountTransactions = await getTransactionsForAccount(account.id)
-
-                        return accountTransactions.map((transaction) =>
-                            mapBackendTransactionToHistoryTransaction(transaction, account)
-                        )
-                    })
+                const transactionGroups = accountTransactionGroups.map(({ account, transactions }) =>
+                    transactions.map((transaction) =>
+                        mapBackendTransactionToHistoryTransaction(transaction, account)
+                    )
                 )
 
                 if (!isMounted) return

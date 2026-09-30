@@ -14,19 +14,7 @@ import {
     getAccountPresentation,
     type AccountPresentation,
 } from '../utils/accountPresentation'
-
-const transactSchema = z.object({
-    accountId: z.string().trim().min(1, 'Välj ett konto.'),
-    amount: z
-        .string()
-        .trim()
-        .min(1, 'Ange ett belopp.')
-        .refine((value) => {
-            const numericAmount = Number(value.replace(',', '.'))
-
-            return !Number.isNaN(numericAmount) && numericAmount > 0
-        }, 'Ange ett giltigt belopp större än 0.'),
-})
+import { transactSchema } from '../schemas/transactionSchema'
 
 const transferSchema = z
     .object({
@@ -382,8 +370,17 @@ function TransactPage() {
                             />
                         </div>
 
-                        {error && <p className="transact-message transact-message--error">{error}</p>}
-                        {success && <p className="transact-message transact-message--success">{success}</p>}
+                        <p
+                            className={`transact-message ${
+                                error
+                                    ? 'transact-message--error'
+                                    : success
+                                      ? 'transact-message--success'
+                                      : 'transact-message--empty'
+                            }`}
+                        >
+                            {error || success}
+                        </p>
 
                         <button type="submit" className="transact-submit-btn" disabled={isSubmitting}>
                             {isSubmitting
