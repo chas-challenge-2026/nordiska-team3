@@ -1,4 +1,3 @@
-import { z } from 'zod'
 import { type FormEvent, useState } from 'react'
 import { Eye, EyeOff, Moon, PlusSquare, ShieldCheck, Sun } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -8,19 +7,7 @@ import { Input } from '../components/Input'
 import { DecorativeCircle } from '../components/DecorativeCircle'
 import { useTheme } from '../context/useTheme'
 import { login } from '../services/authService'
-
-const loginSchema = z.object({
-    personalNumber: z
-        .string()
-        .trim()
-        .min(1, 'Fyll i personnummer.')
-        .regex(/^\d{8}-\d{4}$/, 'Personnummer ska anges i formatet ÅÅÅÅMMDD-XXXX.'),
-    pin: z
-        .string()
-        .trim()
-        .min(1, 'Fyll i PIN-kod.')
-        .regex(/^\d{4,6}$/, 'PIN-koden ska vara 4-6 siffror.'),
-})
+import { loginSchema } from '../schemas/loginSchema'
 
 function LoginPage() {
     const navigate = useNavigate()
