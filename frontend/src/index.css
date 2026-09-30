@@ -249,6 +249,24 @@ select {
   font: inherit;
 }
 
+button:not(:disabled),
+a[href] {
+  transition:
+    translate 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    opacity 160ms ease;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  button:not(:disabled):hover,
+  a[href]:hover {
+    translate: 0 -1px;
+  }
+}
+
 h1,
 h2,
 h3,

@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import { type FormEvent, useEffect, useState } from 'react'
 import { UserProfile } from '../components/UserProfile'
 import { useLogout } from '../hooks/useLogout'
@@ -15,7 +16,26 @@ import {
 } from '../utils/accountPresentation'
 import { transactSchema } from '../schemas/transactionSchema'
 
-type Mode = 'deposit' | 'withdraw'
+const transferSchema = z
+    .object({
+        accountId: z.string().trim().min(1, 'Välj ett konto att flytta från.'),
+        toAccountId: z.string().trim().min(1, 'Välj ett konto att flytta till.'),
+        amount: z
+            .string()
+            .trim()
+            .min(1, 'Ange ett belopp.')
+            .refine((value) => {
+                const numericAmount = Number(value.replace(',', '.'))
+
+                return !Number.isNaN(numericAmount) && numericAmount > 0
+            }, 'Ange ett giltigt belopp större än 0.'),
+    })
+    .refine((data) => data.accountId !== data.toAccountId, {
+        message: 'Från- och till-konto måste vara olika.',
+        path: ['toAccountId'],
+    })
+
+type Mode = 'deposit' | 'withdraw' | 'transfer'
 
 function formatKr(amount: number) {
     return `${amount.toLocaleString('sv-SE')} kr`
@@ -45,6 +65,7 @@ function TransactPage() {
     const [mode, setMode] = useState<Mode>('deposit')
     const [accounts, setAccounts] = useState<TransactAccount[]>([])
     const [accountId, setAccountId] = useState('')
+    const [toAccountId, setToAccountId] = useState('')
     const [isLoadingAccounts, setIsLoadingAccounts] = useState(true)
     const [accountsError, setAccountsError] = useState('')
     const [amount, setAmount] = useState('')
@@ -53,6 +74,7 @@ function TransactPage() {
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     const selectedAccount = accounts.find((acc) => acc.id === accountId) ?? accounts[0] ?? null
+    const selectedToAccount = accounts.find((acc) => acc.id === toAccountId) ?? null
 
     useEffect(() => {
         let isMounted = true
@@ -72,6 +94,7 @@ function TransactPage() {
 
                 setAccounts(mappedAccounts)
                 setAccountId(mappedAccounts[0]?.id ?? '')
+                setToAccountId(mappedAccounts[1]?.id ?? mappedAccounts[0]?.id ?? '')
             } catch {
                 if (!isMounted) return
 
@@ -99,6 +122,65 @@ function TransactPage() {
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
         setSuccess('')
+
+        if (mode === 'transfer') {
+            const validation = transferSchema.safeParse({
+                accountId,
+                toAccountId,
+                amount,
+            })
+
+            if (!validation.success) {
+                setError(validation.error.issues[0]?.message ?? 'Kontrollera överföringen.')
+                return
+            }
+
+            if (!selectedAccount || !selectedToAccount) {
+                setError('Inget konto är valt.')
+                return
+            }
+
+            const numericAmount = Number(validation.data.amount.replace(',', '.'))
+
+            if (numericAmount > selectedAccount.balance) {
+                setError('Beloppet överstiger tillgängligt saldo.')
+                return
+            }
+
+            setError('')
+            setIsSubmitting(true)
+
+            try {
+                const withdrawResult = await withdraw(selectedAccount.id, numericAmount)
+                const depositResult = await deposit(selectedToAccount.id, numericAmount)
+
+                const updatedFromBalance = parseBackendBalance(withdrawResult.balance)
+                const updatedToBalance = parseBackendBalance(depositResult.balance)
+
+                setAccounts((currentAccounts) =>
+                    currentAccounts.map((account) => {
+                        if (account.id === selectedAccount.id) {
+                            return { ...account, balance: updatedFromBalance }
+                        }
+                        if (account.id === selectedToAccount.id) {
+                            return { ...account, balance: updatedToBalance }
+                        }
+                        return account
+                    })
+                )
+
+                setSuccess(
+                    `${formatKr(numericAmount)} har flyttats från ${selectedAccount.name} till ${selectedToAccount.name}.`
+                )
+                setAmount('')
+            } catch (error) {
+                setError(error instanceof Error ? error.message : 'Överföringen misslyckades.')
+            } finally {
+                setIsSubmitting(false)
+            }
+
+            return
+        }
 
         const validation = transactSchema.safeParse({
             accountId,
@@ -175,23 +257,30 @@ function TransactPage() {
         <div className="transact-content">
                 <div className="transact-header">
                     <h1 tabIndex={0}>Flytta pengar</h1>
-                    <p>Sätt in eller ta ut medel från dina sparkonton.</p>
+                    <p>Sätt in, ta ut eller flytta medel mellan dina sparkonton.</p>
                 </div>
 
                     <div className="pill-toggle-row">
                         <button
                             type="button"
-                            className={`pill-toggle ${mode === 'deposit' ? 'pill-toggle--active' : ''}`}
+                            className={`pill-toggle pill-toggle--deposit ${mode === 'deposit' ? 'pill-toggle--active' : ''}`}
                             onClick={() => handleModeChange('deposit')}
                         >
                             Sätt in
                         </button>
                         <button
                             type="button"
-                            className={`pill-toggle ${mode === 'withdraw' ? 'pill-toggle--active' : ''}`}
+                            className={`pill-toggle pill-toggle--withdraw ${mode === 'withdraw' ? 'pill-toggle--active' : ''}`}
                             onClick={() => handleModeChange('withdraw')}
                         >
                             Ta ut
+                        </button>
+                        <button
+                            type="button"
+                            className={`pill-toggle pill-toggle--transfer ${mode === 'transfer' ? 'pill-toggle--active' : ''}`}
+                            onClick={() => handleModeChange('transfer')}
+                        >
+                            Mellan konton
                         </button>
                     </div>
 
@@ -219,9 +308,21 @@ function TransactPage() {
                         </div>
                     )}
 
+                    {mode === 'transfer' && selectedToAccount && (
+                        <div className={`account-preview-card account-preview-card--${selectedToAccount.variant ?? 'default'}`}>
+                            <div className={`account-preview-header account-preview-header--${selectedToAccount.variant ?? 'default'}`}>
+                                {selectedToAccount.icon}
+                                <span>TILL: {selectedToAccount.name.toUpperCase()}</span>
+                            </div>
+                            <p className={`account-preview-value account-preview-value--${selectedToAccount.variant ?? 'default'}`}>
+                                {formatKr(selectedToAccount.balance)}
+                            </p>
+                        </div>
+                    )}
+
                     <form onSubmit={handleSubmit} className="transact-form-card">
                         <div className="transact-field">
-                            <label className="transact-label">Konto</label>
+                            <label className="transact-label">{mode === 'transfer' ? 'Från konto' : 'Konto'}</label>
                             <div className="select-wrapper">
                                 <select
                                     className="transact-pill-input"
@@ -237,6 +338,26 @@ function TransactPage() {
                                 <ChevronDown size={16} className="select-chevron" />
                             </div>
                         </div>
+
+                        {mode === 'transfer' && (
+                            <div className="transact-field">
+                                <label className="transact-label">Till konto</label>
+                                <div className="select-wrapper">
+                                    <select
+                                        className="transact-pill-input"
+                                        value={toAccountId}
+                                        onChange={(e) => setToAccountId(e.target.value)}
+                                    >
+                                    {accounts.map((acc) => (
+                                        <option key={acc.id} value={acc.id}>
+                                            {acc.name} — {formatKr(acc.balance)}
+                                        </option>
+                                    ))}
+                                    </select>
+                                    <ChevronDown size={16} className="select-chevron" />
+                                </div>
+                            </div>
+                        )}
 
                         <div className="transact-field">
                             <label className="transact-label">Belopp (kr)</label>
@@ -263,8 +384,16 @@ function TransactPage() {
 
                         <button type="submit" className="transact-submit-btn" disabled={isSubmitting}>
                             {isSubmitting
-                                ? mode === 'deposit' ? 'Sätter in...' : 'Tar ut...'
-                                : mode === 'deposit' ? 'Sätt in pengar' : 'Ta ut pengar'}
+                                ? mode === 'deposit'
+                                    ? 'Sätter in...'
+                                    : mode === 'withdraw'
+                                        ? 'Tar ut...'
+                                        : 'Flyttar...'
+                                : mode === 'deposit'
+                                    ? 'Sätt in pengar'
+                                    : mode === 'withdraw'
+                                        ? 'Ta ut pengar'
+                                        : 'Flytta pengar'}
                         </button>
                     </form>
                 </div>

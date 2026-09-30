@@ -95,25 +95,41 @@
   background: var(--color-surface);
   color: var(--color-text-primary);
   box-shadow: var(--shadow-sm);
+  transition: color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pill-toggle:hover {
+  color: var(--color-primary-text);
 }
 
 .pill-toggle--deposit.pill-toggle--active {
-  background: var(--color-success-soft);
   color: var(--color-pine-teal);
+  box-shadow: var(--shadow-sm), 0 0 0 2px var(--color-pine-teal) inset;
 }
 
 [data-theme="dark"] .pill-toggle--deposit.pill-toggle--active {
-  background: var(--color-success-soft);
   color: var(--color-success);
+  box-shadow: var(--shadow-sm), 0 0 0 2px var(--color-success) inset;
 }
 
 .pill-toggle--withdraw.pill-toggle--active {
-  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
-  color: var(--color-on-primary);
+  color: var(--color-primary-text);
+  box-shadow: var(--shadow-sm), 0 0 0 2px var(--color-primary) inset;
 }
 
 [data-theme="dark"] .pill-toggle--withdraw.pill-toggle--active {
-  color: var(--color-on-primary);
+  color: var(--color-primary-soft);
+  box-shadow: var(--shadow-sm), 0 0 0 2px var(--color-primary) inset;
+}
+
+.pill-toggle--transfer.pill-toggle--active {
+  color: var(--color-yale-blue-800);
+  box-shadow: var(--shadow-sm), 0 0 0 2px var(--color-yale-blue-800) inset;
+}
+
+[data-theme="dark"] .pill-toggle--transfer.pill-toggle--active {
+  color: var(--color-navy-accent);
+  box-shadow: var(--shadow-sm), 0 0 0 2px var(--color-navy-accent) inset;
 }
 
 /* Account preview card */
