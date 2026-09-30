@@ -137,12 +137,59 @@
   margin-bottom: var(--space-2);
 }
 
+.account-preview-header svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.6;
+}
+
+.account-preview-header--accent {
+  color: var(--color-primary-text);
+}
+
+.account-preview-header--success {
+  color: var(--color-jungle-teal);
+}
+
+.account-preview-header--danger {
+  color: var(--color-danger);
+}
+
+.account-preview-header--purple {
+  color: var(--color-yale-blue-800);
+}
+
+.account-preview-header--pink {
+  color: var(--color-danger);
+}
+
 .account-preview-value {
   font-family: monospace;
   font-size: 32px;
   font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
+}
+
+.account-preview-value--accent {
+  color: var(--color-primary-text);
+}
+
+.account-preview-value--success {
+  color: var(--color-jungle-teal);
+}
+
+.account-preview-value--danger {
+  color: var(--color-danger);
+}
+
+.account-preview-value--purple {
+  color: var(--color-yale-blue-800);
+}
+
+.account-preview-value--pink {
+  color: var(--color-danger);
 }
 
 /* Form card */
