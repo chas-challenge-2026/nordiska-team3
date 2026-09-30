@@ -197,7 +197,7 @@
   padding: var(--space-3) var(--space-5);
   border: none;
   cursor: pointer;
-  transition: opacity 0.2s, background-color 0.2s;
+  transition: box-shadow 0.2s, background-color 0.2s;
 }
 
 .button:disabled {
@@ -212,7 +212,7 @@
 }
 
 .button--primary:hover:not(:disabled) {
-  opacity: 0.9;
+  box-shadow: var(--shadow-md);
 }
 
 .button--secondary {

@@ -52,13 +52,17 @@
   gap: 6px;
 }
 
-.pill-toggle--active {
-  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
-  color: var(--color-on-primary);
+.pill-toggle--active,
+.pill-toggle--active:hover {
+  background: var(--color-surface);
+  color: var(--color-primary-text);
+  box-shadow: var(--shadow-sm), inset 0 0 0 2px var(--color-primary);
 }
 
-[data-theme="dark"] .pill-toggle--active {
-  color: var(--color-on-primary);
+[data-theme="dark"] .pill-toggle--active,
+[data-theme="dark"] .pill-toggle--active:hover {
+  background: var(--color-surface);
+  color: var(--color-primary-soft);
 }
 
 /* Statusprick på årsknappen */
@@ -74,7 +78,11 @@
 }
 
 .pill-toggle--active .pill-status-dot--ready {
-  background: var(--color-on-primary);
+  background: var(--color-primary-text);
+}
+
+[data-theme="dark"] .pill-toggle--active .pill-status-dot--ready {
+  background: var(--color-primary-soft);
 }
 
 .pill-status-dot--pending {
