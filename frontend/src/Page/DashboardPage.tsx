@@ -36,6 +36,8 @@ import {
     type AccountPresentation,
     type AccountVariant,
 } from '../utils/accountPresentation'
+import { createAccountSchema } from '../schemas/accountSchema'
+import { transactionAmountSchema } from '../schemas/transactionSchema'
 
 type CreateAccountIconId = AccountIconId
 type CreateAccountVariant = AccountVariant
@@ -125,6 +127,7 @@ function DashboardPage() {
     const [accounts, setAccounts] = useState<Account[]>([])
     const [isLoadingAccounts, setIsLoadingAccounts] = useState(true)
     const [accountsError, setAccountsError] = useState('')
+    const [createAccountError, setCreateAccountError] = useState('')
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
     const [newAccountName, setNewAccountName] = useState('')
     const [newAccountIconId, setNewAccountIconId] = useState<CreateAccountIconId>('piggyBank')
@@ -260,8 +263,16 @@ function DashboardPage() {
     }
 
     async function handleCreateAccount() {
-        const trimmedName = newAccountName.trim()
-        if (!trimmedName) return
+        const validation = createAccountSchema.safeParse({
+            name: newAccountName,
+        })
+
+        if (!validation.success) {
+            setCreateAccountError(validation.error.issues[0]?.message ?? 'Kontrollera kontonamnet.')
+            return
+        }
+
+        const trimmedName = validation.data.name
 
         const presentation: AccountPresentation = {
             iconId: newAccountIconId,
@@ -285,22 +296,26 @@ function DashboardPage() {
             setNewAccountName('')
             setNewAccountIconId('piggyBank')
             setNewAccountVariant('default')
+            setCreateAccountError('')
             setIsCreateModalOpen(false)
         } catch (error) {
-            setAccountsError(error instanceof Error ? error.message : 'Kunde inte skapa konto.')
+            setCreateAccountError(error instanceof Error ? error.message : 'Kunde inte skapa konto.')
         }
     }
 
     async function handleModalTransaction() {
         if (!selectedAccount) return
 
-        const amount = Number(modalAmount.replace(',', '.'))
+        const validation = transactionAmountSchema.safeParse({
+            amount: modalAmount,
+        })
 
-        if (!modalAmount || Number.isNaN(amount) || amount <= 0) {
-            setModalTransactionMessage('Ange ett giltigt belopp större än 0 kr.')
+        if (!validation.success) {
+            setModalTransactionMessage(validation.error.issues[0]?.message ?? 'Kontrollera beloppet.')
             return
         }
 
+        const amount = Number(validation.data.amount.replace(',', '.'))
         const currentBalance = parseKr(selectedAccount.value)
 
         if (modalTransactionType === 'withdrawal' && amount > currentBalance) {
@@ -352,12 +367,16 @@ function DashboardPage() {
     async function handleDashboardTransaction() {
         if (!dashboardTransactionType || !dashboardTransactionAccount) return
 
-        const amount = Number(dashboardTransactionAmount.replace(',', '.'))
+        const validation = transactionAmountSchema.safeParse({
+            amount: dashboardTransactionAmount,
+        })
 
-        if (!dashboardTransactionAmount || Number.isNaN(amount) || amount <= 0) {
-            setDashboardTransactionMessage('Ange ett giltigt belopp större än 0 kr.')
+        if (!validation.success) {
+            setDashboardTransactionMessage(validation.error.issues[0]?.message ?? 'Kontrollera beloppet.')
             return
         }
+
+        const amount = Number(validation.data.amount.replace(',', '.'))
 
         const currentBalance = parseKr(dashboardTransactionAccount.value)
 
@@ -461,7 +480,10 @@ function DashboardPage() {
 
                     <Modal
                         isOpen={isCreateModalOpen}
-                        onClose={() => setIsCreateModalOpen(false)}
+                        onClose={() => {
+                            setIsCreateModalOpen(false)
+                            setCreateAccountError('')
+                        }}
                         title="Skapa nytt sparkonto"
                     >
                         <div className="create-account-modal">
@@ -470,8 +492,15 @@ function DashboardPage() {
                                 type="text"
                                 placeholder="T.ex. Resekassa"
                                 value={newAccountName}
-                                onChange={(e) => setNewAccountName(e.target.value)}
+                                onChange={(e) => {
+                                    setNewAccountName(e.target.value)
+                                    setCreateAccountError('')
+                                }}
                             />
+
+                            <p className="create-account-modal__message">
+                                {createAccountError}
+                            </p>
 
                             <div className="create-account-modal__field">
                                 <p>Ikon</p>
@@ -586,11 +615,13 @@ function DashboardPage() {
                                             />
                                         </div>
 
-                                        {modalTransactionMessage && (
-                                            <p className="transact-message account-modal__message">
-                                                {modalTransactionMessage}
-                                            </p>
-                                        )}
+                                        <p
+                                            className={`transact-message account-modal__message ${
+                                                modalTransactionMessage ? '' : 'account-modal__message--empty'
+                                            }`}
+                                        >
+                                            {modalTransactionMessage}
+                                        </p>
 
                                         <button
                                             type="button"
@@ -643,11 +674,13 @@ function DashboardPage() {
                                     }}
                                 />
 
-                                {dashboardTransactionMessage && (
-                                    <p className="dashboard-transaction-modal__message">
-                                        {dashboardTransactionMessage}
-                                    </p>
-                                )}
+                                <p
+                                    className={`dashboard-transaction-modal__message ${
+                                        dashboardTransactionMessage ? '' : 'dashboard-transaction-modal__message--empty'
+                                    }`}
+                                >
+                                    {dashboardTransactionMessage}
+                                </p>
 
                                 <div className="dashboard-transaction-modal__actions">
                                     <Button type="button" variant="secondary" onClick={closeDashboardTransactionModal}>
