@@ -4,5 +4,5 @@ namespace NordiskaPortal.API.Repositories.Interfaces;
 
 public interface ITransactionRepository : IRepository<Transaction>
 {
-    Task<IReadOnlyList<Transaction>> GetByAccountIdAsync(Guid accountId); // Nyast transaktionen först
+    Task<(IReadOnlyList<Transaction> Items, int TotalCount)> GetByAccountIdAsync(Guid accountId, int page, int pageSize); // Nyast transaktionen först
 }

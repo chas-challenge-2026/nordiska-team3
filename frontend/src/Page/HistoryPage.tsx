@@ -1,9 +1,9 @@
-import { type HistoryTransaction, type TransactionType } from './mockHistoryTransaction'
+import { type TransactionType } from './mockHistoryTransaction'
 import { UserProfile } from '../components/UserProfile'
 import './HistoryPage.css'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { type BackendAccount, type BackendTransaction } from '../services/accountService'
-import { getAccountsWithTransactions } from '../services/accountOverviewService'
+import { useAccountsWithTransactions } from '../hooks/useAccountsWithTransactions'
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react'
 import { AppNav } from '../components/AppNav'
 import { DecorativeCircle } from '../components/DecorativeCircle'
@@ -119,46 +119,10 @@ function HistoryPage() {
     const { toggleTheme } = useTheme()
     const [activeFilter, setActiveFilter] = useState<HistoryFilter>('all')
     const [activeAccount, setActiveAccount] = useState<AccountFilter>('all')
-    const [transactions, setTransactions] = useState<HistoryTransaction[]>([])
-    const [isLoadingTransactions, setIsLoadingTransactions] = useState(true)
-    const [transactionsError, setTransactionsError] = useState('')
-
-    useEffect(() => {
-        let isMounted = true
-
-        async function loadTransactions() {
-            try {
-                setIsLoadingTransactions(true)
-                setTransactionsError('')
-
-                const accountTransactionGroups = await getAccountsWithTransactions()
-
-                const transactionGroups = accountTransactionGroups.map(({ account, transactions }) =>
-                    transactions.map((transaction) =>
-                        mapBackendTransactionToHistoryTransaction(transaction, account)
-                    )
-                )
-
-                if (!isMounted) return
-
-                setTransactions(transactionGroups.flat())
-            } catch {
-                if (!isMounted) return
-
-                setTransactionsError('Kunde inte hämta transaktioner.')
-            } finally {
-                if (isMounted) {
-                    setIsLoadingTransactions(false)
-                }
-            }
-        }
-
-        loadTransactions()
-
-        return () => {
-            isMounted = false
-        }
-    }, [])
+    const { data: accountTransactionGroups, isLoading: isLoadingTransactions, isError: transactionsError } = useAccountsWithTransactions()
+    const transactions = (accountTransactionGroups ?? []).flatMap(({ account, transactions: groupTransactions }) =>
+        groupTransactions.map((transaction) => mapBackendTransactionToHistoryTransaction(transaction, account))
+    )
 
     const accountFilters = Array.from(new Set(transactions.map((transaction) => transaction.accountName)))
 
