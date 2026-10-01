@@ -3,6 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using NordiskaPortal.API.DTOs.Accounts;
 using NordiskaPortal.API.DTOs.ErrorResponse;
 using NordiskaPortal.API.Services.Interfaces;
@@ -12,7 +13,7 @@ namespace NordiskaPortal.API.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
-public class  AccountsController : ControllerBase
+public class AccountsController : ControllerBase
 {
     private readonly IAccountService _accountService;
 
@@ -46,9 +47,10 @@ public class  AccountsController : ControllerBase
         var account = await _accountService.GetBalanceAsync(CurrentUserId, accountId);
         if (account is null) return NotFound(new ErrorResponseDto("Account does not exist."));
 
-        return Ok(account);   
+        return Ok(account);
     }
 
+    [EnableRateLimiting("SensitiveEndpointsPolicy")]
     [HttpPost("{accountId}/deposit")]
     public async Task<IActionResult> Deposit(Guid accountId, TransactionRequestDto request)
     {
@@ -61,6 +63,7 @@ public class  AccountsController : ControllerBase
             result.Balance!.Value.ToString("F2", CultureInfo.InvariantCulture)));
     }
 
+    [EnableRateLimiting("SensitiveEndpointsPolicy")]
     [HttpPost("{accountId}/withdraw")]
     public async Task<IActionResult> Withdraw(Guid accountId, TransactionRequestDto request)
     {
