@@ -1,7 +1,12 @@
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 using NordiskaPortal.API.Data;
 using NordiskaPortal.API.Extensions;
-using Microsoft.EntityFrameworkCore;
 using NordiskaPortal.API.Filters;
+using NordiskaPortal.API.Services;
+using NordiskaPortal.API.Services.Interfaces;
+using System.Security.Claims;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +20,38 @@ builder.Services.AddApplicationServices();
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<ValidationFilter>();
+});
+
+builder.Services.AddScoped<IFaqService, FaqService>();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("SensitiveEndpointsPolicy", httpContext =>
+    {
+        // Använder användar-ID om inloggad, annars klientens IP-adress
+        var partitionKey = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                           ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                           ?? "anonymous";
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: partitionKey,
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            });
+    });
+
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.ContentType = "application/json";
+        await context.HttpContext.Response.WriteAsync(
+            "{\"message\": \"Too many requests. Please try again after 1 minute.\"}",
+            cancellationToken);
+    };
 });
 
 var app = builder.Build();
@@ -41,6 +78,8 @@ app.UseStaticFiles();
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+app.UseRateLimiter();
 
 app.MapControllers();
 
