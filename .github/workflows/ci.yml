@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [dev]
+  push:
+    branches: [dev]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Restore
+        run: dotnet restore NordiskaPortal.API/NordiskaPortal.API.csproj
+      - name: Build
+        run: dotnet build NordiskaPortal.API/NordiskaPortal.API.csproj --no-restore --configuration Release
+      - name: Restore tests
+        run: dotnet restore NordiskaPortal.Tests/NordiskaPortal.Tests.csproj
+      - name: Test
+        run: dotnet test NordiskaPortal.Tests/NordiskaPortal.Tests.csproj --configuration Release
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Build
+        run: npm run build

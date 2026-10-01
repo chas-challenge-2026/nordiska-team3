@@ -197,7 +197,7 @@
   padding: var(--space-3) var(--space-5);
   border: none;
   cursor: pointer;
-  transition: opacity 0.2s, background-color 0.2s;
+  transition: box-shadow 0.2s, background-color 0.2s;
 }
 
 .button:disabled {
@@ -207,12 +207,12 @@
 
 .button--primary {
   background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
-  color: var(--color-text-primary);
+  color: var(--color-on-primary);
   box-shadow: var(--shadow-sm);
 }
 
 .button--primary:hover:not(:disabled) {
-  opacity: 0.9;
+  box-shadow: var(--shadow-md);
 }
 
 .button--secondary {
@@ -223,6 +223,22 @@
 
 .button--secondary:hover:not(:disabled) {
   background-color: var(--color-surface-soft);
+}
+
+[data-theme="dark"] .user-profile,
+[data-theme="dark"] .login-card,
+[data-theme="dark"] .modal-card,
+[data-theme="dark"] .balance-card,
+[data-theme="dark"] .account-card,
+[data-theme="dark"] .recent-events__list,
+[data-theme="dark"] .dashboard-actions__button,
+[data-theme="dark"] .transaction-card,
+[data-theme="dark"] .account-preview-card,
+[data-theme="dark"] .transact-form-card,
+[data-theme="dark"] .tax-summary-card,
+[data-theme="dark"] .tax-breakdown-card,
+[data-theme="dark"] .tax-history-card {
+  border: 1px solid var(--color-border);
 }
 
 /* ============================= */
@@ -257,7 +273,7 @@
 }
 
 .input:focus {
-  box-shadow: 0 0 0 3px rgba(238, 169, 26, 0.35);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 35%, transparent);
 }
 
 .input--error {
@@ -327,8 +343,8 @@ h3[tabindex="0"]:focus-visible {
 
 .nav-icon--active {
   background: var(--color-primary);
-  color: var(--color-text-inverted);
-  box-shadow: 0 0 24px 4px rgba(245, 169, 15, 0.5);
+  color: var(--color-on-primary);
+  box-shadow: 0 0 24px 4px color-mix(in srgb, var(--color-primary) 50%, transparent);
 }
 /* ================================== */
 /* DecorativeCircle-komponent (Nordiska) */

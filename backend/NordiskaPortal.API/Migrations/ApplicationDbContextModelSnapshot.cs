@@ -61,6 +61,30 @@ namespace NordiskaPortal.API.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Accounts");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000002"),
+                            AccountNumber = "NKM-10001",
+                            AccountType = "CHECKING",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Transaktionskonto",
+                            Status = "ACTIVE",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            UserId = new Guid("d0000000-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000003"),
+                            AccountNumber = "NKM-10002",
+                            AccountType = "SAVINGS",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Sparkonto",
+                            Status = "ACTIVE",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            UserId = new Guid("d0000000-0000-0000-0000-000000000001")
+                        });
                 });
 
             modelBuilder.Entity("NordiskaPortal.API.Models.FaqEntry", b =>
@@ -149,6 +173,58 @@ namespace NordiskaPortal.API.Migrations
                     b.HasIndex("TransactionId");
 
                     b.ToTable("LedgerEntries");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000009"),
+                            AccountId = new Guid("d0000000-0000-0000-0000-000000000002"),
+                            Amount = 5000m,
+                            CreatedAt = new DateTime(2026, 1, 2, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Deposit",
+                            EntryType = "DEPOSIT",
+                            TransactionId = new Guid("d0000000-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-00000000000a"),
+                            AccountId = new Guid("d0000000-0000-0000-0000-000000000002"),
+                            Amount = 3000m,
+                            CreatedAt = new DateTime(2026, 1, 10, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Deposit",
+                            EntryType = "DEPOSIT",
+                            TransactionId = new Guid("d0000000-0000-0000-0000-000000000005")
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-00000000000b"),
+                            AccountId = new Guid("d0000000-0000-0000-0000-000000000002"),
+                            Amount = -750m,
+                            CreatedAt = new DateTime(2026, 1, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Withdrawal",
+                            EntryType = "WITHDRAWAL",
+                            TransactionId = new Guid("d0000000-0000-0000-0000-000000000006")
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-00000000000c"),
+                            AccountId = new Guid("d0000000-0000-0000-0000-000000000003"),
+                            Amount = 20000m,
+                            CreatedAt = new DateTime(2026, 1, 3, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Deposit",
+                            EntryType = "DEPOSIT",
+                            TransactionId = new Guid("d0000000-0000-0000-0000-000000000007")
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-00000000000d"),
+                            AccountId = new Guid("d0000000-0000-0000-0000-000000000003"),
+                            Amount = 5000m,
+                            CreatedAt = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Deposit",
+                            EntryType = "DEPOSIT",
+                            TransactionId = new Guid("d0000000-0000-0000-0000-000000000008")
+                        });
                 });
 
             modelBuilder.Entity("NordiskaPortal.API.Models.Notification", b =>
@@ -263,6 +339,58 @@ namespace NordiskaPortal.API.Migrations
                     b.HasIndex("AccountId");
 
                     b.ToTable("Transactions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000004"),
+                            AccountId = new Guid("d0000000-0000-0000-0000-000000000002"),
+                            Amount = 5000m,
+                            CompletedAt = new DateTime(2026, 1, 2, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2026, 1, 2, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = "COMPLETED",
+                            TransactionType = "DEPOSIT"
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000005"),
+                            AccountId = new Guid("d0000000-0000-0000-0000-000000000002"),
+                            Amount = 3000m,
+                            CompletedAt = new DateTime(2026, 1, 10, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2026, 1, 10, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = "COMPLETED",
+                            TransactionType = "DEPOSIT"
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000006"),
+                            AccountId = new Guid("d0000000-0000-0000-0000-000000000002"),
+                            Amount = 750m,
+                            CompletedAt = new DateTime(2026, 1, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2026, 1, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = "COMPLETED",
+                            TransactionType = "WITHDRAWAL"
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000007"),
+                            AccountId = new Guid("d0000000-0000-0000-0000-000000000003"),
+                            Amount = 20000m,
+                            CompletedAt = new DateTime(2026, 1, 3, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2026, 1, 3, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = "COMPLETED",
+                            TransactionType = "DEPOSIT"
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000008"),
+                            AccountId = new Guid("d0000000-0000-0000-0000-000000000003"),
+                            Amount = 5000m,
+                            CompletedAt = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = "COMPLETED",
+                            TransactionType = "DEPOSIT"
+                        });
                 });
 
             modelBuilder.Entity("NordiskaPortal.API.Models.User", b =>
@@ -312,6 +440,19 @@ namespace NordiskaPortal.API.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "demo@nordiskaportal.se",
+                            FirstName = "Demo",
+                            LastName = "Kund",
+                            PersonalNumber = "19850615-5678",
+                            PinHash = "$2b$12$Ma9ikA7xtUOXMH86.OZA7eYIEb.yDiazDkk5uu5M/4PpbuC3ORvSu",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        });
                 });
 
             modelBuilder.Entity("NordiskaPortal.API.Models.Account", b =>

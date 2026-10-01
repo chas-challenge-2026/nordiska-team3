@@ -90,4 +90,37 @@ public class AuthService : IAuthService
 
         return new AuthResult(response, refreshToken, refreshTokenExpiry);
     }
+
+    public async Task<RegisterResult> RegisterAsync(RegisterRequestDto request)
+    {
+        if (await _userRepository.GetByPersonalNumberAsync(request.PersonalNumber) is not null)
+        {
+            _logger.LogWarning("Registration attempt with already-registered personal number.");
+            return RegisterResult.Failure("A user with this personal number already exists.");
+        }
+
+        if (await _userRepository.ExistsByEmailAsync(request.Email))
+        {
+            _logger.LogWarning("Registration attempt with already-registered email.");
+            return RegisterResult.Failure("A user with this email already exists.");
+        }
+
+        var user = new User
+        {
+            PersonalNumber = request.PersonalNumber,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            Email = request.Email,
+            PinHash = BCrypt.Net.BCrypt.HashPassword(request.Pin),
+        };
+
+        await _userRepository.AddAsync(user);
+        await _userRepository.SaveChangesAsync();
+
+        var authResult = await IssueTokensAsync(user);
+
+        _logger.LogInformation("User {UserId} registered successfully.", user.Id);
+
+        return RegisterResult.Success(authResult);
+    }
 };

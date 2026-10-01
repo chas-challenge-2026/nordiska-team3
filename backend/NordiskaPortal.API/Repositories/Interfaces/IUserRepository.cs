@@ -6,4 +6,5 @@ public interface IUserRepository : IRepository<User>
 {
     Task<User?> GetByPersonalNumberAsync(string personalNumber); // Hämtar en användare baserat på personnummer
     Task<User?> GetByRefreshTokenAsync(string refreshToken); // Hämtar en användare baserat på refresh-token
+    Task<bool> ExistsByEmailAsync(string email); // Kollar om email redan finns hos en ny användare
 }

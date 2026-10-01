@@ -1,6 +1,6 @@
 .dashboard-actions {
   width: 100%;
-  max-width: 560px;
+  max-width: var(--desktop-content-width);
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-4);
@@ -35,7 +35,7 @@
 }
 
 .dashboard-actions__button--secondary {
-  background: #ffffff;
+  background: var(--color-text-inverted);
   color: var(--color-yale-blue-900);
 }
 
@@ -51,7 +51,7 @@
 
 .dashboard-actions__button--primary .dashboard-actions__icon {
   background: var(--color-primary);
-  color: #ffffff;
+  color: var(--color-on-primary);
 }
 
 .dashboard-actions__button--deposit {
@@ -60,53 +60,53 @@
 }
 
 .dashboard-actions__button--deposit .dashboard-actions__icon {
-  background: #17483d;
-  color: #ffffff;
+  background: var(--color-pine-teal);
+  color: var(--color-text-inverted);
 }
 
 .dashboard-actions__button--secondary:not(.dashboard-actions__button--deposit) .dashboard-actions__icon {
   background: var(--color-yale-blue-900);
-  color: #ffffff;
+  color: var(--color-text-inverted);
 }
 
 [data-theme="dark"] .dashboard-actions__button--deposit {
-  background: #d9ede1;
-  color: #17483d;
+  background: var(--color-success-soft);
+  color: var(--color-success);
 }
 
 [data-theme="dark"] .dashboard-actions__button--deposit .dashboard-actions__icon {
-  background: #17483d;
-  color: #ffffff;
+  background: var(--color-pine-teal);
+  color: var(--color-text-inverted);
 }
 
 [data-theme="dark"] .dashboard-actions__button--primary {
-  background: #f8e8c7;
-  color: #062f43;
+  background: var(--color-primary-pale);
+  color: var(--color-yale-blue-900);
 }
 
 [data-theme="dark"] .dashboard-actions__button--primary .dashboard-actions__icon {
-  background: #f5a90f;
-  color: #ffffff;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
 }
 
 [data-theme="dark"] .dashboard-actions__button--secondary {
-  background: #062f43;
-  color: #d7e7ef;
+  background: var(--color-yale-blue-900);
+  color: var(--color-alice-blue);
 }
 
 [data-theme="dark"] .dashboard-actions__button--secondary .dashboard-actions__icon {
-  background: #d7e7ef;
-  color: #062f43;
+  background: var(--color-alice-blue);
+  color: var(--color-yale-blue-900);
 }
 
 [data-theme="dark"] .dashboard-actions__button--secondary.dashboard-actions__button--deposit {
-  background: #d9ede1;
-  color: #17483d;
+  background: var(--color-success-soft);
+  color: var(--color-success);
 }
 
 [data-theme="dark"] .dashboard-actions__button--secondary.dashboard-actions__button--deposit .dashboard-actions__icon {
-  background: #17483d;
-  color: #ffffff;
+  background: var(--color-pine-teal);
+  color: var(--color-text-inverted);
 }
 
 @media (min-width: 521px) {

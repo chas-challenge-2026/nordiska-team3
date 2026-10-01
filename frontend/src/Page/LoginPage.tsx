@@ -7,6 +7,7 @@ import { Input } from '../components/Input'
 import { DecorativeCircle } from '../components/DecorativeCircle'
 import { useTheme } from '../context/useTheme'
 import { login } from '../services/authService'
+import { loginSchema } from '../schemas/loginSchema'
 
 function LoginPage() {
     const navigate = useNavigate()
@@ -26,9 +27,13 @@ function LoginPage() {
         event.preventDefault()
         setIsStartingBankId(false)
 
-        // Stoppar inloggningen direkt om något fält är tomt.
-        if (!personalNumber || !pin) {
-            setErrorMessage('Fyll i personnummer och PIN-kod.')
+        const validation = loginSchema.safeParse({
+            personalNumber,
+            pin,
+        })
+
+        if (!validation.success) {
+            setErrorMessage(validation.error.issues[0]?.message ?? 'Kontrollera dina uppgifter.')
             return
         }
 
@@ -36,8 +41,7 @@ function LoginPage() {
         setIsCheckingPin(true)
 
         try {
-            // authService.login() anropar backend och sparar token/user i localStorage internt.
-            await login(personalNumber, pin)
+            await login(validation.data.personalNumber, validation.data.pin)
 
             // När login lyckas skickas användaren vidare till dashboarden.
             navigate('/dashboard')
@@ -89,7 +93,7 @@ function LoginPage() {
                 </button>
 
                 <div className="login-stack">
-                    <div className="login-brand-card">
+                    <div className="login-brand-card brand-logo">
                         <span>Sparportal</span>
                         <strong>nordiska<span className="login-brand-dot">.</span></strong>
                     </div>

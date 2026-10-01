@@ -225,12 +225,12 @@ public class AccountService : IAccountService
         throw new InvalidOperationException("Could not generate a unique account number after several attempts.");
     }
 
-    public async Task<TransactionHistoryResponseDto?> GetTransactionHistoryAsync(Guid userId, Guid accountId)
+    public async Task<TransactionHistoryResponseDto?> GetTransactionHistoryAsync(Guid userId, Guid accountId, int page, int pageSize)
     {
         var account = await _accountRepository.GetByIdAsync(accountId);
         if (account is null || account.UserId != userId) return null;
 
-        var transactions = await _transactionRepository.GetByAccountIdAsync(accountId);
+        var (transactions, totalCount) = await _transactionRepository.GetByAccountIdAsync(accountId, page, pageSize);
 
         var dtos = transactions
             .Select(t => new TransactionDto(
@@ -242,7 +242,9 @@ public class AccountService : IAccountService
                 t.CompletedAt))
             .ToList();
 
-        return new TransactionHistoryResponseDto(dtos);
+        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+        return new TransactionHistoryResponseDto(dtos, page, pageSize, totalCount, totalPages);
     }
 
     private static AccountDto MapToDto(Account account, decimal balance) =>

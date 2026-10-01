@@ -1,6 +1,6 @@
 .balance-overview {
   width: 100%;
-  max-width: 560px;
+  max-width: var(--desktop-content-width);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -22,7 +22,7 @@
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.06em;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   margin: 0 0 var(--space-2);
 }
 
@@ -89,11 +89,23 @@
 }
 
 .account-card-header--accent {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .account-card-header--success {
   color: var(--color-jungle-teal);
+}
+
+.account-card-header--danger {
+  color: var(--color-danger);
+}
+
+.account-card-header--purple {
+  color: var(--color-yale-blue-800);
+}
+
+.account-card-header--pink {
+  color: var(--color-danger);
 }
 
 .account-card-footer {
@@ -111,11 +123,23 @@
 }
 
 .account-card-value--accent {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .account-card-value--success {
   color: var(--color-jungle-teal);
+}
+
+.account-card-value--danger {
+  color: var(--color-danger);
+}
+
+.account-card-value--purple {
+  color: var(--color-yale-blue-800);
+}
+
+.account-card-value--pink {
+  color: var(--color-danger);
 }
 
 .account-card-chevron {
@@ -124,30 +148,93 @@
 }
 
 .account-card-chevron--accent {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
+}
+
+[data-theme="dark"] .account-card-header--success,
+[data-theme="dark"] .account-card-value--success,
+[data-theme="dark"] .account-card-chevron--success {
+  color: var(--color-success);
 }
 
 .account-card-chevron--success {
   color: var(--color-jungle-teal);
 }
 
+.account-card-chevron--danger {
+  color: var(--color-danger);
+}
+
+[data-theme="dark"] .account-card-header--danger,
+[data-theme="dark"] .account-card-value--danger,
+[data-theme="dark"] .account-card-chevron--danger {
+  color: var(--color-danger);
+}
+
+.account-card-chevron--purple {
+  color: var(--color-yale-blue-800);
+}
+
+.account-card-chevron--pink {
+  color: var(--color-danger);
+}
+
+[data-theme="dark"] .account-card-header--purple,
+[data-theme="dark"] .account-card-value--purple,
+[data-theme="dark"] .account-card-chevron--purple {
+  color: var(--color-alice-blue);
+}
+
+[data-theme="dark"] .account-card-header--pink,
+[data-theme="dark"] .account-card-value--pink,
+[data-theme="dark"] .account-card-chevron--pink {
+  color: var(--color-danger-soft);
+}
+
 @media (max-width: 700px) {
   .accounts-row {
+    width: min(100%, 292px);
     grid-template-columns: 1fr;
+    justify-content: center;
+    gap: var(--space-3);
+    margin: 0 auto;
+  }
+
+  .account-card {
+    position: relative;
+    min-height: 86px;
+    padding: var(--space-3) var(--space-4);
+    gap: var(--space-3);
+    text-align: center;
   }
 
   .account-card-header {
-    justify-content: flex-start;
+    justify-content: center;
     gap: var(--space-2);
     margin-left: 0;
     font-size: 10px;
     letter-spacing: 0.04em;
-    text-align: left;
+    text-align: center;
   }
 
   .account-card-header svg {
     width: 18px;
     height: 18px;
+  }
+
+  .account-card-value {
+    font-size: 18px;
+  }
+
+  .account-card-footer {
+    justify-content: center;
+    gap: var(--space-2);
+  }
+
+  .account-card-chevron {
+    position: absolute;
+    right: var(--space-4);
+    bottom: var(--space-3);
   }
 
   .balance-value {

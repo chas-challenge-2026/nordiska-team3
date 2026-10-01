@@ -85,9 +85,12 @@ public class  AccountsController : ControllerBase
 
     // GET /api/accounts/{accountId}/transactions
     [HttpGet("{accountId:guid}/transactions")]
-    public async Task<IActionResult> GetTransactionHistory(Guid accountId)
+    public async Task<IActionResult> GetTransactionHistory(Guid accountId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-        var history = await _accountService.GetTransactionHistoryAsync(CurrentUserId, accountId);
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
+        var history = await _accountService.GetTransactionHistoryAsync(CurrentUserId, accountId, page, pageSize);
 
         if (history is null) return NotFound(new ErrorResponseDto("Account does not exist."));
 

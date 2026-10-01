@@ -2,7 +2,7 @@
   position: relative;
   z-index: 2;
   width: 100%;
-  max-width: 560px;
+  max-width: var(--desktop-content-width);
   margin: 0 auto;
   padding: 90px var(--space-5) var(--space-7);
   display: flex;
@@ -25,14 +25,15 @@
 
 .tax-header p {
   margin: 0;
-  color: rgba(255, 255, 255, 0.75);
+  color: color-mix(in srgb, var(--color-text-inverted) 75%, transparent);
   font-size: 14px;
   line-height: 1.35;
 }
 
 /* Toggle pills (återanvänder samma klasser som TransactPage) */
 .pill-toggle-row {
-  display: flex;
+ display: grid;
+  grid-template-columns: repeat(5, 1fr);
   gap: var(--space-2);
 }
 
@@ -46,11 +47,56 @@
   background: var(--color-surface);
   color: var(--color-text-primary);
   box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.pill-toggle--active {
-  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
-  color: var(--color-text-primary);
+.pill-toggle--active,
+.pill-toggle--active:hover {
+  background: var(--color-surface);
+  color: var(--color-primary-text);
+  box-shadow: var(--shadow-sm), inset 0 0 0 2px var(--color-primary);
+}
+
+[data-theme="dark"] .pill-toggle--active,
+[data-theme="dark"] .pill-toggle--active:hover {
+  background: var(--color-surface);
+  color: var(--color-primary-soft);
+}
+
+/* Statusprick på årsknappen */
+.pill-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pill-status-dot--ready {
+  background: var(--color-jungle-teal);
+}
+
+.pill-toggle--active .pill-status-dot--ready {
+  background: var(--color-primary-text);
+}
+
+[data-theme="dark"] .pill-toggle--active .pill-status-dot--ready {
+  background: var(--color-primary-soft);
+}
+
+.pill-status-dot--pending {
+  background: var(--color-primary-text);
+  animation: tax-pulse 1s ease-in-out infinite;
+}
+
+.pill-status-dot--failed {
+  background: var(--color-danger);
+}
+
+@keyframes tax-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
 }
 
 /* Summary cards */
@@ -62,7 +108,7 @@
 }
 
 .tax-summary-card {
-  background: var(--dashboard-card-bg, #ffffff);
+  background: var(--dashboard-card-bg, var(--color-text-inverted));
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   padding: var(--space-5);
@@ -88,11 +134,15 @@
   color: var(--color-jungle-teal);
 }
 
+[data-theme="dark"] .tax-summary-value--green {
+  color: var(--color-success);
+}
+
 /* Breakdown card */
 .tax-breakdown-card {
   width: 100%;
   box-sizing: border-box;
-  background: var(--dashboard-card-bg, #ffffff);
+  background: var(--dashboard-card-bg, var(--color-text-inverted));
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   padding: var(--space-5);
@@ -128,9 +178,9 @@
   flex-shrink: 0;
 }
 
-.tax-dot--green { background: var(--color-jungle-teal); }
+.tax-dot--green { background: var(--color-success); }
 .tax-dot--orange { background: var(--color-primary); }
-.tax-dot--purple { background: var(--color-yale-blue-900); }
+.tax-dot--purple { background: var(--color-text-secondary); }
 
 .tax-breakdown-amount {
   font-family: monospace;
@@ -139,8 +189,11 @@
 }
 
 .tax-breakdown-amount--green { color: var(--color-jungle-teal); }
-.tax-breakdown-amount--orange { color: var(--color-primary); }
+.tax-breakdown-amount--orange { color: var(--color-primary-text); }
 .tax-breakdown-amount--purple { color: var(--color-yale-blue-900); }
+
+[data-theme="dark"] .tax-breakdown-amount--green { color: var(--color-success); }
+[data-theme="dark"] .tax-breakdown-amount--purple { color: var(--color-alice-blue); }
 
 /* Download button */
 .tax-download-btn {
@@ -150,9 +203,9 @@
   padding: 16px;
   font-size: 14px;
   font-weight: 800;
-  color: #FFFFFF;
+  color: var(--color-on-primary);
   background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
-  box-shadow: 0 0 24px 4px rgba(245, 169, 15, 0.5);
+  box-shadow: 0 0 24px 4px color-mix(in srgb, var(--color-primary) 50%, transparent);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -165,45 +218,135 @@
   cursor: not-allowed;
 }
 
-/* Brand logo, nedre högra hörnet (som TransactPage) */
-.tax-brand-circle {
-  position: absolute;
-  bottom: 60px;
-  right: 60px;
-  z-index: 3;
-  width: 150px;
-  height: 96px;
-  border-radius: 60px;
-  background: linear-gradient(
-    160deg,
-    var(--color-primary-pale) 0%,
-    var(--color-primary-soft) 55%,
-    var(--color-primary) 100%
-  );
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
+/* Rapporthistorik */
+.tax-history-card {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--dashboard-card-bg, var(--color-text-inverted));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-5);
 }
 
-.tax-brand-circle span {
-  text-transform: uppercase;
+.tax-history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) 0;
+}
+
+.tax-history-year {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.tax-status-badge {
   font-size: 10px;
   font-weight: 800;
-  letter-spacing: 1px;
-  color: var(--color-primary);
+  letter-spacing: 0.03em;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+}
+
+.tax-status-badge--ready {
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+  color: var(--color-jungle-teal);
+}
+
+.tax-status-badge--pending {
+  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+  color: var(--color-primary-text);
+}
+
+[data-theme="dark"] .tax-status-badge--ready {
+  color: var(--color-success);
+}
+
+.tax-status-badge--failed {
+  background: color-mix(in srgb, var(--color-danger) 14%, transparent);
+  color: var(--color-danger);
+}
+
+.tax-history-download {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.tax-history-download:hover:not(:disabled) {
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
+  color: var(--color-text-inverted);
+}
+
+.tax-history-download:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.tax-spin {
+  animation: tax-spin 1s linear infinite;
+}
+
+@keyframes tax-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Begär ny rapport */
+.tax-request-btn {
+  width: 100%;
+  border: 1.5px dashed color-mix(in srgb, var(--color-text-inverted) 30%, transparent);
+  background: transparent;
+  color: var(--color-text-inverted);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tax-request-btn:hover {
+  border-color: color-mix(in srgb, var(--color-text-inverted) 50%, transparent);
+  background: color-mix(in srgb, var(--color-text-inverted) 5%, transparent);
+}
+
+/* Brand logo, nedre högra hörnet */
+.tax-brand-circle {
+  position: absolute;
+  left: 84px;
+  bottom: 60px;
+  z-index: 1;
+  box-shadow: 0 22px 44px var(--color-shadow);
 }
 
 .tax-brand-circle strong {
   font-family: "Poppins", sans-serif;
-  font-weight: 700;
-  font-size: 26px;
-  color: var(--color-yale-blue-900);
+    font-size: 33px;
+    font-weight: 700;
+    color: var(--color-yale-blue-900);
+    line-height: 1;
 }
 
 .tax-brand-circle .tax-brand-dot {
-  color: var(--color-primary);
+  color: var(--color-amber-honey-deep);
 }
 
 @media (max-width: 700px) {
@@ -218,4 +361,9 @@
   .tax-brand-circle {
     display: none;
   }
+
+  .pill-toggle-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
 }

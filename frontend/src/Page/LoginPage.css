@@ -59,15 +59,7 @@
   width: 190px;
   height: 108px;
   border-radius: 42px;
-  background: linear-gradient(
-    135deg,
-    #ffffff 0%,
-    #ffffff 28%,
-    #fff7e6 46%,
-    var(--color-primary-pale) 64%,
-    var(--color-primary-soft) 86%,
-    var(--color-primary) 100%
-  );
+  background: var(--color-primary-pale);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -83,7 +75,7 @@
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 1px;
-  color: var(--color-primary);
+  color: var(--color-amber-honey-deep);
 }
 
 .login-brand-card strong {
@@ -94,8 +86,13 @@
 }
 
 .login-brand-dot {
-  color: var(--color-primary);
+  color: var(--color-amber-honey-deep);
   font: inherit;
+}
+
+[data-theme="dark"] .login-brand-card > span,
+[data-theme="dark"] .login-brand-dot {
+  color: var(--color-amber-honey-deep);
 }
 
 .login-card {
@@ -168,7 +165,7 @@
 
 .login-card input:focus,
 .login-card .input:focus {
-  box-shadow: 0 0 0 3px rgba(238, 169, 26, 0.35);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 35%, transparent);
   border: 0;
   outline: none;
 }
@@ -183,7 +180,7 @@
   min-height: 15px;
   margin-top: 0;
   margin-bottom: -10px;
-  color: #a63d40;
+  color: var(--color-danger);
   font-size: 10px;
   font-weight: 700;
   line-height: 14px;
@@ -223,14 +220,14 @@
   height: 28px;
   border-radius: var(--radius-pill);
   background: transparent;
-  color: var(--color-steel-blue);
+  color: var(--color-text-secondary);
   display: grid;
   place-items: center;
   padding: 0;
 }
 
 .password-toggle:hover {
-  background: rgba(19, 71, 99, 0.08);
+  background: color-mix(in srgb, var(--color-yale-blue-900) 8%, transparent);
   color: var(--color-yale-blue-900);
 }
 
@@ -240,7 +237,7 @@
 
 .login-card .button--primary {
   background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
-  color: var(--color-yale-blue-900);
+  color: var(--color-on-primary);
   box-shadow: var(--shadow-sm);
 }
 
@@ -334,15 +331,7 @@
     width: 188px;
     height: 104px;
     border-radius: 52px;
-    background: linear-gradient(
-      0deg,
-      #ffffff 0%,
-      #ffffff 28%,
-      #fff7e6 46%,
-      var(--color-primary-pale) 64%,
-      var(--color-primary-soft) 86%,
-      var(--color-primary) 100%
-    );
+    background: var(--color-primary-pale);
   }
 
   .login-brand-card strong {
