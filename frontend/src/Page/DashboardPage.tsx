@@ -1,5 +1,5 @@
 import { type DashboardAccountTransaction } from '../components/DashboardActions/mockDashboardAccountTransactions'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { UserProfile } from '../components/UserProfile'
 import './DashboardPage.css'
@@ -13,6 +13,8 @@ import {
     type BackendTransaction,
 } from '../services/accountService'
 import { useAccountsWithTransactions } from '../hooks/useAccountsWithTransactions'
+import { useQueryClient } from '@tanstack/react-query'
+import { type AccountWithTransactions } from '../services/accountOverviewService'
 import { DecorativeCircle } from '../components/DecorativeCircle'
 import { BalanceOverview } from '../components/DashboardActions/BalanceOverview'
 import { DashboardActions } from '../components/DashboardActions/DashboardActions'
@@ -122,15 +124,23 @@ function DashboardPage() {
     const navigate = useNavigate()
     const handleLogout = useLogout()
     const { toggleTheme } = useTheme()
+    const queryClient = useQueryClient()
 
     const { data: accountTransactionGroups, isLoading: isLoadingAccounts, isError: accountsError } = useAccountsWithTransactions()
-    const [accounts, setAccounts] = useState<Account[]>([])
+
+    const accounts = (accountTransactionGroups ?? []).map(({ account }, index) =>
+        mapBackendAccountToDashboardAccount(account, index)
+    )
+    const accountTransactions = (accountTransactionGroups ?? []).flatMap(({ account, transactions }) =>
+        transactions.map((transaction) => mapBackendTransactionToDashboardTransaction(transaction, account.id))
+    )
+
     const [createAccountError, setCreateAccountError] = useState('')
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
     const [newAccountName, setNewAccountName] = useState('')
     const [newAccountIconId, setNewAccountIconId] = useState<CreateAccountIconId>('piggyBank')
     const [newAccountVariant, setNewAccountVariant] = useState<CreateAccountVariant>('default')
-    const [selectedAccount, setSelectedAccount] = useState<Account | null>(null)
+    const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null)
     const [modalTransactionType, setModalTransactionType] = useState<'deposit' | 'withdrawal'>('deposit')
     const [modalAmount, setModalAmount] = useState('')
     const [modalTransactionMessage, setModalTransactionMessage] = useState('')
@@ -138,21 +148,8 @@ function DashboardPage() {
     const [dashboardTransactionAccountId, setDashboardTransactionAccountId] = useState('')
     const [dashboardTransactionAmount, setDashboardTransactionAmount] = useState('')
     const [dashboardTransactionMessage, setDashboardTransactionMessage] = useState('')
-    const [accountTransactions, setAccountTransactions] = useState<DashboardAccountTransaction[]>([])
 
-    useEffect(() => {
-        if (!accountTransactionGroups) return
-
-        const backendAccounts = accountTransactionGroups.map(({ account }) => account)
-
-        setAccounts(backendAccounts.map(mapBackendAccountToDashboardAccount))
-        setAccountTransactions(
-            accountTransactionGroups.flatMap(({ account, transactions }) =>
-                transactions.map((transaction) => mapBackendTransactionToDashboardTransaction(transaction, account.id))
-            )
-        )
-        setDashboardTransactionAccountId((current) => current || backendAccounts[0]?.id || '')
-    }, [accountTransactionGroups])
+    const selectedAccount = accounts.find((account) => account.id === selectedAccountId) ?? null
 
     const dashboardTransactionAccount =
         accounts.find((account) => account.id === dashboardTransactionAccountId) ?? accounts[0] ?? null
@@ -188,11 +185,7 @@ function DashboardPage() {
         .slice(0, 5)
 
     function handleAccountClick(accountId: string) {
-        const account = accounts.find((account) => account.id === accountId)
-
-        if (!account) return
-
-        setSelectedAccount(account)
+        setSelectedAccountId(accountId)
         setModalTransactionMessage('')
     }
 
@@ -252,16 +245,11 @@ function DashboardPage() {
             const createdAccount = await createAccount('SAVINGS')
             const accountWithName = await renameAccount(createdAccount.id, trimmedName)
 
-            const newAccount: Account = {
-                id: accountWithName.id,
-                icon: getAccountIcon(presentation.iconId),
-                label: accountWithName.name.toUpperCase(),
-                value: formatBackendBalance(accountWithName.balance),
-                variant: presentation.variant,
-            }
-
             setAccountPresentation(accountWithName.id, presentation)
-            setAccounts((prev) => [...prev, newAccount])
+            queryClient.setQueryData<AccountWithTransactions[]>(['accountsWithTransactions'], (prev) => [
+                ...(prev ?? []),
+                { account: accountWithName, transactions: [] },
+            ])
             setNewAccountName('')
             setNewAccountIconId('piggyBank')
             setNewAccountVariant('default')
@@ -297,30 +285,27 @@ function DashboardPage() {
                 modalTransactionType === 'deposit'
                     ? await deposit(selectedAccount.id, amount)
                     : await withdraw(selectedAccount.id, amount)
-            const balanceChange = modalTransactionType === 'deposit' ? amount : -amount
-            const updatedAccount: Account = {
-                ...selectedAccount,
-                value: formatBackendBalance(result.balance),
-            }
 
-            const newTransaction: DashboardAccountTransaction = {
-                id: result.transactionId,
-                accountId: selectedAccount.id,
-                title: modalTransactionType === 'deposit' ? 'Insättning' : 'Uttag',
-                date: new Intl.DateTimeFormat('sv-SE', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                }).format(new Date()),
-                amount: balanceChange,
-                type: modalTransactionType,
-            }
-
-            setAccounts((prevAccounts) =>
-                prevAccounts.map((account) => (account.id === selectedAccount.id ? updatedAccount : account))
+            queryClient.setQueryData<AccountWithTransactions[]>(['accountsWithTransactions'], (prev) =>
+                (prev ?? []).map((group) =>
+                    group.account.id === selectedAccount.id
+                        ? {
+                              account: { ...group.account, balance: result.balance },
+                              transactions: [
+                                  {
+                                      id: result.transactionId,
+                                      transactionType: modalTransactionType === 'deposit' ? 'DEPOSIT' : 'WITHDRAWAL',
+                                      amount: amount.toFixed(2),
+                                      status: 'COMPLETED',
+                                      createdAt: new Date().toISOString(),
+                                      completedAt: new Date().toISOString(),
+                                  },
+                                  ...group.transactions,
+                              ],
+                          }
+                        : group
+                )
             )
-            setSelectedAccount(updatedAccount)
-            setAccountTransactions((prevTransactions) => [newTransaction, ...prevTransactions])
             setModalTransactionMessage(
                 modalTransactionType === 'deposit'
                     ? `${formatKr(amount)} har satts in på kontot.`
@@ -359,29 +344,27 @@ function DashboardPage() {
                 dashboardTransactionType === 'deposit'
                     ? await deposit(dashboardTransactionAccount.id, amount)
                     : await withdraw(dashboardTransactionAccount.id, amount)
-            const balanceChange = dashboardTransactionType === 'deposit' ? amount : -amount
-            const updatedAccount: Account = {
-                ...dashboardTransactionAccount,
-                value: formatBackendBalance(result.balance),
-            }
 
-            const newTransaction: DashboardAccountTransaction = {
-                id: result.transactionId,
-                accountId: dashboardTransactionAccount.id,
-                title: dashboardTransactionType === 'deposit' ? 'Insättning' : 'Uttag',
-                date: new Intl.DateTimeFormat('sv-SE', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                }).format(new Date()),
-                amount: balanceChange,
-                type: dashboardTransactionType,
-            }
-
-            setAccounts((prevAccounts) =>
-                prevAccounts.map((account) => (account.id === dashboardTransactionAccount.id ? updatedAccount : account))
+            queryClient.setQueryData<AccountWithTransactions[]>(['accountsWithTransactions'], (prev) =>
+                (prev ?? []).map((group) =>
+                    group.account.id === dashboardTransactionAccount.id
+                        ? {
+                              account: { ...group.account, balance: result.balance },
+                              transactions: [
+                                  {
+                                      id: result.transactionId,
+                                      transactionType: dashboardTransactionType === 'deposit' ? 'DEPOSIT' : 'WITHDRAWAL',
+                                      amount: amount.toFixed(2),
+                                      status: 'COMPLETED',
+                                      createdAt: new Date().toISOString(),
+                                      completedAt: new Date().toISOString(),
+                                  },
+                                  ...group.transactions,
+                              ],
+                          }
+                        : group
+                )
             )
-            setAccountTransactions((prevTransactions) => [newTransaction, ...prevTransactions])
             setDashboardTransactionMessage(
                 dashboardTransactionType === 'deposit'
                     ? `${formatKr(amount)} har satts in på ${formatAccountName(dashboardTransactionAccount.label)}.`
@@ -521,7 +504,7 @@ function DashboardPage() {
 
                     <Modal
                         isOpen={selectedAccount !== null}
-                        onClose={() => setSelectedAccount(null)}
+                        onClose={() => setSelectedAccountId(null)}
                     >
                         {selectedAccount && (
                             <div className="account-modal">
