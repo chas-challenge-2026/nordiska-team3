@@ -30,9 +30,9 @@ app.UseExceptionHandler();
 
 app.ApplyMigrations();
 
-app.UseHttpsRedirection();
-
 app.UseCors("Frontend");
+
+app.UseHttpsRedirection();
 
 app.UseDefaultFiles();
 

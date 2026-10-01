@@ -12,7 +12,7 @@ import {
     type BackendAccount,
     type BackendTransaction,
 } from '../services/accountService'
-import { getAccountsWithTransactions } from '../services/accountOverviewService'
+import { useAccountsWithTransactions } from '../hooks/useAccountsWithTransactions'
 import { DecorativeCircle } from '../components/DecorativeCircle'
 import { BalanceOverview } from '../components/DashboardActions/BalanceOverview'
 import { DashboardActions } from '../components/DashboardActions/DashboardActions'
@@ -123,9 +123,8 @@ function DashboardPage() {
     const handleLogout = useLogout()
     const { toggleTheme } = useTheme()
 
+    const { data: accountTransactionGroups, isLoading: isLoadingAccounts, isError: accountsError } = useAccountsWithTransactions()
     const [accounts, setAccounts] = useState<Account[]>([])
-    const [isLoadingAccounts, setIsLoadingAccounts] = useState(true)
-    const [accountsError, setAccountsError] = useState('')
     const [createAccountError, setCreateAccountError] = useState('')
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
     const [newAccountName, setNewAccountName] = useState('')
@@ -142,44 +141,18 @@ function DashboardPage() {
     const [accountTransactions, setAccountTransactions] = useState<DashboardAccountTransaction[]>([])
 
     useEffect(() => {
-        let isMounted = true
+        if (!accountTransactionGroups) return
 
-        async function loadAccounts() {
-            try {
-                setIsLoadingAccounts(true)
-                setAccountsError('')
+        const backendAccounts = accountTransactionGroups.map(({ account }) => account)
 
-                const accountTransactionGroups = await getAccountsWithTransactions()
-                const backendAccounts = accountTransactionGroups.map(({ account }) => account)
-
-                const transactionGroups = accountTransactionGroups.map(({ account, transactions }) =>
-                    transactions.map((transaction) =>
-                        mapBackendTransactionToDashboardTransaction(transaction, account.id)
-                    )
-                )
-
-                if (!isMounted) return
-
-                setAccounts(backendAccounts.map(mapBackendAccountToDashboardAccount))
-                setAccountTransactions(transactionGroups.flat())
-                setDashboardTransactionAccountId(backendAccounts[0]?.id ?? '')
-            } catch {
-                if (!isMounted) return
-
-                setAccountsError('Kunde inte hämta konton.')
-            } finally {
-                if (isMounted) {
-                    setIsLoadingAccounts(false)
-                }
-            }
-        }
-
-        loadAccounts()
-
-        return () => {
-            isMounted = false
-        }
-    }, [])
+        setAccounts(backendAccounts.map(mapBackendAccountToDashboardAccount))
+        setAccountTransactions(
+            accountTransactionGroups.flatMap(({ account, transactions }) =>
+                transactions.map((transaction) => mapBackendTransactionToDashboardTransaction(transaction, account.id))
+            )
+        )
+        setDashboardTransactionAccountId((current) => current || backendAccounts[0]?.id || '')
+    }, [accountTransactionGroups])
 
     const dashboardTransactionAccount =
         accounts.find((account) => account.id === dashboardTransactionAccountId) ?? accounts[0] ?? null

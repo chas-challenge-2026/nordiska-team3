@@ -11,9 +11,18 @@ public class TransactionRepository : Repository<Transaction>, ITransactionReposi
     {
     }
 
-    public async Task<IReadOnlyList<Transaction>> GetByAccountIdAsync(Guid accountId) =>
-        await _dbSet
-            .Where(t => t.AccountId == accountId)
+    public async Task<(IReadOnlyList<Transaction> Items, int TotalCount)> GetByAccountIdAsync(Guid accountId, int page, int pageSize)
+    {
+        var query = _dbSet.Where(t => t.AccountId == accountId);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
             .OrderByDescending(t => t.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
+
+        return (items, totalCount);
+    }
 }
