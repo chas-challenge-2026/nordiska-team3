@@ -29,6 +29,7 @@ if (app.Environment.IsDevelopment())
 app.UseExceptionHandler();
 
 app.ApplyMigrations();
+await app.SeedTestDataAsync();
 
 app.UseHttpsRedirection();
 

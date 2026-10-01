@@ -13,18 +13,27 @@
 name: nordiska
 
 services:
+  secrets-init:
+    image: alpine:3.19
+    volumes:
+      - db_secret:/secrets
+    entrypoint: ["/bin/sh", "-c", "test -f /secrets/db_password || (head -c 24 /dev/urandom | base64 > /secrets/db_password)"]
+
   db:
     image: postgres:12
     environment:
       POSTGRES_DB: nordiska
       POSTGRES_USER: nordiska
-      POSTGRES_PASSWORD: nordiska123
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./seed.sql:/docker-entrypoint-initdb.d/seed.sql
-      - ./user.sql:/docker-entrypoint-initdb.d/user.sql
+      - db_secret:/run/secrets:ro
     expose:
       - "5432"
+    depends_on:
+      secrets-init:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U nordiska"]
       interval: 5s
@@ -44,8 +53,10 @@ services:
       db:
         condition: service_healthy
 
-  # v2 backend (NordiskaPortal.API). Local dev key below, NOT a production secret
-  # (same principle as the db password above) - real secret management is a separate, later step.
+  # v2 backend (NordiskaPortal.API). JWT-nyckel och DB-lösenord hårdkodas
+  # Inte här utan de genereras och sparas i egna volymer vid första starten.
+  # Se GetOrCreateSigningKey/AddDatabase i ServiceCollectionExtensions.cs
+  # och secrets-init-tjänsten ovan.
   api:
     build:
       context: ..
@@ -55,13 +66,19 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+:5077
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=nordiska;Username=nordiska;Password=nordiska123
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=nordiska;Username=nordiska
       - Jwt__Issuer=NordiskaPortal.API
       - Jwt__Audience=NordiskaPortal.Client
-      - Jwt__Key=local-dev-only-key-do-not-use-in-prod-3f8a9c2e1b7d4f6a
       - Cors__AllowedOrigins__0=http://localhost:5173
+      - Cors__AllowedOrigins__1=http://localhost:5077
+    volumes:
+      - api_secrets:/secrets
+      - db_secret:/run/secrets:ro
     depends_on:
       db:
         condition: service_healthy
+
 volumes:
   postgres_data:
+  api_secrets:
+  db_secret:
