@@ -1,5 +1,6 @@
 using FluentValidation;
 using System.Text;
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -44,6 +45,8 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
+        var jwtKey = configuration["Jwt:Key"] ?? GetOrCreateSigningKey("/secrets/jwt.key");
+
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
@@ -56,13 +59,30 @@ public static class ServiceCollectionExtensions
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = configuration["Jwt:Issuer"],
                     ValidAudience = configuration["Jwt:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!))
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
                 };
             });
 
         services.AddAuthorization();
 
         return services;
+    }
+
+    // Läser en tidigare genererad nyckel från disk om den finns (stage/prod,
+    // ingen Jwt:Key i config). Annars genereras en ny slumpmässig nyckel och
+    // sparas, så samma nyckel återanvänds vid nästa omstart av containern
+    private static string GetOrCreateSigningKey(string path)
+    {
+        if (File.Exists(path))
+            return File.ReadAllText(path).Trim();
+
+        var directory = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(directory))
+            Directory.CreateDirectory(directory);
+
+        var key = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+        File.WriteAllText(path, key);
+        return key;
     }
 
     public static IServiceCollection AddCorsPolicy(this IServiceCollection services, IConfiguration configuration)
@@ -115,6 +135,15 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+        // I stage/prod innehåller connection string inget lösenord - secrets-init
+        // genererar ett och delar det med db/api via en egen volym (docker-compose.yml).
+        const string dbPasswordFile = "/run/secrets/db_password";
+        if (File.Exists(dbPasswordFile))
+        {
+            connectionString = $"{connectionString};Password={File.ReadAllText(dbPasswordFile).Trim()}";
+        }
+
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(connectionString));
 
@@ -151,5 +180,29 @@ public static class ServiceCollectionExtensions
         db.Database.Migrate();
 
         return app;
+    }
+
+    // Lägger in en testanvändare om den saknas, efter att migrationerna körts.
+    // Ersätter infra/user.sql, som försökte göra samma sak innan Users-tabellen
+    public static async Task SeedTestDataAsync(this WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        const string testPersonalNumber = "19900101-1234";
+        if (!await db.Users.AnyAsync(u => u.PersonalNumber == testPersonalNumber))
+        {
+            db.Users.Add(new User
+            {
+                Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+                PersonalNumber = testPersonalNumber,
+                FirstName = "Test",
+                LastName = "Testsson",
+                Email = "test@example.com",
+                PinHash = "$2b$12$Ma9ikA7xtUOXMH86.OZA7eYIEb.yDiazDkk5uu5M/4PpbuC3ORvSu"
+            });
+
+            await db.SaveChangesAsync();
+        }
     }
 }
