@@ -1,132 +1,126 @@
-﻿using System.Text.RegularExpressions;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using NordiskaPortal.API.Data;
 using NordiskaPortal.API.DTOs.Faq;
+using NordiskaPortal.API.Models;
 using NordiskaPortal.API.Services.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
-namespace NordiskaPortal.API.Services;
-
-public class FaqService : IFaqService
+namespace NordiskaPortal.API.Services
 {
-    private readonly ApplicationDbContext _context;
-    private const double MatchThreshold = 0.3; // Minsta acceptabla score för en godkänd träff
-
-    public FaqService(ApplicationDbContext context)
+    public class FaqService : IFaqService
     {
-        _context = context;
-    }
+        private readonly ApplicationDbContext _context;
 
-    public async Task<FaqSearchResultDto> SearchFaqAsync(string userQuery)
-    {
-        // 1. The question is normalized
-        var normalizedQuery = NormalizeText(userQuery);
-        var queryTokens = normalizedQuery.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-        if (queryTokens.Length == 0)
+         
+        private static readonly HashSet<string> StopWords = new(StringComparer.OrdinalIgnoreCase)
         {
-            return FallbackToCustomerService();
+            "hur", "vad", "var", "när", "varför", "vem", "vilken", "vilket", "vilka",
+            "jag", "mig", "min", "mitt", "mina", "du", "dig", "din", "ditt", "dina",
+            "han", "hon", "den", "det", "vi", "oss", "vår", "vårt", "våra", "ni", "er", "ert", "era", "de", "dem",
+            "är", "var", "har", "hade", "gör", "gjorde", "kan", "kunde", "ska", "skulle", "vill", "ville",
+            "en", "ett", "i", "på", "till", "från", "av", "med", "för", "om", "att", "och", "eller", "men", "som", "in", "a"
+        };
+
+        public FaqService(ApplicationDbContext context)
+        {
+            _context = context;
         }
 
-        // 2. All relevant FAQ entries are compared
-        var allFaqs = await _context.FaqEntries.AsNoTracking().ToListAsync();
-
-        if (!allFaqs.Any())
+        public async Task<IEnumerable<FaqEntry>> GetDefaultFaqsAsync(int count = 6)
         {
-            return FallbackToCustomerService();
+            return await _context.FaqEntries
+                .AsNoTracking()
+                .Take(count)
+                .ToListAsync();
         }
 
-        // 3. Results get a match score
-        var rankedResults = allFaqs.Select(faq =>
+        public async Task<FaqSearchResultDto> SearchFaqAsync(string query)
         {
-            var normalizedQuestion = NormalizeText(faq.Question);
-            var normalizedKeywords = NormalizeText(faq.Keywords);
-            var normalizedCategory = NormalizeText(faq.Category);
-
-            double score = CalculateScore(queryTokens, normalizedQuestion, normalizedKeywords, normalizedCategory);
-
-            return new
+            if (string.IsNullOrWhiteSpace(query))
             {
-                Faq = faq,
-                Score = score
-            };
-        })
-        .OrderByDescending(r => r.Score)
-        .ToList();
+                return new FaqSearchResultDto
+                {
+                    MatchFound = false,
+                    Score = 0,
+                    Message = "Ingen sökfras angavs. Vänligen kontakta kundservice för hjälp."
+                };
+            }
 
-        // 4. The best match is returned
-        var bestMatch = rankedResults.FirstOrDefault();
+            
+            var cleanQuery = Regex.Replace(query, @"[^\w\s]", " ").ToLowerInvariant();
 
-        if (bestMatch != null && bestMatch.Score >= MatchThreshold)
-        {
+            
+            var tokens = cleanQuery
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .Where(t => t.Length > 2 && !StopWords.Contains(t))
+                .ToHashSet();
+
+            
+            if (tokens.Count == 0)
+            {
+                return new FaqSearchResultDto
+                {
+                    MatchFound = false,
+                    Score = 0,
+                    Message = "Inga matchande frågor hittades. Vänligen kontakta kundservice för mer hjälp."
+                };
+            }
+
+            var faqs = await _context.FaqEntries.AsNoTracking().ToListAsync();
+
+            var scoredList = faqs
+                .Select(faq => new
+                {
+                    Faq = faq,
+                    Score = CalculateScore(faq, tokens)
+                })
+                .Where(x => x.Score > 0)
+                .OrderByDescending(x => x.Score)
+                .ToList();
+
+            var bestMatch = scoredList.FirstOrDefault();
+
+            if (bestMatch == null)
+            {
+                return new FaqSearchResultDto
+                {
+                    MatchFound = false,
+                    Score = 0,
+                    Message = "Inga matchande frågor hittades. Vänligen kontakta kundservice för mer hjälp."
+                };
+            }
+
             return new FaqSearchResultDto
             {
                 MatchFound = true,
-                Score = Math.Round(bestMatch.Score, 2),
                 Question = bestMatch.Faq.Question,
                 Answer = bestMatch.Faq.Answer,
                 Category = bestMatch.Faq.Category,
-                Message = "Svar hittades."
+                Score = bestMatch.Score
             };
         }
 
-        // 5. A poor match falls back to customer service
-        return FallbackToCustomerService();
-    }
-
-    private static string NormalizeText(string? text)
-    {
-        if (string.IsNullOrWhiteSpace(text)) return string.Empty;
-        var lower = text.ToLowerInvariant();
-        return Regex.Replace(lower, @"[^\w\s]", " ").Trim();
-    }
-
-    private static double CalculateScore(string[] queryTokens, string targetQuestion, string targetKeywords, string targetCategory)
-    {
-        double score = 0;
-
-        
-        var questionWords = targetQuestion.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                                          .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        var keywordsList = targetKeywords.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                                         .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        int validTokenCount = 0;
-
-        foreach (var token in queryTokens)
+        private static int CalculateScore(FaqEntry faq, HashSet<string> tokens)
         {
-           
-            if (token.Length < 2) continue;
+            int score = 0;
 
-            validTokenCount++;
+            var cleanQuestion = Regex.Replace(faq.Question ?? "", @"[^\w\s]", " ").ToLowerInvariant();
+            var questionWords = cleanQuestion.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
-           
-            if (keywordsList.Contains(token))
+            var cleanKeywords = Regex.Replace(faq.Keywords ?? "", @"[^\w\s]", " ").ToLowerInvariant();
+            var keywordWords = cleanKeywords.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var token in tokens)
             {
-                score += 0.5;
+                if (questionWords.Contains(token)) score += 3;
+                if (keywordWords.Contains(token)) score += 2;
             }
-            else if (questionWords.Contains(token))
-            {
-                score += 0.3;
-            }
-            else if (targetCategory.Equals(token, StringComparison.OrdinalIgnoreCase))
-            {
-                score += 0.2;
-            }
+
+            return score;
         }
-
-        if (validTokenCount == 0) return 0;
-
-        return score / validTokenCount;
-    }
-
-    private static FaqSearchResultDto FallbackToCustomerService()
-    {
-        return new FaqSearchResultDto
-        {
-            MatchFound = false,
-            Score = 0.0,
-            Message = "Vi hittade inget svar som matchade din fråga. Vänligen kontakta kundservice för personlig hjälp på support@nordiskaportal.se eller ring 08-123 456."
-        };
     }
 }

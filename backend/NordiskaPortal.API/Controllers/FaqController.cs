@@ -1,31 +1,44 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using NordiskaPortal.API.DTOs.Faq;
 using NordiskaPortal.API.Services.Interfaces;
 
-namespace NordiskaPortal.API.Controllers;
-
-[ApiController]
-[Route("api/[controller]")]
-public class FaqController : ControllerBase
+namespace NordiskaPortal.API.Controllers
 {
-    private readonly IFaqService _faqService;
-
-    public FaqController(IFaqService faqService)
+    [ApiController]
+    [Route("api/[controller]")]
+    public class FaqController : ControllerBase
     {
-        _faqService = faqService;
-    }
+        private readonly IFaqService _faqService;
 
-    [EnableRateLimiting("SensitiveEndpointsPolicy")]
-    [HttpGet("search")]
-    public async Task<ActionResult<FaqSearchResultDto>> Search([FromQuery] string query)
-    {
-        if (string.IsNullOrWhiteSpace(query))
+        public FaqController(IFaqService faqService)
         {
-            return BadRequest(new { message = "Söksträngen kan inte vara tom." });
+            _faqService = faqService;
         }
 
-        var result = await _faqService.SearchFaqAsync(query);
-        return Ok(result);
+        [HttpGet]
+        public async Task<IActionResult> GetDefaultFaqs([FromQuery] int count = 6)
+        {
+            var faqs = await _faqService.GetDefaultFaqsAsync(count);
+
+            var result = faqs.Select(f => new
+            {
+                f.Id,
+                f.Question,
+                f.Answer,
+                f.Category
+            });
+
+            return Ok(result);
+        }
+
+        [HttpGet("search")]
+        [EnableRateLimiting("SensitiveEndpointsPolicy")]
+        public async Task<IActionResult> SearchFaq([FromQuery] string query)
+        {
+            var searchResult = await _faqService.SearchFaqAsync(query);
+            return Ok(searchResult);
+        }
     }
 }
