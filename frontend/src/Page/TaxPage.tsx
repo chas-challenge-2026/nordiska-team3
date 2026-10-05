@@ -7,7 +7,7 @@ import { DecorativeCircle } from '../components/DecorativeCircle'
 import { useTheme } from '../context/useTheme'
 import { mockTaxReports } from './mockTaxReport'
 import type { TaxReportStatus, TaxReportYear } from './mockTaxReport'
-import { Download, Loader2, RotateCcw, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Download, Loader2, RotateCcw, Plus } from 'lucide-react'
 import { downloadTaxReport } from '../services/taxReportService'
 
 const statusLabel: Record<TaxReportStatus, string> = {
@@ -26,6 +26,8 @@ function TaxPage() {
 
     const [reports, setReports] = useState<TaxReportYear[]>(mockTaxReports)
     const [selectedYear, setSelectedYear] = useState(mockTaxReports[0].year)
+    const [reportHistoryPage, setReportHistoryPage] = useState(1)
+    const reportHistoryPageSize = 5
 
     const report = reports.find((r) => r.year === selectedYear)!
     const calculatedTax = report.totalInterest * report.taxRate
@@ -33,6 +35,11 @@ function TaxPage() {
     const latestYear = Math.max(...reports.map((r) => r.year))
     const nextAvailableYear = latestYear + 1
     const hasNextYearReport = reports.some((r) => r.year === nextAvailableYear)
+    const reportHistoryTotalPages = Math.max(1, Math.ceil(reports.length / reportHistoryPageSize))
+    const paginatedReports = reports.slice(
+        (reportHistoryPage - 1) * reportHistoryPageSize,
+        reportHistoryPage * reportHistoryPageSize
+    )
 
     function handleLogout() {
         navigate('/login')
@@ -49,6 +56,7 @@ function TaxPage() {
 
         setReports((prev) => [newReport, ...prev])
         setSelectedYear(nextAvailableYear)
+        setReportHistoryPage(1)
 
         // Mock: simulerar generering tills backend har en riktig endpoint.
         setTimeout(() => {
@@ -81,6 +89,14 @@ function TaxPage() {
                 prev.map((r) => (r.year === year ? { ...r, status: 'ready' } : r))
             )
         }, 1500)
+    }
+
+    function goToPreviousReportPage() {
+        setReportHistoryPage((page) => Math.max(1, page - 1))
+    }
+
+    function goToNextReportPage() {
+        setReportHistoryPage((page) => Math.min(reportHistoryTotalPages, page + 1))
     }
 
     function renderActionButton(r: TaxReportYear) {
@@ -185,7 +201,7 @@ function TaxPage() {
 
                     <div className="tax-history-card">
                         <p className="tax-breakdown-title">RAPPORTHISTORIK</p>
-                        {reports.map((r) => (
+                        {paginatedReports.map((r) => (
                             <div className="tax-history-row" key={r.year}>
                                 <div className="tax-history-year">
                                     <span>{r.year}</span>
@@ -196,6 +212,32 @@ function TaxPage() {
                                 {renderActionButton(r)}
                             </div>
                         ))}
+
+                        {reportHistoryTotalPages > 1 && (
+                            <nav className="tax-pagination" aria-label="Sidnavigering för rapporthistorik">
+                                <button
+                                    type="button"
+                                    className="tax-pagination__button"
+                                    onClick={goToPreviousReportPage}
+                                    disabled={reportHistoryPage === 1}
+                                    aria-label="Visa föregående rapportsida"
+                                >
+                                    <ChevronLeft size={16} />
+                                </button>
+                                <span className="tax-pagination__status">
+                                    Sida {reportHistoryPage} av {reportHistoryTotalPages}
+                                </span>
+                                <button
+                                    type="button"
+                                    className="tax-pagination__button"
+                                    onClick={goToNextReportPage}
+                                    disabled={reportHistoryPage === reportHistoryTotalPages}
+                                    aria-label="Visa nästa rapportsida"
+                                >
+                                    <ChevronRight size={16} />
+                                </button>
+                            </nav>
+                        )}
                     </div>
 
                     {!hasNextYearReport && (

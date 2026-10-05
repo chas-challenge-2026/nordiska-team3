@@ -297,6 +297,52 @@
   cursor: not-allowed;
 }
 
+.tax-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.tax-pagination__button {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.tax-pagination__button:hover:not(:disabled) {
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
+  color: var(--color-text-inverted);
+}
+
+.tax-pagination__button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.tax-pagination__button:focus-visible {
+  outline: 3px solid var(--color-primary-soft);
+  outline-offset: 3px;
+}
+
+.tax-pagination__status {
+  min-width: 92px;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
+
 .tax-spin {
   animation: tax-spin 1s linear infinite;
 }

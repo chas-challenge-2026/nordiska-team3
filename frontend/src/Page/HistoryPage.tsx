@@ -4,7 +4,7 @@ import './HistoryPage.css'
 import { useState } from 'react'
 import { type BackendAccount, type BackendTransaction } from '../services/accountService'
 import { useAccountsWithTransactions } from '../hooks/useAccountsWithTransactions'
-import { ArrowDownLeft, ArrowUpRight } from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import { AppNav } from '../components/AppNav'
 import { DecorativeCircle } from '../components/DecorativeCircle'
 import { useLogout } from '../hooks/useLogout'
@@ -119,12 +119,18 @@ function HistoryPage() {
     const { toggleTheme } = useTheme()
     const [activeFilter, setActiveFilter] = useState<HistoryFilter>('all')
     const [activeAccount, setActiveAccount] = useState<AccountFilter>('all')
-    const { data: accountTransactionGroups, isLoading: isLoadingTransactions, isError: transactionsError } = useAccountsWithTransactions()
-    const transactions = (accountTransactionGroups ?? []).flatMap(({ account, transactions: groupTransactions }) =>
-        groupTransactions.map((transaction) => mapBackendTransactionToHistoryTransaction(transaction, account))
+    const [currentPage, setCurrentPage] = useState(1)
+    const pageSize = 20
+    const { data: accountTransactionGroups, isLoading: isLoadingTransactions, isError: transactionsError } = useAccountsWithTransactions(currentPage, pageSize)
+    const transactions = (accountTransactionGroups ?? []).flatMap(({ account, history }) =>
+        history.transactions.map((transaction) => mapBackendTransactionToHistoryTransaction(transaction, account))
     )
 
-    const accountFilters = Array.from(new Set(transactions.map((transaction) => transaction.accountName)))
+    const accountFilters = (accountTransactionGroups ?? []).map(({ account }) => account.name)
+    const matchingHistoryGroups = (accountTransactionGroups ?? []).filter(({ account }) =>
+        activeAccount === 'all' || account.name === activeAccount
+    )
+    const totalPages = Math.max(1, ...matchingHistoryGroups.map(({ history }) => history.totalPages))
 
     const visibleTransactions = transactions.filter((transaction) => {
         const matchesType = activeFilter === 'all' || transaction.type === activeFilter
@@ -135,10 +141,20 @@ function HistoryPage() {
 
     function handleAccountChange(accountName: AccountFilter) {
         setActiveAccount(accountName)
+        setCurrentPage(1)
     }
 
     function handleTypeChange(filter: HistoryFilter) {
         setActiveFilter(filter)
+        setCurrentPage(1)
+    }
+
+    function goToPreviousPage() {
+        setCurrentPage((page) => Math.max(1, page - 1))
+    }
+
+    function goToNextPage() {
+        setCurrentPage((page) => Math.min(totalPages, page + 1))
     }
 
     const selectedAccountLabel = activeAccount === 'all' ? 'Alla konton' : activeAccount
@@ -321,6 +337,32 @@ function HistoryPage() {
                             <h2 tabIndex={0}>Inga transaktioner hittades</h2>
                             <p>Det finns inga rörelser för {selectedAccountLabel} som matchar det valda filtret.</p>
                         </div>
+                    )}
+
+                    {!isLoadingTransactions && !transactionsError && totalPages > 1 && (
+                        <nav className="history-pagination" aria-label="Sidnavigering för transaktionshistorik">
+                            <button
+                                type="button"
+                                className="history-pagination__button"
+                                onClick={goToPreviousPage}
+                                disabled={currentPage === 1}
+                                aria-label="Visa föregående sida"
+                            >
+                                <ChevronLeft size={16} />
+                            </button>
+                            <span className="history-pagination__status">
+                                Sida {currentPage} av {totalPages}
+                            </span>
+                            <button
+                                type="button"
+                                className="history-pagination__button"
+                                onClick={goToNextPage}
+                                disabled={currentPage === totalPages}
+                                aria-label="Visa nästa sida"
+                            >
+                                <ChevronRight size={16} />
+                            </button>
+                        </nav>
                     )}
                 </section>
             </main>
