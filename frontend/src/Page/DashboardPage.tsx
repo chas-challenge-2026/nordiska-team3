@@ -131,8 +131,8 @@ function DashboardPage() {
     const accounts = (accountTransactionGroups ?? []).map(({ account }, index) =>
         mapBackendAccountToDashboardAccount(account, index)
     )
-    const accountTransactions = (accountTransactionGroups ?? []).flatMap(({ account, transactions }) =>
-        transactions.map((transaction) => mapBackendTransactionToDashboardTransaction(transaction, account.id))
+    const accountTransactions = (accountTransactionGroups ?? []).flatMap(({ account, history }) =>
+        history.transactions.map((transaction) => mapBackendTransactionToDashboardTransaction(transaction, account.id))
     )
 
     const [createAccountError, setCreateAccountError] = useState('')
@@ -246,9 +246,18 @@ function DashboardPage() {
             const accountWithName = await renameAccount(createdAccount.id, trimmedName)
 
             setAccountPresentation(accountWithName.id, presentation)
-            queryClient.setQueryData<AccountWithTransactions[]>(['accountsWithTransactions'], (prev) => [
+            queryClient.setQueryData<AccountWithTransactions[]>(['accountsWithTransactions', 1, 20], (prev) => [
                 ...(prev ?? []),
-                { account: accountWithName, transactions: [] },
+                {
+                    account: accountWithName,
+                    history: {
+                        transactions: [],
+                        page: 1,
+                        pageSize: 20,
+                        totalCount: 0,
+                        totalPages: 0,
+                    },
+                },
             ])
             setNewAccountName('')
             setNewAccountIconId('piggyBank')
@@ -286,22 +295,27 @@ function DashboardPage() {
                     ? await deposit(selectedAccount.id, amount)
                     : await withdraw(selectedAccount.id, amount)
 
-            queryClient.setQueryData<AccountWithTransactions[]>(['accountsWithTransactions'], (prev) =>
+            queryClient.setQueryData<AccountWithTransactions[]>(['accountsWithTransactions', 1, 20], (prev) =>
                 (prev ?? []).map((group) =>
                     group.account.id === selectedAccount.id
                         ? {
                               account: { ...group.account, balance: result.balance },
-                              transactions: [
-                                  {
-                                      id: result.transactionId,
-                                      transactionType: modalTransactionType === 'deposit' ? 'DEPOSIT' : 'WITHDRAWAL',
-                                      amount: amount.toFixed(2),
-                                      status: 'COMPLETED',
-                                      createdAt: new Date().toISOString(),
-                                      completedAt: new Date().toISOString(),
-                                  },
-                                  ...group.transactions,
-                              ],
+                              history: {
+                                  ...group.history,
+                                  transactions: [
+                                      {
+                                          id: result.transactionId,
+                                          transactionType: modalTransactionType === 'deposit' ? 'DEPOSIT' : 'WITHDRAWAL',
+                                          amount: amount.toFixed(2),
+                                          status: 'COMPLETED',
+                                          createdAt: new Date().toISOString(),
+                                          completedAt: new Date().toISOString(),
+                                      },
+                                      ...group.history.transactions,
+                                  ],
+                                  totalCount: group.history.totalCount + 1,
+                                  totalPages: Math.ceil((group.history.totalCount + 1) / group.history.pageSize),
+                              },
                           }
                         : group
                 )
@@ -345,22 +359,27 @@ function DashboardPage() {
                     ? await deposit(dashboardTransactionAccount.id, amount)
                     : await withdraw(dashboardTransactionAccount.id, amount)
 
-            queryClient.setQueryData<AccountWithTransactions[]>(['accountsWithTransactions'], (prev) =>
+            queryClient.setQueryData<AccountWithTransactions[]>(['accountsWithTransactions', 1, 20], (prev) =>
                 (prev ?? []).map((group) =>
                     group.account.id === dashboardTransactionAccount.id
                         ? {
                               account: { ...group.account, balance: result.balance },
-                              transactions: [
-                                  {
-                                      id: result.transactionId,
-                                      transactionType: dashboardTransactionType === 'deposit' ? 'DEPOSIT' : 'WITHDRAWAL',
-                                      amount: amount.toFixed(2),
-                                      status: 'COMPLETED',
-                                      createdAt: new Date().toISOString(),
-                                      completedAt: new Date().toISOString(),
-                                  },
-                                  ...group.transactions,
-                              ],
+                              history: {
+                                  ...group.history,
+                                  transactions: [
+                                      {
+                                          id: result.transactionId,
+                                          transactionType: dashboardTransactionType === 'deposit' ? 'DEPOSIT' : 'WITHDRAWAL',
+                                          amount: amount.toFixed(2),
+                                          status: 'COMPLETED',
+                                          createdAt: new Date().toISOString(),
+                                          completedAt: new Date().toISOString(),
+                                      },
+                                      ...group.history.transactions,
+                                  ],
+                                  totalCount: group.history.totalCount + 1,
+                                  totalPages: Math.ceil((group.history.totalCount + 1) / group.history.pageSize),
+                              },
                           }
                         : group
                 )
