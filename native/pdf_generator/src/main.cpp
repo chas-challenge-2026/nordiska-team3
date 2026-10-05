@@ -116,16 +116,35 @@ int main(int argc, char* argv[])
     {
         if 
         (
+            !account.is_object() ||
             !has_string_field(account, "displayNumber") ||
             !has_string_field(account, "accountType") ||
             !has_string_field(account, "openingBalance") ||
-            !has_string_field(account, "closingBalance")
+            !has_string_field(account, "closingBalance") ||
+            !account.contains("transactions") ||
+            !account["transactions"].is_array()
         )
         {
             std::cerr << "Error: tax-report JSON has an invalid account\n";
             return NORDISKA_EXIT_INVALID_INPUT;
+        }   
+
+            for (const auto& transaction : account["transactions"])
+        {
+            if 
+            (
+                !transaction.is_object() ||
+                !has_string_field(transaction, "bookedAt") ||
+                !has_string_field(transaction, "type") ||
+                !has_string_field(transaction, "description") ||
+                !has_string_field(transaction, "amount") ||
+                transaction["bookedAt"].get<std::string>().size() < 10
+            )
+            {
+                std::cerr << "Error: tax-report JSON has an invalid transaction\n";
+                return NORDISKA_EXIT_INVALID_INPUT;
+            }
         }
-        
     }
 
     const std::string bank_name = bank["name"].get<std::string>();
@@ -241,21 +260,60 @@ int main(int argc, char* argv[])
 
     HPDF_Page_SetFontAndSize(page, font, 12);
 
-    float account_y = 588;
+    HPDF_REAL account_y = 588;
 
     for (const auto& account : accounts)
     {
-        const std::string display_number = account["displayNumber"].get<std::string>();        
-        const std::string account_type = account["accountType"].get<std::string>();
-        const std::string opening_balance = account["openingBalance"].get<std::string>();
-        const std::string closing_balance = account["closingBalance"].get<std::string>();        
-        const std::string account_line = display_number + " (" + account_type + ")";
-        const std::string balance_line = "Ingående saldo: " + opening_balance + "   Utgående saldo: " + closing_balance;
+        if (account_y < 110)
+        {
+            std::cerr << "Error: report requires multiple pages\n";
+            HPDF_Page_EndText(page);
+            HPDF_Free(pdf);
+            return NORDISKA_EXIT_PDF_GENERATION_ERROR;
+        }
 
+        const std::string account_line = account["displayNumber"].get<std::string>() + " (" + account["accountType"].get<std::string>() + ")";
+        const std::string balance_line = "Ingående saldo: " + account["openingBalance"].get<std::string>() + "  Utgående saldo: " + account["closingBalance"].get<std::string>();
+
+        HPDF_Page_SetFontAndSize(page, font, 12);
         HPDF_Page_TextOut(page, 50, account_y, account_line.c_str());
-        HPDF_Page_TextOut(page, 50, account_y - 18, balance_line.c_str());
+        account_y -= 26;
 
-        account_y -= 54;
+        HPDF_Page_TextOut(page, 50, account_y, balance_line.c_str());
+        account_y -= 18;
+
+        HPDF_Page_SetFontAndSize(page, font, 10);
+        HPDF_Page_TextOut(page, 50, account_y, "Datum");
+        HPDF_Page_TextOut(page, 120, account_y, "Typ");
+        HPDF_Page_TextOut(page, 220, account_y, "Beskrivning");
+
+        const std::string amount_heading = "Belopp (" + currency + ")";
+        HPDF_Page_TextOut(page, 440, account_y, amount_heading.c_str());
+        account_y -= 18;
+
+        for (const auto& transaction : account["transactions"])
+        {
+            if (account_y < 50)
+            {
+                std::cerr << "Error: report requires multiple pages\n";
+                HPDF_Page_EndText(page);
+                HPDF_Free(pdf);
+                return NORDISKA_EXIT_PDF_GENERATION_ERROR;
+            }
+            const std::string date = transaction["bookedAt"].get<std::string>().substr(0, 10);
+            const std::string type = transaction["type"].get<std::string>();
+            const std::string description = transaction["description"].get<std::string>();
+            const std::string amount = transaction["amount"].get<std::string>();
+
+            HPDF_Page_TextOut(page, 50, account_y, date.c_str());
+            HPDF_Page_TextOut(page, 120, account_y, type.c_str());
+            HPDF_Page_TextOut(page, 220, account_y, description.c_str());
+            HPDF_Page_TextOut(page, 440, account_y, amount.c_str());
+
+            account_y -= 18;
+        }
+
+        account_y -= 24;
     }
 
     HPDF_Page_EndText(page);
