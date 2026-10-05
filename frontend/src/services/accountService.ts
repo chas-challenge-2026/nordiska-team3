@@ -130,10 +130,18 @@ export type BackendTransaction = {
 
 export type TransactionHistoryResponse = {
     transactions: BackendTransaction[]
+    page: number
+    pageSize: number
+    totalCount: number
+    totalPages: number
 }
 
-export async function getTransactionsForAccount(accountId: string): Promise<BackendTransaction[]> {
-    const response = await fetch(`${API_URL}/api/accounts/${accountId}/transactions`, {
+export async function getTransactionsForAccount(
+    accountId: string,
+    page = 1,
+    pageSize = 20
+): Promise<TransactionHistoryResponse> {
+    const response = await fetch(`${API_URL}/api/accounts/${accountId}/transactions?page=${page}&pageSize=${pageSize}`, {
         method: 'GET',
         headers: getAuthHeaders(),
         credentials: 'include',
@@ -143,6 +151,5 @@ export async function getTransactionsForAccount(accountId: string): Promise<Back
         throw new Error('Kunde inte hämta transaktioner.')
     }
 
-    const data: TransactionHistoryResponse = await response.json()
-    return data.transactions
+    return response.json()
 }

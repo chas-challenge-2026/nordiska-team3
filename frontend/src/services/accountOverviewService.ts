@@ -6,21 +6,21 @@ import {
     getAccounts,
     getTransactionsForAccount,
     type BackendAccount,
-    type BackendTransaction,
+    type TransactionHistoryResponse,
 } from './accountService'
 
 export type AccountWithTransactions = {
     account: BackendAccount
-    transactions: BackendTransaction[]
+    history: TransactionHistoryResponse
 }
 
-export async function getAccountsWithTransactions(): Promise<AccountWithTransactions[]> {
+export async function getAccountsWithTransactions(page = 1, pageSize = 20): Promise<AccountWithTransactions[]> {
     const accounts = await getAccounts()
 
     const accountTransactionGroups = await Promise.all(
         accounts.map(async (account) => ({
             account,
-            transactions: await getTransactionsForAccount(account.id),
+            history: await getTransactionsForAccount(account.id, page, pageSize),
         }))
     )
 
