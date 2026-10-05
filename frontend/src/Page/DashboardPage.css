@@ -243,6 +243,9 @@
   color: var(--color-text-secondary);
   font-size: 12px;
   font-weight: 800;
+  line-height: 16px;
+  /* Två rader text + padding, så modalen har samma höjd med och utan meddelande */
+  min-height: calc(2 * 16px + 2 * var(--space-3));
   margin: 0;
   padding: var(--space-3);
 }
@@ -333,7 +336,7 @@
 }
 
 .create-account-modal__message {
-  min-height: 16px;
+  min-height: 32px;
   margin: 6px 0 0;
   color: var(--color-danger);
   font-size: 11px;
@@ -760,7 +763,7 @@
 }
 
 .account-modal .transact-message {
-  min-height: 16px;
+  min-height: 32px;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.01em;
@@ -920,7 +923,7 @@
   }
 
   .create-account-modal__message {
-    min-height: 14px;
+    min-height: 28px;
     margin-top: 4px;
     font-size: 10px;
     line-height: 14px;

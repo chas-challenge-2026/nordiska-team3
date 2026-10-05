@@ -177,7 +177,8 @@
 }
 
 .login-card .login-error {
-  min-height: 15px;
+  /* Två rader, så att knapparna under inte flyttas när ett långt fel radbryts */
+  min-height: 28px;
   margin-top: 0;
   margin-bottom: -10px;
   color: var(--color-danger);

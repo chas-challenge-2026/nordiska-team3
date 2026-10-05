@@ -290,7 +290,10 @@
 }
 
 .input-error-text {
+  /* Reserverar plats för två rader så att fältet inte ändrar höjd när felet visas */
+  min-height: 32px;
   font-size: 12px;
+  line-height: 16px;
   color: var(--color-danger);
   margin: 0;
 }

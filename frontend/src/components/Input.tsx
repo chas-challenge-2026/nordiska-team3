@@ -21,7 +21,8 @@ export function Input({ label, error, type = "text", className, ...props }: Inpu
         />
         {isAmount && <span className="input-suffix">kr</span>}
       </div>
-      {error && <p className="input-error-text">{error}</p>}
+      {/* Raden renderas alltid när error skickas in (även '') så att platsen är reserverad och layouten inte hoppar */}
+      {error !== undefined && <p className="input-error-text">{error}</p>}
     </div>
   );
 }

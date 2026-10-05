@@ -271,7 +271,8 @@
 }
 
 .transact-message {
-  min-height: 16px;
+  /* Reserverad plats för två rader så att kortet inte hoppar när ett meddelande visas */
+  min-height: 32px;
   font-size: 12px;
   font-weight: 700;
   line-height: 16px;
