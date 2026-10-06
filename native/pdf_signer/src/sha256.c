@@ -74,3 +74,19 @@ NordiskaExitCode nordiska_calculate_pdf_sha256(
 
         return NORDISKA_EXIT_SUCCESS;
     }
+
+void nordiska_sha256_to_hex(
+    const unsigned char digest[NORDISKA_SHA256_SIZE],
+    char hex_output[NORDISKA_SHA256_HEX_SIZE])
+{
+    static const char hex_digits[] = "0123456789abcdef";
+
+    for (size_t i = 0; i < NORDISKA_SHA256_SIZE; i++)
+    {
+        hex_output[i * 2] =
+            hex_digits[(digest[i] >> 4) & 0x0F];
+        hex_output[i * 2 + 1] =
+            hex_digits[digest[i] & 0x0F];
+    }
+    hex_output[NORDISKA_SHA256_HEX_SIZE - 1] = '\0';
+}

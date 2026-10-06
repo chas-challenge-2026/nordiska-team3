@@ -22,36 +22,32 @@
     '''
 */ 
 #include "nordiska/error_codes.h"
+#include "pdf_signer/sha256.h"
 #include <stdio.h>
 #include <string.h>
 
-static int can_read_pdf(const char* pdfPath)
+static void print_usage(void)
 {
-    FILE* pdfFile = fopen(pdfPath, "rb"); //rb = read binary
+    fprintf(
+        stderr,
+        "USAGE: pdf_signer sign "
+        "<input-pdf> <private-key-pem> <output-signature>\n"
+        "USAGE: pdf_signer verify "
+        "<input-pdf> <public-key-pem> <signature-file>\n"
+    );
+}
 
-    if (pdfFile == NULL)
-    {
-        fprintf(stderr, "Error: cannot open input PDF '%s'\n", pdfPath);
-        return NORDISKA_EXIT_FILE_ERROR;
-    }
+static int invalid_input(const char* message)
+{
+    fprintf(
+        stderr,
+        "ERROR 1 INVALID_INPUT: %s\n",
+        message
+    );
 
-    unsigned char buffer[4096];
-    size_t bytesRead;
+    print_usage();
 
-    while ((bytesRead = fread(buffer, 1, sizeof(buffer), pdfFile)) > 0)
-    {
-        // NAT-36.
-    }
-
-    if (ferror(pdfFile))
-    {
-        fprintf(stderr, "Error: could not read input PDF '%s'\n", pdfPath);
-        fclose(pdfFile);
-        return NORDISKA_EXIT_FILE_ERROR;
-    }
-
-    fclose(pdfFile);
-    return NORDISKA_EXIT_SUCCESS;
+    return NORDISKA_EXIT_INVALID_INPUT;
 }
 
 int main(int argc, char* argv[]) //argv used later to call real data, I suppose.
@@ -67,6 +63,23 @@ int main(int argc, char* argv[]) //argv used later to call real data, I suppose.
     }
 
     const char* operation = argv[1];
+
+    if (strcmp(operation, "sign") == 0 ||
+        strcmp(operation, "verify") == 0)
+    {
+        unsigned char pdfDigest[NORDISKA_SHA256_SIZE];
+
+        int hashResult =
+            nordiska_calculate_pdf_sha256(argv[2], pdfDigest);
+
+        if (hashResult != NORDISKA_EXIT_SUCCESS)
+        {
+            return hashResult;
+        }
+        char pdfHashHex[NORDISKA_SHA256_HEX_SIZE];
+        nordiska_sha256_to_hex(pdfDigest, pdfHashHex);
+    }
+
 
     if (strcmp(operation, "sign") == 0) // Checks if the operation is 'sign' returns 0(SUCCESS)
     {
