@@ -24,13 +24,18 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
 
-    var trustedProxies = builder.Configuration
-        .GetSection("ForwardedHeaders:KnownProxies")
-        .Get<string[]>() ?? Array.Empty<string>();
+    var section = builder.Configuration.GetSection("ForwardedHeaders");
 
-    foreach (var proxy in trustedProxies)
+    foreach (var proxy in section.GetSection("KnownProxies").Get<string[]>() ?? Array.Empty<string>())
     {
         options.KnownProxies.Add(IPAddress.Parse(proxy));
+    }
+
+    foreach (var network in section.GetSection("KnownNetworks").Get<string[]>() ?? Array.Empty<string>())
+    {
+        var parts = network.Split('/');
+        options.KnownNetworks.Add(new Microsoft.AspNetCore.HttpOverrides.IPNetwork(
+            IPAddress.Parse(parts[0]), int.Parse(parts[1])));
     }
 });
 
