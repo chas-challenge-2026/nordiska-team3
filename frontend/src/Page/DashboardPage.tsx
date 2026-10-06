@@ -37,6 +37,7 @@ import {
     type AccountPresentation,
     type AccountVariant,
 } from '../utils/accountPresentation'
+import { formatAccountInterest, getAccountInterest } from '../utils/accountInterest'
 import { createAccountSchema } from '../schemas/accountSchema'
 import { transactionAmountSchema } from '../schemas/transactionSchema'
 
@@ -67,12 +68,15 @@ function formatBackendBalance(balance: string) {
 
 function mapBackendAccountToDashboardAccount(account: BackendAccount, index: number): Account {
     const presentation = getAccountPresentation(account.id, index)
+    const interest = getAccountInterest(account)
 
     return {
         id: account.id,
         icon: getAccountIcon(presentation.iconId),
         label: account.name.toUpperCase(),
         value: formatBackendBalance(account.balance),
+        interest: interest ? formatAccountInterest(interest) : undefined,
+        interestType: interest?.type,
         variant: presentation.variant,
     }
 }

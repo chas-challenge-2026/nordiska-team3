@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Info } from 'lucide-react'
+import { interestTypeExplanations, type InterestType } from '../../utils/accountInterest'
 import './BalanceOverview.css'
 
 export interface Account {
@@ -7,6 +8,8 @@ export interface Account {
     icon: ReactNode
     label: string
     value: string
+    interest?: string
+    interestType?: InterestType
     variant?: 'default' | 'accent' | 'success' | 'danger' | 'purple' | 'pink'
 }
 
@@ -36,6 +39,9 @@ export function BalanceOverview({
     const totalAmount = parseKrValue(totalValue)
     const [animatedTotal, setAnimatedTotal] = useState(formatKrValue(0))
     const displayedTotal = Number.isFinite(totalAmount) ? animatedTotal : totalValue
+    const interestTypes = Array.from(
+        new Set(accounts.flatMap((account) => (account.interestType ? [account.interestType] : [])))
+    )
 
     useEffect(() => {
         if (!Number.isFinite(totalAmount)) {
@@ -91,9 +97,17 @@ export function BalanceOverview({
                                 className={`account-card-chevron account-card-chevron--${account.variant ?? 'default'}`}
                             />
                         </div>
+                        {account.interest && <p className="account-card-interest">{account.interest}</p>}
                     </button>
                 ))}
             </div>
+
+            {interestTypes.length > 0 && (
+                <p className="accounts-interest-note">
+                    <Info size={14} aria-hidden="true" />
+                    <span>{interestTypes.map((type) => interestTypeExplanations[type]).join(' ')}</span>
+                </p>
+            )}
         </div>
     )
 }

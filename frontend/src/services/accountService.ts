@@ -9,6 +9,9 @@ export type BackendAccount = {
     name: string
     status: string
     balance: string
+    // Skickas inte av backend än, se utils/accountInterest.ts
+    interestRate?: string
+    interestType?: 'VARIABLE' | 'FIXED'
 }
 
 export type AccountsResponse = {
