@@ -1,6 +1,8 @@
+using System.Net;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.EntityFrameworkCore;
 using NordiskaPortal.API.Data;
 using NordiskaPortal.API.Extensions;
-using Microsoft.EntityFrameworkCore;
 using NordiskaPortal.API.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,7 +20,23 @@ builder.Services.AddControllers(options =>
     options.Filters.Add<ValidationFilter>();
 });
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+
+    var trustedProxies = builder.Configuration
+        .GetSection("ForwardedHeaders:KnownProxies")
+        .Get<string[]>() ?? Array.Empty<string>();
+
+    foreach (var proxy in trustedProxies)
+    {
+        options.KnownProxies.Add(IPAddress.Parse(proxy));
+    }
+});
+
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
