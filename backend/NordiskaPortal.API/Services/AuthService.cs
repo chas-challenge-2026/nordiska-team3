@@ -93,16 +93,20 @@ public class AuthService : IAuthService
 
     public async Task<RegisterResult> RegisterAsync(RegisterRequestDto request)
     {
+        // Samma meddelande oavsett orsak, så klienten inte kan avgöra om ett personnummer eller e-post redan finns.
+        const string genericConflictMessage =
+            "Registration could not be completed with the provided details.";
+
         if (await _userRepository.GetByPersonalNumberAsync(request.PersonalNumber) is not null)
         {
             _logger.LogWarning("Registration attempt with already-registered personal number.");
-            return RegisterResult.Failure("A user with this personal number already exists.");
+            return RegisterResult.Failure(genericConflictMessage);
         }
 
         if (await _userRepository.ExistsByEmailAsync(request.Email))
         {
             _logger.LogWarning("Registration attempt with already-registered email.");
-            return RegisterResult.Failure("A user with this email already exists.");
+            return RegisterResult.Failure(genericConflictMessage);
         }
 
         var user = new User
