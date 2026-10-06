@@ -10,7 +10,6 @@
     min-height: 100vh;
     background: var(--color-page-bg);
     overflow-x: hidden;
-    overflow-y: clip;
 }
 
 [data-theme="dark"] .history-page {
@@ -54,6 +53,9 @@
 .history-main {
     position: relative;
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
     padding-left: 64px;
 }
 
@@ -62,6 +64,7 @@
     z-index: 2;
     width: 100%;
     max-width: var(--desktop-content-width);
+    box-sizing: border-box;
     margin: 0 auto;
     padding: 90px var(--space-5) var(--space-7);
 }
@@ -406,7 +409,7 @@
 @media (max-width: 700px) {
     .history-page {
         flex-direction: column;
-        padding-bottom: 96px;
+        padding-bottom: 0;
     }
 
     .history-main {

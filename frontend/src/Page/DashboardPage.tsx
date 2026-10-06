@@ -19,6 +19,7 @@ import { DecorativeCircle } from '../components/DecorativeCircle'
 import { BalanceOverview } from '../components/DashboardActions/BalanceOverview'
 import { DashboardActions } from '../components/DashboardActions/DashboardActions'
 import { RecentEvents } from '../components/RecentEvents/RecentEvents'
+import { CustomerServiceFooter } from '../components/CustomerServiceFooter'
 import type { Account } from '../components/DashboardActions/BalanceOverview'
 import type { DashboardAction } from '../components/DashboardActions/mockDashboardActions'
 import { useLogout } from '../hooks/useLogout'
@@ -668,6 +669,8 @@ function DashboardPage() {
 
                     <DashboardActions onActionClick={handleActionClick} />
                 </div>
+
+                <CustomerServiceFooter />
             </main>
         </div>
     )

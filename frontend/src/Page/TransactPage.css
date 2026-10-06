@@ -3,6 +3,7 @@
   z-index: 2;
   width: 100%;
   max-width: var(--desktop-content-width);
+  box-sizing: border-box;
   margin: 0 auto;
   padding: 90px var(--space-5) var(--space-7);
   display: flex;

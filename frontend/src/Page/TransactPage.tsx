@@ -9,6 +9,7 @@ import { type TransactAccount } from './mockTransactAccounts'
 import { deposit, getAccounts, withdraw, type BackendAccount } from '../services/accountService'
 import { ChevronDown } from 'lucide-react'
 import { useTheme } from '../context/useTheme'
+import { CustomerServiceFooter } from '../components/CustomerServiceFooter'
 import {
     getAccountIcon,
     getAccountPresentation,
@@ -397,6 +398,8 @@ function TransactPage() {
                         </button>
                     </form>
                 </div>
+
+                <CustomerServiceFooter />
             </main>
         </div>
     )

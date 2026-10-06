@@ -7,6 +7,7 @@ import { useAccountsWithTransactions } from '../hooks/useAccountsWithTransaction
 import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import { AppNav } from '../components/AppNav'
 import { DecorativeCircle } from '../components/DecorativeCircle'
+import { CustomerServiceFooter } from '../components/CustomerServiceFooter'
 import { useLogout } from '../hooks/useLogout'
 import { useTheme } from '../context/useTheme'
 
@@ -364,7 +365,10 @@ function HistoryPage() {
                             </button>
                         </nav>
                     )}
+
                 </section>
+
+                <CustomerServiceFooter />
             </main>
         </div>
     )
