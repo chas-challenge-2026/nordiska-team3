@@ -216,102 +216,9 @@
     line-height: 1.45;
 }
 
-.faq-contact {
-    position: relative;
-    z-index: 2;
-    width: calc(100% + 64px);
-    margin: auto 0 0 -64px;
-    background: var(--color-surface);
-    color: var(--color-text-primary);
-    box-shadow: var(--faq-card-shadow);
-}
-
-[data-theme="dark"] .faq-contact {
-    background: var(--faq-card-bg);
-}
-
-.faq-contact__inner {
-    width: min(calc(100% - 64px), var(--desktop-content-width));
-    margin: 0 auto 0 calc(64px + ((100% - 64px - min(calc(100% - 64px), var(--desktop-content-width))) / 2));
-    padding: var(--space-4) var(--space-5);
-}
-
-.faq-contact h2 {
-    margin: 0 0 var(--space-3);
-    color: var(--color-text-primary);
-    font-size: 16px;
-    font-weight: 800;
-}
-
-.faq-chat-card {
-    display: grid;
-    grid-template-columns: 136px minmax(0, 1fr);
-    align-items: stretch;
-    margin: 0 auto;
-    width: 100%;
-    min-height: 58px;
-    overflow: hidden;
-    border-radius: var(--radius-md);
-    background: var(--color-yale-blue-900);
-    color: var(--color-text-inverted);
-}
-
-[data-theme="dark"] .faq-chat-card {
-    background: var(--color-surface-soft);
-}
-
-.faq-chat-card button {
-    background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
-    color: var(--color-on-primary);
-    font-size: 13px;
-    font-weight: 900;
-}
-
-[data-theme="dark"] .faq-chat-card button {
-    color: var(--color-on-primary);
-}
-
-.faq-chat-card p {
-    align-self: center;
-    margin: 0;
-    padding: 0 var(--space-4);
-    color: inherit;
-    font-size: 11px;
-    font-weight: 700;
-    line-height: 1.35;
-}
-
-.faq-hours {
-    margin: var(--space-2) 0;
-    color: var(--color-text-secondary);
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.faq-contact-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-}
-
-.faq-contact-links a {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 32px;
-    padding: 0 16px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-pill);
-    color: var(--color-text-primary);
-    font-size: 12px;
-    font-weight: 800;
-    text-decoration: none;
-}
-
 [data-theme="dark"] .faq-search,
 [data-theme="dark"] .faq-item,
-[data-theme="dark"] .faq-no-results,
-[data-theme="dark"] .faq-chat-card {
+[data-theme="dark"] .faq-no-results {
     border: 1px solid var(--color-border);
 }
 
@@ -324,7 +231,7 @@
     .faq-main {
         margin-left: 0;
         padding-left: 0;
-        min-height: auto;
+        min-height: 100vh;
     }
 
     .faq-page .decorative-circle {
@@ -362,38 +269,4 @@
         font-size: 12px;
     }
 
-    .faq-contact {
-        width: 100%;
-        margin: var(--space-5) 0 96px;
-        text-align: center;
-    }
-
-    .faq-contact__inner {
-        width: min(100%, 560px);
-        margin: 0 auto;
-        padding: var(--space-3) var(--space-4);
-    }
-
-    .faq-contact h2 {
-        font-size: 13px;
-    }
-
-    .faq-chat-card {
-        grid-template-columns: 104px minmax(0, 1fr);
-        min-height: 58px;
-        text-align: left;
-    }
-
-    .faq-chat-card button {
-        font-size: 12px;
-    }
-
-    .faq-chat-card p {
-        padding: 0 var(--space-3);
-        font-size: 8px;
-    }
-
-    .faq-contact-links {
-        justify-content: center;
-    }
 }

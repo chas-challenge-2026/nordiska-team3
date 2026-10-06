@@ -24,6 +24,9 @@
 .dashboard-main {
   position: relative;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
   padding-left: 64px;
   overflow: visible;
 }
@@ -34,6 +37,7 @@
   z-index: 2;
   width: 100%;
   max-width: var(--desktop-content-width);
+  box-sizing: border-box;
   margin: 0 auto;
   padding: 150px var(--space-5) var(--space-7);
   display: flex;
@@ -827,7 +831,7 @@
   .dashboard-page {
     flex-direction: column;
     min-height: 100vh;
-    padding-bottom: 100px;
+    padding-bottom: 0;
     overflow-x: hidden;
   }
 
@@ -838,6 +842,7 @@
   .dashboard-main {
     margin-left: 0;
     padding-left: 0;
+    min-height: 100vh;
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;

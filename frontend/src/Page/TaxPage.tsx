@@ -4,6 +4,7 @@ import './TaxPage.css'
 import { AppNav } from '../components/AppNav'
 import { UserProfile } from '../components/UserProfile'
 import { DecorativeCircle } from '../components/DecorativeCircle'
+import { CustomerServiceFooter } from '../components/CustomerServiceFooter'
 import { useTheme } from '../context/useTheme'
 import { mockTaxReports } from './mockTaxReport'
 import type { TaxReportStatus, TaxReportYear } from './mockTaxReport'
@@ -247,6 +248,8 @@ function TaxPage() {
                         </button>
                     )}
                 </div>
+
+                <CustomerServiceFooter />
             </main>
         </div>
     )

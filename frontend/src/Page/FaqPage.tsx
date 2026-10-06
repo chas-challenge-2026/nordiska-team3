@@ -3,6 +3,7 @@ import { ChevronRight, Search } from 'lucide-react'
 import { AppNav } from '../components/AppNav'
 import { DecorativeCircle } from '../components/DecorativeCircle'
 import { UserProfile } from '../components/UserProfile'
+import { CustomerServiceFooter } from '../components/CustomerServiceFooter'
 import { useTheme } from '../context/useTheme'
 import { useLogout } from '../hooks/useLogout'
 import './FaqPage.css'
@@ -80,7 +81,7 @@ function FaqPage() {
                 <div className="faq-content">
                     <header className="faq-header">
                         <h1 tabIndex={0}>Vanliga frågor</h1>
-                        <p>Hittar du inte svaret? Kontakta oss via chatten.</p>
+                        <p>Sök bland vanliga frågor eller kontakta kundservice om du behöver mer hjälp.</p>
                     </header>
 
                     <label className="faq-search">
@@ -135,26 +136,7 @@ function FaqPage() {
                     )}
                 </div>
 
-                <section className="faq-contact" id="faq-contact">
-                    <div className="faq-contact__inner">
-                        <h2>Hittade du inte svaret?</h2>
-
-                        <div className="faq-chat-card">
-                            <button type="button">Starta chatt</button>
-                            <p>
-                                Vår AI-agent Nora arbetar 24/7 och kan hjälpa er med både enkla
-                                och komplexa frågor.
-                            </p>
-                        </div>
-
-                        <p className="faq-hours">Annars finns vi tillgängliga vardagar kl 8-18.</p>
-
-                        <div className="faq-contact-links">
-                            <a href="tel:0812345678">08-123 456 78</a>
-                            <a href="mailto:hej@nordiska.se">hej@nordiska.se</a>
-                        </div>
-                    </div>
-                </section>
+                <CustomerServiceFooter />
             </section>
         </main>
     )
