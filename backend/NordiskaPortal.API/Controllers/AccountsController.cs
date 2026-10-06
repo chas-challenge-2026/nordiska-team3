@@ -3,8 +3,10 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using NordiskaPortal.API.DTOs.Accounts;
 using NordiskaPortal.API.DTOs.ErrorResponse;
+using NordiskaPortal.API.Extensions;
 using NordiskaPortal.API.Services.Interfaces;
 
 namespace NordiskaPortal.API.Controllers;
@@ -49,6 +51,7 @@ public class  AccountsController : ControllerBase
         return Ok(account);   
     }
 
+    [EnableRateLimiting(RateLimitPolicies.MoneyTransaction)]
     [HttpPost("{accountId}/deposit")]
     public async Task<IActionResult> Deposit(Guid accountId, TransactionRequestDto request)
     {
@@ -61,6 +64,7 @@ public class  AccountsController : ControllerBase
             result.Balance!.Value.ToString("F2", CultureInfo.InvariantCulture)));
     }
 
+    [EnableRateLimiting(RateLimitPolicies.MoneyTransaction)]
     [HttpPost("{accountId}/withdraw")]
     public async Task<IActionResult> Withdraw(Guid accountId, TransactionRequestDto request)
     {

@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using NordiskaPortal.API.Services.Interfaces;
+using NordiskaPortal.API.Extensions;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -20,6 +22,7 @@ namespace NordiskaPortal.API.Controllers
 
         public record CreateTaxReportRequest(int ReportYear);
 
+        [EnableRateLimiting(RateLimitPolicies.TaxReport)]
         [HttpPost]
         public async Task<IActionResult> CreateTaxReport(CreateTaxReportRequest request)
         {

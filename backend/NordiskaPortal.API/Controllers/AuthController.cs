@@ -2,8 +2,10 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using NordiskaPortal.API.DTOs.Auth;
 using NordiskaPortal.API.DTOs.ErrorResponse;
+using NordiskaPortal.API.Extensions;
 using NordiskaPortal.API.Services.Interfaces;
 
 namespace NordiskaPortal.API.Controllers;
@@ -20,6 +22,7 @@ public class AuthController : ControllerBase
     }
 
     // POST /api/auth/register - Öppen för alla, ingen [Authorize] behövs
+    [EnableRateLimiting(RateLimitPolicies.Auth)]
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequestDto request)
     {
@@ -33,6 +36,7 @@ public class AuthController : ControllerBase
     }
 
     // POST /api/auth/login-pin - Öppen för alla, ingen [Authorize] behövs
+    [EnableRateLimiting(RateLimitPolicies.Auth)]
     [HttpPost("login-pin")]
     public async Task<IActionResult> LoginPin(LoginPinRequestDto request)
     {
@@ -46,6 +50,7 @@ public class AuthController : ControllerBase
     }
 
     // POST /api/auth/refresh
+    [EnableRateLimiting(RateLimitPolicies.Refresh)]
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh()
     {
