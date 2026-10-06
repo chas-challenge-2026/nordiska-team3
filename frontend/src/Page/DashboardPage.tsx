@@ -19,6 +19,7 @@ import { DecorativeCircle } from '../components/DecorativeCircle'
 import { BalanceOverview } from '../components/DashboardActions/BalanceOverview'
 import { DashboardActions } from '../components/DashboardActions/DashboardActions'
 import { RecentEvents } from '../components/RecentEvents/RecentEvents'
+import { NextEvent } from '../components/NextEvent/NextEvent'
 import { CustomerServiceFooter } from '../components/CustomerServiceFooter'
 import type { Account } from '../components/DashboardActions/BalanceOverview'
 import type { DashboardAction } from '../components/DashboardActions/mockDashboardActions'
@@ -39,6 +40,7 @@ import {
     type AccountVariant,
 } from '../utils/accountPresentation'
 import { formatAccountInterest, getAccountInterest } from '../utils/accountInterest'
+import { getNextEvent } from '../utils/nextEvent'
 import { createAccountSchema } from '../schemas/accountSchema'
 import { transactionAmountSchema } from '../schemas/transactionSchema'
 
@@ -136,6 +138,7 @@ function DashboardPage() {
     const accounts = (accountTransactionGroups ?? []).map(({ account }, index) =>
         mapBackendAccountToDashboardAccount(account, index)
     )
+    const nextEvent = getNextEvent(accountTransactionGroups ?? [])
     const accountTransactions = (accountTransactionGroups ?? []).flatMap(({ account, history }) =>
         history.transactions.map((transaction) => mapBackendTransactionToDashboardTransaction(transaction, account.id))
     )
@@ -444,6 +447,8 @@ function DashboardPage() {
                             onAccountClick={handleAccountClick}
                         />
                     )}
+
+                    <NextEvent event={nextEvent} />
 
                     <button
                         type="button"
