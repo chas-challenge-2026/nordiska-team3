@@ -1,7 +1,7 @@
-﻿namespace NordiskaPortal.API.Controllers;
-
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using NordiskaPortal.API.Data;
+
+namespace NordiskaPortal.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
