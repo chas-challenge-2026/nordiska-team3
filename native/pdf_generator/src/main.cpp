@@ -90,7 +90,10 @@ int main(int argc, char* argv[])
         !report_data["customer"].is_object() ||
 
         !report_data.contains("accounts") ||
-        !report_data["accounts"].is_array()
+        !report_data["accounts"].is_array() ||
+
+        !report_data.contains("summary") ||
+        !report_data["summary"].is_object()
     )
     {
         std::cerr << "Error: tax-report JSON has an invalid header\n";
@@ -100,6 +103,20 @@ int main(int argc, char* argv[])
     const auto& bank = report_data["bank"];
     const auto& customer = report_data["customer"];
     const auto& accounts = report_data["accounts"];
+    const auto& summary = report_data["summary"];
+
+    if
+    (
+        !has_string_field(summary, "totalDeposits") ||
+        !has_string_field(summary, "totalWithdrawals") ||
+        !has_string_field(summary, "interestIncome") ||
+        !has_string_field(summary, "capitalTaxRate") ||
+        !has_string_field(summary, "capitalTax") 
+    )
+    {
+        std::cerr << "Error: tax-report JSON has an invalid summary\n";
+        return NORDISKA_EXIT_INVALID_INPUT;
+    }
 
     if
     (
@@ -314,6 +331,35 @@ int main(int argc, char* argv[])
         }
 
         account_y -= 24;
+    }
+
+    if (account_y < 170)
+    {
+        std::cerr << "Error: report summary requires another page\n";
+        HPDF_Page_EndText(page);
+        HPDF_Free(pdf);
+        return NORDISKA_EXIT_PDF_GENERATION_ERROR;
+    }
+    
+    HPDF_Page_SetFontAndSize(page, font, 14);
+    HPDF_Page_TextOut(page, 50, account_y, "Sammanfattning");
+    account_y -= 26;
+
+    HPDF_Page_SetFontAndSize(page, font, 12);
+
+    const std::string summary_lines[] =
+    {
+        "Totala insättningar: " + summary["totalDeposits"].get<std::string>() + " " + currency,
+        "Totala uttag: " + summary["totalWithdrawals"].get<std::string>() + " " + currency,
+        "Ränteinkomster: " + summary["interestIncome"].get<std::string>() + " " + currency,
+        "Skattesats (decimalform): " + summary["capitalTaxRate"].get<std::string>(),
+        "Kapitalskatt: " + summary["capitalTax"].get<std::string>() + " " + currency,
+    };
+
+    for (const auto& line : summary_lines)
+    {
+        HPDF_Page_TextOut(page, 50, account_y, line.c_str());
+        account_y -= 18;
     }
 
     HPDF_Page_EndText(page);
