@@ -69,8 +69,8 @@ public static class RateLimitingExtensions
 
     private static RateLimitPartition<string> ByUser(HttpContext context, int permitsPerMinute)
     {
-        // JwtBearer är konfigurerad med MapInboundClaims = false, så claimen heter "sub".
-        var userId = context.User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+        var userId = context.User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+                  ?? context.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         var key = userId is not null
             ? "user:" + userId
