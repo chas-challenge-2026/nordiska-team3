@@ -34,46 +34,79 @@ static std::vector<std::string> wrap_text(
 {
     std::vector<std::string> lines;
     std::string line;
+    std::string word;
 
-    for (std::size_t position = 0; position < text.size();)
+    const auto add_word = [&]()
     {
-        std::size_t next = position + 1;
+        if (word.empty())
+            return;
 
-        //Keep all bytes of one UTF-8 character together.
-        while (next < text.size() && (static_cast<unsigned char>(text[next]) & 0xC0) == 0x80)
+        const std::string candidate = line.empty() ? word : line + " " + word;
+
+        if (HPDF_Page_TextWidth(page, candidate.c_str()) <= max_width)
         {
-            ++next;
+            line = candidate;
+            word.clear();
+            return;
         }
 
-        std::string character = text.substr(position, next - position);
-        position = next;
-
-        if (character == "\r")
-            continue;
-
-        if (character == "\n")
+        if (!line.empty())
         {
             lines.push_back(line);
             line.clear();
-            continue;
         }
 
-        if (character == "\t")
-            character = " ";
-
-        const std::string candidate = line + character;
-        
-        if (!line.empty() && HPDF_Page_TextWidth(page, candidate.c_str()) > max_width)
+        //Split an oversized word without splitting UTF-8 characters
+        for (std::size_t position = 0; position < word.size();)
         {
-            lines.push_back(line);
-            line = character;
+            std::size_t next = position + 1;
+
+            while (next < word.size() && (static_cast<unsigned char>(word[next]) & 0xC0) == 0x80)
+            {
+                ++next;
+            }
+
+            const std::string character = word.substr(position, next - position);
+            const std::string fragment = line + character;
+
+            if (!line.empty() && HPDF_Page_TextWidth(page, fragment.c_str()) > max_width)
+            {
+                lines.push_back(line);
+                line.clear();
+            }
+
+            line += character;
+            position = next;
+        }
+
+        word.clear();
+    };
+
+    for (char character : text)
+    {
+        if 
+        (
+            character == ' ' || 
+            character == '\t' ||
+            character == '\r' ||
+            character == '\n'
+        )
+        {
+            add_word();
+
+            if (character == '\n')
+            {
+                lines.push_back(line);
+                line.clear();
+            }
         }
         else
         {
-            line = candidate;
+            word += character;
         }
     }
-
+    
+    add_word();
     lines.push_back(line);
     return lines;
 }
@@ -347,7 +380,7 @@ int main(int argc, char* argv[])
             HPDF_Page_SetSize(page, HPDF_PAGE_SIZE_A4, HPDF_PAGE_PORTRAIT) != HPDF_OK ||
             HPDF_Page_BeginText(page) != HPDF_OK ||
             HPDF_Page_SetFontAndSize(page, font, 12) != HPDF_OK ||
-            HPDF_Page_TextOut(page, 50, 780, "NORDISKA Skatteraport") != HPDF_OK
+            HPDF_Page_TextOut(page, 50, 780, "NORDISKA Skatterapport") != HPDF_OK
         )
         {
             return false;
@@ -408,8 +441,9 @@ int main(int argc, char* argv[])
 
             const auto type_lines = wrap_text(page, transaction["type"].get<std::string>(), 90);
             const auto description_lines = wrap_text(page, transaction["description"].get<std::string>(), 210);
+            const auto amount_lines = wrap_text(page, amount, 105);
             
-            const std::size_t line_count = std::max(type_lines.size(), description_lines.size());
+            const std::size_t line_count = std::max({type_lines.size(), description_lines.size(), amount_lines.size()});
 
             for (std::size_t index = 0; index < line_count; ++index)
             {
@@ -437,7 +471,6 @@ int main(int argc, char* argv[])
                 if (index == 0)
                 {
                     HPDF_Page_TextOut(page, 50, account_y, date.c_str());
-                    HPDF_Page_TextOut(page, 440, account_y, amount.c_str());
                 }
                 if (index < type_lines.size())
                 {
@@ -446,6 +479,10 @@ int main(int argc, char* argv[])
                 if (index < description_lines.size())
                 {
                     HPDF_Page_TextOut(page, 220, account_y, description_lines[index].c_str()); // Susie Deltarune
+                }
+                if (index < amount_lines.size())
+                {
+                    HPDF_Page_TextOut(page, 440, account_y, amount_lines[index].c_str());
                 }
                 account_y -= 18;
             }
