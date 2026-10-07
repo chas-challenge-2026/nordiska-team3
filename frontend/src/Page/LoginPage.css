@@ -250,26 +250,6 @@
   box-shadow: none;
 }
 
-.bankid-options {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  height: 48px;
-  margin-top: 4px;
-  flex-shrink: 0;
-}
-
-.bankid-options button {
-  height: 48px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  background: var(--color-surface-soft);
-  color: var(--color-text-primary);
-  font-size: 12px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
 .secure-text {
   display: flex;
   align-items: flex-start;
@@ -397,15 +377,6 @@
   .login-card .button {
     height: 42px;
     font-size: 12px;
-  }
-
-  .bankid-options button {
-    height: 42px;
-    font-size: 12px;
-  }
-
-  .bankid-options {
-    height: 42px;
   }
 
   .password-toggle {
