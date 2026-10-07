@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ChevronRight, Search } from 'lucide-react'
 import { AppNav } from '../components/AppNav'
 import { DecorativeCircle } from '../components/DecorativeCircle'
@@ -6,58 +6,49 @@ import { UserProfile } from '../components/UserProfile'
 import { CustomerServiceFooter } from '../components/CustomerServiceFooter'
 import { useTheme } from '../context/useTheme'
 import { useLogout } from '../hooks/useLogout'
+import { useFaqEntries, useFaqSearch } from '../hooks/useFaq'
+import type { FaqEntry } from '../services/faqService'
 import './FaqPage.css'
 
-const faqItems = [
-    {
-        id: 'open-account',
-        question: 'Hur öppnar jag ett nytt sparkonto?',
-        answer: 'Du öppnar ett nytt sparkonto från dashboarden genom att välja Skapa nytt sparkonto.',
-    },
-    {
-        id: 'withdrawal-time',
-        question: 'Hur lång tid tar ett uttag?',
-        answer: 'Ett uttag hanteras normalt samma bankdag. I vissa fall kan det ta upp till nästa bankdag.',
-    },
-    {
-        id: 'interest-statement',
-        question: 'Var hittar jag mitt räntebesked?',
-        answer: 'Du hittar räntebesked och underlag på sidan Skatterapport.',
-    },
-    {
-        id: 'deposit-protection',
-        question: 'Är mina pengar skyddade?',
-        answer: 'Ja, dina pengar omfattas av insättningsgarantin enligt de villkor som gäller för kontot.',
-    },
-    {
-        id: 'phone-number',
-        question: 'Hur ändrar jag mitt telefonnummer?',
-        answer: 'Du kan uppdatera dina kontaktuppgifter via profilknappen längst upp till höger.',
-    },
-    {
-        id: 'multiple-accounts',
-        question: 'Kan jag ha flera sparkonton?',
-        answer: 'Ja, du kan skapa flera sparkonton och ge dem olika namn för olika sparmål.',
-    },
-]
+function matchesSearch(item: FaqEntry, search: string) {
+    return item.question.toLocaleLowerCase('sv-SE').includes(search)
+}
 
 function FaqPage() {
     const [searchTerm, setSearchTerm] = useState('')
+    const [debouncedSearch, setDebouncedSearch] = useState('')
     const [openQuestionId, setOpenQuestionId] = useState<string | null>(null)
     const handleLogout = useLogout()
     const { toggleTheme } = useTheme()
 
-    const visibleFaqItems = useMemo(() => {
-        const normalizedSearch = searchTerm.trim().toLocaleLowerCase('sv-SE')
+    const { data: faqItems = [], isLoading, isError, refetch } = useFaqEntries()
+    const normalizedSearch = searchTerm.trim().toLocaleLowerCase('sv-SE')
 
+    const visibleFaqItems = useMemo(() => {
         if (!normalizedSearch) {
             return faqItems
         }
 
-        return faqItems.filter((item) =>
-            item.question.toLocaleLowerCase('sv-SE').includes(normalizedSearch)
-        )
+        return faqItems.filter((item) => matchesSearch(item, normalizedSearch))
+    }, [faqItems, normalizedSearch])
+
+    // Vänta tills användaren slutat skriva innan backend tillfrågas
+    useEffect(() => {
+        const timeout = setTimeout(() => setDebouncedSearch(searchTerm.trim()), 400)
+
+        return () => clearTimeout(timeout)
     }, [searchTerm])
+
+    // Hittar filtreringen inget används backendens smarta sökning, som förstår t.ex. "när kommer pengarna"
+    const isTyping = debouncedSearch !== searchTerm.trim()
+    const shouldUseSmartSearch =
+        !isLoading && !isError && !isTyping && debouncedSearch.length > 0 && visibleFaqItems.length === 0
+    const smartSearch = useFaqSearch(debouncedSearch, shouldUseSmartSearch)
+    const isWaitingForSmartSearch =
+        normalizedSearch.length > 0 &&
+        visibleFaqItems.length === 0 &&
+        (isTyping || smartSearch.isFetching)
+    const bestMatch = smartSearch.data?.matchFound ? smartSearch.data : null
 
     return (
         <main className="faq-page">
@@ -95,7 +86,19 @@ function FaqPage() {
                         />
                     </label>
 
-                    {visibleFaqItems.length > 0 ? (
+                    {isLoading ? (
+                        <section className="faq-no-results" aria-live="polite">
+                            <h2>Hämtar vanliga frågor …</h2>
+                        </section>
+                    ) : isError ? (
+                        <section className="faq-no-results" role="alert">
+                            <h2>Vanliga frågor kunde inte hämtas</h2>
+                            <p>Försök igen om en stund, eller kontakta kundservice längre ner på sidan.</p>
+                            <button className="faq-retry" type="button" onClick={() => refetch()}>
+                                Försök igen
+                            </button>
+                        </section>
+                    ) : visibleFaqItems.length > 0 ? (
                         <div className="faq-list" aria-live="polite">
                             {visibleFaqItems.map((item) => (
                                 <article className="faq-accordion" key={item.id}>
@@ -125,12 +128,26 @@ function FaqPage() {
                                 </article>
                             ))}
                         </div>
+                    ) : isWaitingForSmartSearch ? (
+                        <section className="faq-no-results" aria-live="polite">
+                            <h2>Söker …</h2>
+                        </section>
+                    ) : bestMatch ? (
+                        <div className="faq-list" aria-live="polite">
+                            <p className="faq-best-match-label">Närmaste svar på din sökning</p>
+                            <article className="faq-accordion">
+                                <h2 className="faq-item faq-item--static">{bestMatch.question}</h2>
+                                <div className="faq-answer">
+                                    <p>{bestMatch.answer}</p>
+                                </div>
+                            </article>
+                        </div>
                     ) : (
                         <section className="faq-no-results" aria-live="polite">
                             <h2>Inget svar hittades</h2>
                             <p>
-                                Vi hittade ingen fråga som matchar din sökning. Testa att formulera om
-                                eller använd kontaktvägarna längre ner på sidan.
+                                {smartSearch.data?.message ??
+                                    'Vi hittade ingen fråga som matchar din sökning. Testa att formulera om eller använd kontaktvägarna längre ner på sidan.'}
                             </p>
                         </section>
                     )}
