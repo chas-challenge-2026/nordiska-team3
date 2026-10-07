@@ -220,15 +220,27 @@ public static class ServiceCollectionExtensions
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var protector = scope.ServiceProvider.GetRequiredService<IPersonalNumberProtector>();
 
-        // Finns redan krypterade rader maste nyckeln kunna öppna dem. Annars har nyckelfilen
-        // tappats (t.ex. volymen raderades) och vi stoppar hellre an att tyst bryta alla inloggningar.
         var sample = await db.Users
             .Where(u => u.PersonalNumber.StartsWith(PersonalNumberProtector.Prefix))
             .Select(u => u.PersonalNumber)
             .FirstOrDefaultAsync();
 
-        if (sample is not null)
+        if (!protector.IsKeyAvailable)
         {
+            // Finns det redan krypterade personnummer får vi ALDRIG skapa en ny nyckel,
+            if (sample is not null)
+            {
+                throw new InvalidOperationException(
+                    "Personal number key is missing but encrypted personal numbers exist. " +
+                    "Restore /secrets/pn.key (or PersonalNumberProtection:Key). Refusing to generate a new key.");
+            }
+
+            // Allra första starten: inga krypterade rader finns än, skapa nyckeln.
+            protector.GenerateNewKey();
+        }
+        else if (sample is not null)
+        {
+            // Nyckeln finns: kontrollera att den faktiskt kan öppna befintliga krypterade rader.
             try
             {
                 protector.Unprotect(sample);
