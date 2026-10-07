@@ -4,12 +4,13 @@ import { type RecentEvent } from './mockRecentEvents'
 
 type RecentEventsProps = {
   events?: RecentEvent[]
+  title?: string
 }
 
-export function RecentEvents({ events = [] }: RecentEventsProps) {
+export function RecentEvents({ events = [], title = 'Senaste händelser' }: RecentEventsProps) {
   return (
     <section className="recent-events">
-      <h2 className="recent-events__title" tabIndex={0}>Senaste händelser</h2>
+      <h2 className="recent-events__title" tabIndex={0}>{title}</h2>
 
       <div className={`recent-events__list ${events.length === 0 ? 'recent-events__list--empty' : ''}`}>
         {events.length === 0 ? (
