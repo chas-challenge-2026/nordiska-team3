@@ -99,4 +99,94 @@ public class AccountServiceTests
         result.IsSuccess.Should().BeFalse();
         result.ErrorMessage.Should().Be("Account does not exist.");
     }
+
+    [Fact]
+    public async Task TransferAsync_WhenAmountIsNotPositive_ShouldReturnFailure()
+    {
+        var service = CreateService();
+
+        var result = await service.TransferAsync(Guid.NewGuid(), Guid.NewGuid(), "NKM-22222", 0m);
+
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorMessage.Should().Be("Amount must be positive.");
+    }
+
+    [Fact]
+    public async Task TransferAsync_WhenSourceAccountBelongsToAnotherUser_ShouldReturnFailure()
+    {
+        var fromId = Guid.NewGuid();
+        _accountRepoMock.Setup(r => r.GetByIdAsync(fromId)).ReturnsAsync(
+            new Account { Id = fromId, UserId = Guid.NewGuid(), AccountNumber = "NKM-11111", AccountType = "SAVINGS", Name = "Sparkonto" });
+
+        var service = CreateService();
+
+        var result = await service.TransferAsync(Guid.NewGuid(), fromId, "NKM-22222", 10m);
+
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorMessage.Should().Be("Account does not exist.");
+    }
+
+    [Fact]
+    public async Task TransferAsync_WhenRecipientDoesNotExist_ShouldReturnFailure()
+    {
+        var userId = Guid.NewGuid();
+        var fromId = Guid.NewGuid();
+        _accountRepoMock.Setup(r => r.GetByIdAsync(fromId)).ReturnsAsync(
+            new Account { Id = fromId, UserId = userId, AccountNumber = "NKM-11111", AccountType = "SAVINGS", Name = "Sparkonto" });
+        _accountRepoMock.Setup(r => r.GetByAccountNumberAsync("NKM-99999")).ReturnsAsync((Account?)null);
+
+        var service = CreateService();
+
+        var result = await service.TransferAsync(userId, fromId, "NKM-99999", 10m);
+
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorMessage.Should().Be("Recipient account does not exist.");
+    }
+
+    [Fact]
+    public async Task TransferAsync_WhenSameAccount_ShouldReturnFailure()
+    {
+        var userId = Guid.NewGuid();
+        var accountId = Guid.NewGuid();
+        var account = new Account { Id = accountId, UserId = userId, AccountNumber = "NKM-11111", AccountType = "SAVINGS", Name = "Sparkonto" };
+        _accountRepoMock.Setup(r => r.GetByIdAsync(accountId)).ReturnsAsync(account);
+        _accountRepoMock.Setup(r => r.GetByAccountNumberAsync("NKM-11111")).ReturnsAsync(account);
+
+        var service = CreateService();
+
+        var result = await service.TransferAsync(userId, accountId, "NKM-11111", 10m);
+
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorMessage.Should().Be("Accounts must be different.");
+    }
+
+    [Fact]
+    public async Task LookupRecipientAsync_WhenAccountDoesNotExist_ShouldReturnNull()
+    {
+        _accountRepoMock.Setup(r => r.GetByAccountNumberAsync("NKM-99999")).ReturnsAsync((Account?)null);
+
+        var service = CreateService();
+
+        var result = await service.LookupRecipientAsync("NKM-99999");
+
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task LookupRecipientAsync_ShouldMaskLastName()
+    {
+        var ownerId = Guid.NewGuid();
+        _accountRepoMock.Setup(r => r.GetByAccountNumberAsync("NKM-22222")).ReturnsAsync(
+            new Account { Id = Guid.NewGuid(), UserId = ownerId, AccountNumber = "NKM-22222", AccountType = "SAVINGS", Name = "Sparkonto" });
+        _userRepoMock.Setup(r => r.GetByIdAsync(ownerId)).ReturnsAsync(
+            new User { Id = ownerId, FirstName = "Anna", LastName = "Lindberg", Email = "anna@example.com", PersonalNumber = "x", PinHash = "x" });
+
+        var service = CreateService();
+
+        var result = await service.LookupRecipientAsync("NKM-22222");
+
+        result.Should().NotBeNull();
+        result!.OwnerName.Should().Be("Anna L.");
+        result.AccountNumber.Should().Be("NKM-22222");
+    }
 }

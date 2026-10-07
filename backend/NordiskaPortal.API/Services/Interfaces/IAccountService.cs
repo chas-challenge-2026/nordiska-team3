@@ -14,4 +14,8 @@ public interface IAccountService
     Task<AccountDto?> RenameAccountAsync(Guid userId, Guid accountId, string name);
 
     Task<TransactionHistoryResponseDto?> GetTransactionHistoryAsync(Guid userId, Guid accountId, int page, int pageSize);
+
+    Task<RecipientLookupDto?> LookupRecipientAsync(string accountNumber);
+
+    Task<TransferOperationResult> TransferAsync(Guid userId, Guid fromAccountId, string toAccountNumber, decimal amount);
 }

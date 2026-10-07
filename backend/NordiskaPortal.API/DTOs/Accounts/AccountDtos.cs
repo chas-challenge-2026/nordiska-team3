@@ -15,7 +15,7 @@ public sealed record TransactionRequestDto(decimal Amount);
 
 public sealed record TransactionResultDto(Guid TransactionId, string Balance);
 
-public sealed record TransactionDto(Guid Id, string TransactionType, string Amount, string Status, DateTime CreatedAt, DateTime? CompletedAt);
+public sealed record TransactionDto(Guid Id, string TransactionType, string Amount, string Status, DateTime CreatedAt, DateTime? CompletedAt, Guid? TransferId, string? Counterparty);
 
 // Svar från GET /api/accounts/{id}/transactions
 public sealed record TransactionHistoryResponseDto(
@@ -24,3 +24,12 @@ public sealed record TransactionHistoryResponseDto(
     int PageSize,
     int TotalCount,
     int TotalPages);
+
+// POST /api/accounts/{accountId}/transfer - skicka pengar till ett annat konto via kontonummer
+public sealed record TransferRequestDto(string ToAccountNumber, decimal Amount);
+
+// Svar fran transfer. ToBalance fylls bara i när mottagarkontot tillhör samma användare.
+public sealed record TransferResultDto(Guid TransferId, string FromBalance, string? ToBalance);
+
+// Svar fran GET /api/accounts/lookup?accountNumber=NKM-xxxxx - maskerat namn, t.ex. "Robin.M"
+public sealed record RecipientLookupDto(string AccountNumber, string OwnerName);

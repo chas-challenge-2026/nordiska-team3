@@ -9,6 +9,8 @@ public class Transaction
     public string Status { get; set; } = "PENDING";
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? CompletedAt { get; set; }
+    public Guid? TransferId { get; set; }
+    public string? CounterpartyLabel { get; set; }
 
     public Account Account { get; set; }
     public ICollection<LedgerEntry> LedgerEntries { get; set; } = new List<LedgerEntry>();

@@ -17,6 +17,9 @@ public class AccountRepository : Repository<Account>, IAccountRepository // Ärve
     public async Task<bool> ExistsByAccountNumberAsync(string accountNumber) => // Kollar om ett visst kontonummer redan finns
         await _dbSet.AnyAsync(a => a.AccountNumber == accountNumber);
 
+    public async Task<Account?> GetByAccountNumberAsync(string accountNumber) =>
+        await _dbSet.SingleOrDefaultAsync(a => a.AccountNumber == accountNumber);
+
     public async Task<decimal> GetBalanceAsync(Guid accountId) => // Vi ville ha saldo som en beräkning inte ett sparat värde som kan bli inaktuellt
         await _context.LedgerEntries
             .Where(l => l.AccountId == accountId)

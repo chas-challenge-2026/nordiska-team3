@@ -77,6 +77,31 @@ public class  AccountsController : ControllerBase
             result.Balance!.Value.ToString("F2", CultureInfo.InvariantCulture)));
     }
 
+    [EnableRateLimiting(RateLimitPolicies.AccountLookup)]
+    [HttpGet("lookup")]
+    public async Task<IActionResult> LookupRecipient([FromQuery] string accountNumber)
+    {
+        var recipient = await _accountService.LookupRecipientAsync(accountNumber ?? string.Empty);
+
+        if (recipient is null) return NotFound(new ErrorResponseDto("Account does not exist."));
+
+        return Ok(recipient);
+    }
+
+    [EnableRateLimiting(RateLimitPolicies.MoneyTransaction)]
+    [HttpPost("{accountId:guid}/transfer")]
+    public async Task<IActionResult> Transfer(Guid accountId, TransferRequestDto request)
+    {
+        var result = await _accountService.TransferAsync(CurrentUserId, accountId, request.ToAccountNumber, request.Amount);
+
+        if (!result.IsSuccess) return BadRequest(new ErrorResponseDto(result.ErrorMessage!));
+
+        return Ok(new TransferResultDto(
+            result.TransferId!.Value,
+            result.FromBalance!.Value.ToString("F2", CultureInfo.InvariantCulture),
+            result.ToBalance?.ToString("F2", CultureInfo.InvariantCulture)));
+    }
+
     [HttpPatch("{accountId:guid}/name")]
     public async Task<IActionResult> RenameAccount(Guid accountId, RenameAccountRequestDto request)
     {
