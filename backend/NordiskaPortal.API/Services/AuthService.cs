@@ -1,0 +1,130 @@
+using NordiskaPortal.API.DTOs.Auth;
+using NordiskaPortal.API.Models;
+using NordiskaPortal.API.Repositories.Interfaces;
+using NordiskaPortal.API.Services.Interfaces;
+
+namespace NordiskaPortal.API.Services;
+
+public class AuthService : IAuthService
+{
+    private readonly IUserRepository _userRepository;
+    private readonly ITokenService _tokenService;
+    private readonly ILogger<AuthService> _logger;
+
+    public AuthService(IUserRepository userRepository, ITokenService tokenService, ILogger<AuthService> logger)
+    {
+        _userRepository = userRepository;
+        _tokenService = tokenService;
+        _logger = logger;
+    }
+
+    public async Task<AuthResult?> LoginWithPinAsync(LoginPinRequestDto request)
+    {
+        var user = await _userRepository.GetByPersonalNumberAsync(request.PersonalNumber);
+
+        if (user is null || !BCrypt.Net.BCrypt.Verify(request.Pin, user.PinHash))
+        {
+            _logger.LogWarning("Failed PIN login attempt.");
+            return null;
+        }
+
+        var result = await IssueTokensAsync(user);
+
+        _logger.LogInformation("User {UserId} logged in successfully.", user.Id);
+
+        return result;
+
+    }
+
+    public async Task<AuthResult?> RefreshAsync(string refreshToken)
+    {
+        var user = await _userRepository.GetByRefreshTokenAsync(refreshToken);
+
+        if (user is null || user.RefreshTokenExpiryTime is null || user.RefreshTokenExpiryTime < DateTime.UtcNow)
+        {
+            _logger.LogWarning("Refresh token invalid or expired.");
+            return null;
+        }
+
+        var result = await IssueTokensAsync(user);
+
+        _logger.LogInformation("Refreshed access token for user {UserId}.", user.Id);
+
+        return result;
+    }
+
+    public async Task<MeResponseDto?> GetCurrentUserAsync(Guid userId)
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+        return user is null ? null : new MeResponseDto(MapToUserDto(user));
+    }
+
+    public async Task LogoutAsync(Guid userId)
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+
+        if (user is not null)
+        {
+            user.RefreshToken = null;
+            user.RefreshTokenExpiryTime = null;
+            _userRepository.Update(user);
+            await _userRepository.SaveChangesAsync();
+        }
+    }
+
+    private static UserDto MapToUserDto(User user) =>
+        new(user.Id, $"{user.FirstName} {user.LastName}", user.Email, user.PersonalNumber);
+
+    private async Task<AuthResult> IssueTokensAsync(User user)
+    {
+        var accessToken = _tokenService.GenerateAccessToken(user);
+        var refreshToken = _tokenService.GenerateRefreshToken();
+        var refreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+
+        user.RefreshToken = refreshToken;
+        user.RefreshTokenExpiryTime = refreshTokenExpiry;
+        _userRepository.Update(user);
+        await _userRepository.SaveChangesAsync();
+
+        var response = new LoginResponseDto(accessToken, MapToUserDto(user));
+
+        return new AuthResult(response, refreshToken, refreshTokenExpiry);
+    }
+
+    public async Task<RegisterResult> RegisterAsync(RegisterRequestDto request)
+    {
+        // Samma meddelande oavsett orsak, så klienten inte kan avgöra om ett personnummer eller e-post redan finns.
+        const string genericConflictMessage =
+            "Registration could not be completed with the provided details.";
+
+        if (await _userRepository.GetByPersonalNumberAsync(request.PersonalNumber) is not null)
+        {
+            _logger.LogWarning("Registration attempt with already-registered personal number.");
+            return RegisterResult.Failure(genericConflictMessage);
+        }
+
+        if (await _userRepository.ExistsByEmailAsync(request.Email))
+        {
+            _logger.LogWarning("Registration attempt with already-registered email.");
+            return RegisterResult.Failure(genericConflictMessage);
+        }
+
+        var user = new User
+        {
+            PersonalNumber = request.PersonalNumber,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            Email = request.Email,
+            PinHash = BCrypt.Net.BCrypt.HashPassword(request.Pin),
+        };
+
+        await _userRepository.AddAsync(user);
+        await _userRepository.SaveChangesAsync();
+
+        var authResult = await IssueTokensAsync(user);
+
+        _logger.LogInformation("User {UserId} registered successfully.", user.Id);
+
+        return RegisterResult.Success(authResult);
+    }
+};

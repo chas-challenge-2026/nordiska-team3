@@ -1,0 +1,141 @@
+import { type FormEvent, useState } from 'react'
+import { Eye, EyeOff, Moon, PlusSquare, ShieldCheck, Sun } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import './LoginPage.css'
+import { Button } from '../components/Button'
+import { Input } from '../components/Input'
+import { DecorativeCircle } from '../components/DecorativeCircle'
+import { useTheme } from '../context/useTheme'
+import { login } from '../services/authService'
+import { loginSchema } from '../schemas/loginSchema'
+
+function LoginPage() {
+    const navigate = useNavigate()
+    const { theme, toggleTheme } = useTheme()
+
+    const [isCheckingPin, setIsCheckingPin] = useState(false)
+    const [personalNumber, setPersonalNumber] = useState('')
+    const [pin, setPin] = useState('')
+    const [showPin, setShowPin] = useState(false)
+    const [errorMessage, setErrorMessage] = useState('')
+
+    // Körs när användaren skickar PIN-formuläret.
+    async function handlePinLogin(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault()
+
+        const validation = loginSchema.safeParse({
+            personalNumber,
+            pin,
+        })
+
+        if (!validation.success) {
+            setErrorMessage(validation.error.issues[0]?.message ?? 'Kontrollera dina uppgifter.')
+            return
+        }
+
+        setErrorMessage('')
+        setIsCheckingPin(true)
+
+        try {
+            await login(validation.data.personalNumber, validation.data.pin)
+
+            // När login lyckas skickas användaren vidare till dashboarden.
+            navigate('/dashboard')
+        } catch (error) {
+            // Om authService/backend säger att något gick fel visas felet på login-sidan.
+            setErrorMessage(error instanceof Error ? error.message : 'Inloggningen misslyckades.')
+        } finally {
+            // Oavsett om login lyckas eller misslyckas ska laddningsläget stängas av.
+            setIsCheckingPin(false)
+        }
+    }
+
+    function handleBankIdLogin() {
+        setIsCheckingPin(false)
+        setErrorMessage('BankID kommer snart. Logga in med PIN-kod så länge.')
+    }
+
+    return (
+        <main className="login-page">
+            <section className="login-shell">
+                <DecorativeCircle color="orange" size={190} left={-30} top={220} />
+                <DecorativeCircle color="green" size={115} left={80} top={340} opacity={0.9} />
+                <DecorativeCircle color="orange" size={75} left={150} bottom={80} />
+                <DecorativeCircle color="green" size={150} right={-20} bottom={180} />
+                <DecorativeCircle color="blue" size={110} right={60} bottom={100} opacity={0.9} />
+
+                <button
+                    className="theme-toggle"
+                    type="button"
+                    aria-label={theme === 'dark' ? 'Byt till ljust tema' : 'Byt till mörkt tema'}
+                    onClick={toggleTheme}
+                >
+                    {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+                </button>
+
+                <div className="login-stack">
+                    <div className="login-brand-card brand-logo">
+                        <span>Sparportal</span>
+                        <strong>nordiska<span className="login-brand-dot">.</span></strong>
+                    </div>
+
+                    <form className="login-card" onSubmit={handlePinLogin}>
+                        <div>
+                            <h1 tabIndex={0}>Välkommen tillbaka</h1>
+                            <p>Logga in med PIN-kod. BankID kommer snart.</p>
+                        </div>
+
+                        <Input
+                            label="Personnummer"
+                            type="text"
+                            placeholder="ÅÅMMDD-XXXX"
+                            value={personalNumber}
+                            onChange={(event) => setPersonalNumber(event.target.value)}
+                        />
+
+                        <div className="input-group">
+                            <label className="input-label">PIN-kod</label>
+                            <div className="password-input-wrapper">
+                                <input
+                                    className="input"
+                                    type={showPin ? 'text' : 'password'}
+                                    placeholder="••••••"
+                                    value={pin}
+                                    onChange={(event) => setPin(event.target.value)}
+                                />
+                                <button
+                                    className="password-toggle"
+                                    type="button"
+                                    aria-label={showPin ? 'Dölj PIN-kod' : 'Visa PIN-kod'}
+                                    onClick={() => setShowPin(!showPin)}
+                                >
+                                    {showPin ? <EyeOff size={16} /> : <Eye size={16} />}
+                                </button>
+                            </div>
+                        </div>
+
+                        <p className="login-error">
+                            {errorMessage}
+                        </p>
+
+                        <Button type="submit" variant="primary" disabled={isCheckingPin}>
+                            {isCheckingPin ? 'Kontrollerar PIN...' : 'Logga in'}
+                        </Button>
+
+                        <Button type="button" variant="secondary" onClick={handleBankIdLogin}>
+                            <PlusSquare size={16} />
+                            Logga in med BankID
+                        </Button>
+
+                        <p className="secure-text">
+                            <ShieldCheck size={16} />
+                            <span>Inloggning skyddas av BankID och 256-bitars kryptering.</span>
+                        </p>
+                    </form>
+                </div>
+            </section>
+        </main>
+    )
+}
+
+export default LoginPage

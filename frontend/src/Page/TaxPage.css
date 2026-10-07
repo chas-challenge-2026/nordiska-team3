@@ -1,0 +1,416 @@
+.tax-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: var(--desktop-content-width);
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 90px var(--space-5) var(--space-7);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-4);
+}
+
+.tax-header {
+  width: 100%;
+}
+
+.tax-header h1 {
+  margin: 0 0 8px;
+  color: var(--color-text-inverted);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.12;
+}
+
+.tax-header p {
+  margin: 0;
+  color: color-mix(in srgb, var(--color-text-inverted) 75%, transparent);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+/* Toggle pills (återanvänder samma klasser som TransactPage) */
+.pill-toggle-row {
+ display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-2);
+}
+
+.pill-toggle {
+  border: none;
+  padding: 10px 24px;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pill-toggle--active,
+.pill-toggle--active:hover {
+  background: var(--color-surface);
+  color: var(--color-primary-text);
+  box-shadow: var(--shadow-sm), inset 0 0 0 2px var(--color-primary);
+}
+
+[data-theme="dark"] .pill-toggle--active,
+[data-theme="dark"] .pill-toggle--active:hover {
+  background: var(--color-surface);
+  color: var(--color-primary-soft);
+}
+
+/* Statusprick på årsknappen */
+.pill-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pill-status-dot--ready {
+  background: var(--color-jungle-teal);
+}
+
+.pill-toggle--active .pill-status-dot--ready {
+  background: var(--color-primary-text);
+}
+
+[data-theme="dark"] .pill-toggle--active .pill-status-dot--ready {
+  background: var(--color-primary-soft);
+}
+
+.pill-status-dot--pending {
+  background: var(--color-primary-text);
+  animation: tax-pulse 1s ease-in-out infinite;
+}
+
+.pill-status-dot--failed {
+  background: var(--color-danger);
+}
+
+@keyframes tax-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* Summary cards */
+.tax-summary-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.tax-summary-card {
+  background: var(--dashboard-card-bg, var(--color-text-inverted));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-5);
+}
+
+.tax-summary-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-2);
+}
+
+.tax-summary-value {
+  font-family: monospace;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.tax-summary-value--green {
+  color: var(--color-jungle-teal);
+}
+
+[data-theme="dark"] .tax-summary-value--green {
+  color: var(--color-success);
+}
+
+/* Breakdown card */
+.tax-breakdown-card {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--dashboard-card-bg, var(--color-text-inverted));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-5);
+}
+
+.tax-breakdown-title {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-3);
+}
+
+.tax-breakdown-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) 0;
+}
+
+.tax-breakdown-name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+
+.tax-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tax-dot--green { background: var(--color-success); }
+.tax-dot--orange { background: var(--color-primary); }
+.tax-dot--purple { background: var(--color-text-secondary); }
+
+.tax-breakdown-amount {
+  font-family: monospace;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.tax-breakdown-amount--green { color: var(--color-jungle-teal); }
+.tax-breakdown-amount--orange { color: var(--color-primary-text); }
+.tax-breakdown-amount--purple { color: var(--color-yale-blue-900); }
+
+[data-theme="dark"] .tax-breakdown-amount--green { color: var(--color-success); }
+[data-theme="dark"] .tax-breakdown-amount--purple { color: var(--color-alice-blue); }
+
+/* Download button */
+.tax-download-btn {
+  width: 100%;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 16px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-on-primary);
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
+  box-shadow: 0 0 24px 4px color-mix(in srgb, var(--color-primary) 50%, transparent);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.tax-download-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Rapporthistorik */
+.tax-history-card {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--dashboard-card-bg, var(--color-text-inverted));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-5);
+}
+
+.tax-history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) 0;
+}
+
+.tax-history-year {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.tax-status-badge {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+}
+
+.tax-status-badge--ready {
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+  color: var(--color-jungle-teal);
+}
+
+.tax-status-badge--pending {
+  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+  color: var(--color-primary-text);
+}
+
+[data-theme="dark"] .tax-status-badge--ready {
+  color: var(--color-success);
+}
+
+.tax-status-badge--failed {
+  background: color-mix(in srgb, var(--color-danger) 14%, transparent);
+  color: var(--color-danger);
+}
+
+.tax-history-download {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.tax-history-download:hover:not(:disabled) {
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
+  color: var(--color-text-inverted);
+}
+
+.tax-history-download:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.tax-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.tax-pagination__button {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.tax-pagination__button:hover:not(:disabled) {
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
+  color: var(--color-text-inverted);
+}
+
+.tax-pagination__button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.tax-pagination__button:focus-visible {
+  outline: 3px solid var(--color-primary-soft);
+  outline-offset: 3px;
+}
+
+.tax-pagination__status {
+  min-width: 92px;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.tax-spin {
+  animation: tax-spin 1s linear infinite;
+}
+
+@keyframes tax-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Begär ny rapport */
+.tax-request-btn {
+  width: 100%;
+  border: 1.5px dashed color-mix(in srgb, var(--color-text-inverted) 30%, transparent);
+  background: transparent;
+  color: var(--color-text-inverted);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tax-request-btn:hover {
+  border-color: color-mix(in srgb, var(--color-text-inverted) 50%, transparent);
+  background: color-mix(in srgb, var(--color-text-inverted) 5%, transparent);
+}
+
+/* Brand logo, nedre högra hörnet */
+.tax-brand-circle {
+  position: absolute;
+  left: 84px;
+  bottom: 60px;
+  z-index: 1;
+  box-shadow: 0 22px 44px var(--color-shadow);
+}
+
+.tax-brand-circle strong {
+  font-family: "Poppins", sans-serif;
+    font-size: 33px;
+    font-weight: 700;
+    color: var(--color-yale-blue-900);
+    line-height: 1;
+}
+
+.tax-brand-circle .tax-brand-dot {
+  color: var(--color-amber-honey-deep);
+}
+
+@media (max-width: 700px) {
+  .tax-content {
+    padding: 56px var(--space-4) var(--space-6);
+  }
+
+  .tax-summary-row {
+    grid-template-columns: 1fr;
+  }
+
+  .tax-brand-circle {
+    display: none;
+  }
+
+  .pill-toggle-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+}

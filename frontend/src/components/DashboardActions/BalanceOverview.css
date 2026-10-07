@@ -1,0 +1,289 @@
+.balance-overview {
+  width: 100%;
+  max-width: var(--desktop-content-width);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.balance-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  background: var(--dashboard-card-bg, var(--color-surface-soft));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--dashboard-card-shadow, var(--shadow-lg));
+  padding: var(--space-6);
+  text-align: center;
+  margin-bottom: var(--space-5);
+}
+
+.balance-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--color-primary-text);
+  margin: 0 0 var(--space-2);
+}
+
+.balance-value {
+  font-family: monospace;
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.balance-sub {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin: var(--space-2) 0 0;
+}
+
+.accounts-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.account-card {
+  position: relative;
+  /* Gör att saldot kan skalas efter kortets bredd (cqi) */
+  container-type: inline-size;
+  background: var(--dashboard-card-bg, var(--color-surface-soft));
+  border: none;
+  border-radius: var(--radius-md);
+  box-shadow: var(--dashboard-card-shadow, var(--shadow-sm));
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
+.account-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 5px;
+  margin-left: -4px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: var(--color-text-primary);
+  text-align: left;
+}
+
+.account-card-header svg {
+  color: currentColor;
+  flex-shrink: 0;
+  display: block;
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.6;
+}
+
+.account-card-header span {
+  line-height: 1.2;
+  min-width: 0;
+}
+
+.account-card-header--accent {
+  color: var(--color-primary-text);
+}
+
+.account-card-header--success {
+  color: var(--color-jungle-teal);
+}
+
+.account-card-header--danger {
+  color: var(--color-danger);
+}
+
+.account-card-header--purple {
+  color: var(--color-yale-blue-800);
+}
+
+.account-card-header--pink {
+  color: var(--color-danger);
+}
+
+.account-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.account-card-value {
+  font-family: monospace;
+  /* Saldot ska alltid få plats på en rad: krymper i smala kort i stället för att radbrytas */
+  font-size: min(20px, 12cqi);
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.account-card-interest {
+  /* Ligger tätare mot saldot än kortets vanliga gap */
+  margin: calc(var(--space-2) - var(--space-4)) 0 0;
+  padding-right: var(--space-5);
+  white-space: nowrap;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.accounts-interest-note {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-3) 0 0;
+  /* Ligger direkt på sidans mörkblå bakgrund, inte på ett kort */
+  color: color-mix(in srgb, var(--color-text-inverted) 85%, transparent);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.accounts-interest-note svg {
+  flex-shrink: 0;
+}
+
+.account-card-value--accent {
+  color: var(--color-primary-text);
+}
+
+.account-card-value--success {
+  color: var(--color-jungle-teal);
+}
+
+.account-card-value--danger {
+  color: var(--color-danger);
+}
+
+.account-card-value--purple {
+  color: var(--color-yale-blue-800);
+}
+
+.account-card-value--pink {
+  color: var(--color-danger);
+}
+
+.account-card-chevron {
+  /* Ligger i hörnet så att saldot får hela kortets bredd */
+  position: absolute;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  color: var(--color-text-primary);
+  flex-shrink: 0;
+}
+
+.account-card-chevron--accent {
+  color: var(--color-primary-text);
+}
+
+[data-theme="dark"] .account-card-header--success,
+[data-theme="dark"] .account-card-value--success,
+[data-theme="dark"] .account-card-chevron--success {
+  color: var(--color-success);
+}
+
+.account-card-chevron--success {
+  color: var(--color-jungle-teal);
+}
+
+.account-card-chevron--danger {
+  color: var(--color-danger);
+}
+
+[data-theme="dark"] .account-card-header--danger,
+[data-theme="dark"] .account-card-value--danger,
+[data-theme="dark"] .account-card-chevron--danger {
+  color: var(--color-danger);
+}
+
+.account-card-chevron--purple {
+  color: var(--color-yale-blue-800);
+}
+
+.account-card-chevron--pink {
+  color: var(--color-danger);
+}
+
+[data-theme="dark"] .account-card-header--purple,
+[data-theme="dark"] .account-card-value--purple,
+[data-theme="dark"] .account-card-chevron--purple {
+  color: var(--color-alice-blue);
+}
+
+[data-theme="dark"] .account-card-header--pink,
+[data-theme="dark"] .account-card-value--pink,
+[data-theme="dark"] .account-card-chevron--pink {
+  color: var(--color-danger-soft);
+}
+
+@media (max-width: 700px) {
+  .accounts-row {
+    width: min(100%, 292px);
+    grid-template-columns: 1fr;
+    justify-content: center;
+    gap: var(--space-3);
+    margin: 0 auto;
+  }
+
+  .account-card {
+    position: relative;
+    min-height: 86px;
+    padding: var(--space-3) var(--space-4);
+    gap: var(--space-3);
+    text-align: center;
+  }
+
+  .account-card-header {
+    justify-content: center;
+    gap: var(--space-2);
+    margin-left: 0;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-align: center;
+  }
+
+  .account-card-header svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .account-card-value {
+    font-size: min(18px, 12cqi);
+  }
+
+  .account-card-interest {
+    margin-top: calc(var(--space-1) - var(--space-3));
+    padding-right: 0;
+  }
+
+  .accounts-interest-note {
+    width: min(100%, 292px);
+    align-items: flex-start;
+  }
+
+  .account-card-footer {
+    justify-content: center;
+    gap: var(--space-2);
+  }
+
+  .account-card-chevron {
+    position: absolute;
+    right: var(--space-4);
+    bottom: var(--space-3);
+  }
+
+  .balance-value {
+    font-size: 36px;
+  }
+}

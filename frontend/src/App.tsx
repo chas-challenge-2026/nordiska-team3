@@ -1,0 +1,87 @@
+import { useEffect } from 'react'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { isAuthenticated } from './services/authService'
+import LoginPage from './Page/LoginPage'
+import DashboardPage from './Page/DashboardPage'
+import TransactPage from './Page/TransactPage'
+import HistoryPage from './Page/HistoryPage'
+import TaxPage from './Page/TaxPage'
+import FaqPage from './Page/FaqPage'
+
+function ProtectedRoute({ children }: { children: JSX.Element }) {
+  // Kollar om användaren har en sparad token.
+  // Just nu räcker det för mock-login, senare kan detta kopplas mot GET /api/auth/me.
+  if (!isAuthenticated()) {
+    return <Navigate to="/login" replace />
+  }
+
+  return children
+}
+
+function ScrollToTop() {
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [pathname])
+
+  return null
+}
+
+function App() {
+  return (
+    <>
+      <ScrollToTop />
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<LoginPage />} />
+
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/transaktioner"
+          element={
+            <ProtectedRoute>
+              <TransactPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/historik"
+          element={
+            <ProtectedRoute>
+              <HistoryPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/skatt"
+          element={
+            <ProtectedRoute>
+              <TaxPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/faq"
+          element={
+            <ProtectedRoute>
+              <FaqPage />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </>
+  )
+}
+export default App

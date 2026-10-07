@@ -5,3 +5,8 @@ services:
   db:
     ports:
       - "5432:5432"
+  api:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    ports:
+      - "5077:5077"

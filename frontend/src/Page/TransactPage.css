@@ -1,0 +1,340 @@
+.transact-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: var(--desktop-content-width);
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 90px var(--space-5) var(--space-7);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-5);
+}
+
+.transact-header {
+  width: 100%;
+  text-align: left;
+}
+
+.dashboard-page .transact-header h1 {
+  margin: 0 0 8px;
+  color: var(--color-text-inverted);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.12;
+}
+
+.dashboard-page .transact-header p {
+  margin: 0;
+  color: color-mix(in srgb, var(--color-text-inverted) 75%, transparent);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.transact-empty-card {
+  width: 100%;
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--color-text-inverted);
+  text-align: center;
+}
+
+.transact-empty-card h2 {
+  margin: 0;
+  color: var(--color-text-inverted);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+/* Brand-card (samma som Login/Dashboard) */
+.transact-brand-circle {
+  position: absolute;
+  bottom: 60px;
+  right: 60px;
+  z-index: 3;
+  width: 150px;
+  height: 96px;
+  border-radius: 60px;
+  background: var(--color-primary-pale);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.transact-brand-circle strong {
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  font-size: 28px;
+  color: var(--color-yale-blue-900);
+}
+
+.transact-brand-circle .brand-dot {
+  color: var(--color-amber-honey-deep);
+}
+
+@media (max-width: 700px) {
+  .transact-brand-circle {
+    display: none;
+  }
+}
+
+/* Toggle pills */
+.pill-toggle-row {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.pill-toggle {
+  border: none;
+  padding: 12px 28px;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-sm);
+  transition: color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pill-toggle:hover {
+  color: var(--color-primary-text);
+}
+
+.pill-toggle--deposit.pill-toggle--active {
+  color: var(--color-pine-teal);
+  box-shadow: var(--shadow-sm), 0 0 0 2px var(--color-pine-teal) inset;
+}
+
+[data-theme="dark"] .pill-toggle--deposit.pill-toggle--active {
+  color: var(--color-success);
+  box-shadow: var(--shadow-sm), 0 0 0 2px var(--color-success) inset;
+}
+
+.pill-toggle--withdraw.pill-toggle--active {
+  color: var(--color-primary-text);
+  box-shadow: var(--shadow-sm), 0 0 0 2px var(--color-primary) inset;
+}
+
+[data-theme="dark"] .pill-toggle--withdraw.pill-toggle--active {
+  color: var(--color-primary-soft);
+  box-shadow: var(--shadow-sm), 0 0 0 2px var(--color-primary) inset;
+}
+
+.pill-toggle--transfer.pill-toggle--active {
+  color: var(--color-yale-blue-800);
+  box-shadow: var(--shadow-sm), 0 0 0 2px var(--color-yale-blue-800) inset;
+}
+
+[data-theme="dark"] .pill-toggle--transfer.pill-toggle--active {
+  color: var(--color-navy-accent);
+  box-shadow: var(--shadow-sm), 0 0 0 2px var(--color-navy-accent) inset;
+}
+
+/* Account preview card */
+.account-preview-card {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--dashboard-card-bg, var(--color-text-inverted));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-5) var(--space-6);
+}
+
+.account-preview-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-2);
+}
+
+.account-preview-header svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.6;
+}
+
+.account-preview-header--accent {
+  color: var(--color-primary-text);
+}
+
+.account-preview-header--success {
+  color: var(--color-jungle-teal);
+}
+
+.account-preview-header--danger {
+  color: var(--color-danger);
+}
+
+.account-preview-header--purple {
+  color: var(--color-yale-blue-800);
+}
+
+.account-preview-header--pink {
+  color: var(--color-danger);
+}
+
+.account-preview-value {
+  font-family: monospace;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.account-preview-value--accent {
+  color: var(--color-primary-text);
+}
+
+.account-preview-value--success {
+  color: var(--color-jungle-teal);
+}
+
+.account-preview-value--danger {
+  color: var(--color-danger);
+}
+
+.account-preview-value--purple {
+  color: var(--color-yale-blue-800);
+}
+
+.account-preview-value--pink {
+  color: var(--color-danger);
+}
+
+/* Form card */
+.transact-form-card {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--dashboard-card-bg, var(--color-text-inverted));
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.transact-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.transact-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-primary);
+}
+
+.transact-pill-input {
+  width: 100%;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  padding: 14px 20px;
+  font-size: 14px;
+  box-sizing: border-box;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.transact-pill-input:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
+
+[data-theme="dark"] .transact-pill-input {
+  background: var(--color-surface-soft);
+  color: var(--color-text-primary);
+}
+
+.select-wrapper {
+  position: relative;
+}
+
+.select-chevron {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
+
+.transact-message {
+  /* Reserverad plats för två rader så att kortet inte hoppar när ett meddelande visas */
+  min-height: 32px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  margin: 0;
+}
+
+.transact-message--empty {
+  visibility: hidden;
+}
+
+.transact-message--error {
+  color: var(--color-danger);
+}
+
+.transact-message--success {
+  color: var(--color-success);
+}
+
+.transact-submit-btn {
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 15px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-on-primary);
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
+  box-shadow: 0 0 24px 4px color-mix(in srgb, var(--color-primary) 50%, transparent);
+  cursor: pointer;
+}
+
+.transact-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.transact-submit-btn--deposit {
+  background: var(--color-success-soft);
+  color: var(--color-pine-teal);
+}
+
+[data-theme="dark"] .transact-submit-btn--deposit {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.transact-submit-btn--withdraw {
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
+  color: var(--color-on-primary);
+}
+
+@media (max-width: 700px) {
+  .transact-content {
+    padding: 56px var(--space-4) var(--space-6);
+  }
+
+  .brand-card {
+    width: 160px;
+    height: 95px;
+  }
+
+  .brand-card strong {
+    font-size: 28px;
+  }
+}

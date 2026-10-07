@@ -1,0 +1,31 @@
+/* Ärver färg, storlek och radhöjd från meddelanderaden den ligger i */
+.order-receipt {
+  display: block;
+  min-width: 0;
+}
+
+/* En rad var: kortas med "…" hellre än att bryta till en tredje rad */
+.order-receipt__line {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: inherit;
+}
+
+.order-receipt__line + .order-receipt__line {
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.order-receipt__link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.order-receipt__link:focus-visible {
+  border-radius: 2px;
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
