@@ -3,7 +3,8 @@
 public class User
 {
     public Guid Id { get; set; } = Guid.NewGuid();
-    public string PersonalNumber { get; set; } // Används vid PIN-inlog, "ÅÅÅÅMMDD-XXXX" format.
+    public string PersonalNumber { get; set; } // Krypterat (enc:v1). Använd IPersonalNumberProtector.
+    public string? PersonalNumberHash { get; set; } // HMAC for sökning och unikhet, se IPersonalNumberProtector.ComputeHash
     public string FirstName { get; set; }
     public string LastName { get; set; }
     public string Email { get; set; }

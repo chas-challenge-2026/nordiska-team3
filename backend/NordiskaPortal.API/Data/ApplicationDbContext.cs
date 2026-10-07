@@ -28,7 +28,7 @@ public class ApplicationDbContext : DbContext
             .IsUnique();
 
         modelBuilder.Entity<User>()
-            .HasIndex(u => u.PersonalNumber)
+            .HasIndex(u => u.PersonalNumberHash)
             .IsUnique();
 
         // Account constraints
