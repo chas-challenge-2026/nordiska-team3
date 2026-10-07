@@ -11,8 +11,12 @@ namespace NordiskaPortal.API.Services
 {
     public class TaxReportProcessingService : ITaxReportProcessingService
     {
+        private const string GenericErrorMessage = "The report could not be generated.";
+        private const int MaxLoggedErrorLength = 1000;
+
         private readonly ApplicationDbContext _context;
         private readonly ITaxReportDataService _taxReportDataService;
+        private readonly INativeProcessRunner _processRunner;
         private readonly IConfiguration _configuration;
         private readonly ILogger<TaxReportProcessingService> _logger;
         private readonly TaxReportQueue _queue;
@@ -20,11 +24,13 @@ namespace NordiskaPortal.API.Services
         public TaxReportProcessingService(
             ApplicationDbContext context,
             ITaxReportDataService taxReportDataService,
+            INativeProcessRunner processRunner,
             IConfiguration configuration,
             ILogger<TaxReportProcessingService> logger, TaxReportQueue queue)
         {
-             _context = context;
+            _context = context;
             _taxReportDataService = taxReportDataService;
+            _processRunner = processRunner;
             _configuration = configuration;
             _logger = logger;
             _queue = queue;
@@ -79,14 +85,16 @@ namespace NordiskaPortal.API.Services
 
                 _logger.LogInformation("TaxReport {TaxReportId} input written to {Path}", report.Id, finalPath);
 
-                // Stays PROCESSING here (not a misleading READY) the JSON step succeeded,
-                // native just hasn't run yet. Genuine failures are caught below and marked FAILED.
+                await GeneratePdfAsync(report, finalPath, Path.Combine(outputDirectory, $"{report.Id}.pdf"));
+                await _context.SaveChangesAsync();
             }
 
             catch (Exception ex)
             {
+                // ErrorMessage is returned to the customer, so unexpected errors get a generic text
+                // and the details only go to the log.
                 report.Status = "FAILED";
-                report.ErrorMessage = ex.Message;
+                report.ErrorMessage = ex is TaxReportGenerationException ? ex.Message : GenericErrorMessage;
                 await _context.SaveChangesAsync();
 
                 _logger.LogError(ex, "TaxReport {TaxReportId} failed to process", report.Id);
@@ -98,6 +106,72 @@ namespace NordiskaPortal.API.Services
         {
             return await _context.TaxReports
                 .FirstOrDefaultAsync(r => r.Id == reportId && r.UserId == userId);
+        }
+
+        // Runs the native PDF generator on the input JSON. The signer is not wired in yet,
+        // so a successful report is READY but unsigned (SignaturePath stays null).
+        private async Task GeneratePdfAsync(TaxReport report, string jsonPath, string pdfPath)
+        {
+            var generatorPath = Path.GetFullPath(_configuration["TaxReport:PdfGeneratorPath"]!);
+            if (!System.IO.File.Exists(generatorPath))
+            {
+                _logger.LogError("PDF generator not found at {Path}", generatorPath);
+                throw new TaxReportGenerationException("The PDF generator is not available.");
+            }
+
+            var jsonFullPath = Path.GetFullPath(jsonPath);
+            var pdfFullPath = Path.GetFullPath(pdfPath);
+
+            // The generator rejects an existing output file, so clear any leftover from an earlier attempt.
+            if (System.IO.File.Exists(pdfFullPath))
+            {
+                System.IO.File.Delete(pdfFullPath);
+            }
+
+            var timeoutSeconds = _configuration.GetValue("TaxReport:TimeoutSeconds", 30);
+
+            var result = await _processRunner.RunAsync(
+                generatorPath,
+                new[] { jsonFullPath, pdfFullPath },
+                TimeSpan.FromSeconds(timeoutSeconds));
+
+            report.NativeExitCode = result.TimedOut ? null : result.ExitCode;
+
+            if (result.TimedOut)
+            {
+                _logger.LogError("PDF generator timed out after {Seconds}s for TaxReport {TaxReportId}", timeoutSeconds, report.Id);
+                throw new TaxReportGenerationException("PDF generation timed out.");
+            }
+
+            if (result.ExitCode != 0)
+            {
+                _logger.LogError(
+                    "PDF generator failed for TaxReport {TaxReportId} with exit code {ExitCode}: {StandardError}",
+                    report.Id, result.ExitCode, Truncate(result.StandardError));
+                throw new TaxReportGenerationException($"PDF generation failed (code {result.ExitCode}).");
+            }
+
+            if (!System.IO.File.Exists(pdfFullPath) || new FileInfo(pdfFullPath).Length == 0)
+            {
+                throw new TaxReportGenerationException("The PDF generator did not produce a file.");
+            }
+
+            report.PdfPath = pdfFullPath;
+            report.Status = "READY";
+            report.CompletedAt = DateTime.UtcNow;
+
+            _logger.LogInformation("TaxReport {TaxReportId} PDF written to {Path}", report.Id, pdfFullPath);
+        }
+
+        private static string Truncate(string text) =>
+            text.Length <= MaxLoggedErrorLength ? text : text[..MaxLoggedErrorLength];
+    }
+
+    // A failure whose message is safe to show to the customer (it is stored in TaxReport.ErrorMessage).
+    public sealed class TaxReportGenerationException : Exception
+    {
+        public TaxReportGenerationException(string message) : base(message)
+        {
         }
     }
 }
