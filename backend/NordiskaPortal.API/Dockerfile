@@ -22,8 +22,8 @@ WORKDIR /app
 COPY --from=build /app/publish .
 COPY --from=frontend-build /frontend/dist ./wwwroot
 
-EXPOSE 5077
-ENV ASPNETCORE_URLS=http://+:5077
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Development
 
 ENTRYPOINT ["dotnet", "NordiskaPortal.API.dll"]
