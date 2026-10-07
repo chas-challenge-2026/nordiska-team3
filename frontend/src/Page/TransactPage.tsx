@@ -10,6 +10,7 @@ import { deposit, getAccounts, withdraw, type BackendAccount } from '../services
 import { ChevronDown } from 'lucide-react'
 import { useTheme } from '../context/useTheme'
 import { CustomerServiceFooter } from '../components/CustomerServiceFooter'
+import { customerServiceContact } from '../content/customerServiceContact'
 import {
     getAccountIcon,
     getAccountPresentation,
@@ -151,31 +152,51 @@ function TransactPage() {
             setError('')
             setIsSubmitting(true)
 
+            // Backend saknar en endpoint för överföring, så den görs som uttag + insättning.
+            // Misslyckas insättningen sätts pengarna tillbaka på från-kontot.
+            // Knappen är låst (isSubmitting) under alla steg, även återställningen.
+            function updateBalance(accountId: string, balance: string) {
+                setAccounts((currentAccounts) =>
+                    currentAccounts.map((account) =>
+                        account.id === accountId ? { ...account, balance: parseBackendBalance(balance) } : account
+                    )
+                )
+            }
+
+            let withdrawResult: Awaited<ReturnType<typeof withdraw>>
+
             try {
-                const withdrawResult = await withdraw(selectedAccount.id, numericAmount)
+                withdrawResult = await withdraw(selectedAccount.id, numericAmount)
+            } catch {
+                setError('Överföringen kunde inte genomföras. Inga pengar har flyttats.')
+                setIsSubmitting(false)
+                return
+            }
+
+            try {
                 const depositResult = await deposit(selectedToAccount.id, numericAmount)
 
-                const updatedFromBalance = parseBackendBalance(withdrawResult.balance)
-                const updatedToBalance = parseBackendBalance(depositResult.balance)
-
-                setAccounts((currentAccounts) =>
-                    currentAccounts.map((account) => {
-                        if (account.id === selectedAccount.id) {
-                            return { ...account, balance: updatedFromBalance }
-                        }
-                        if (account.id === selectedToAccount.id) {
-                            return { ...account, balance: updatedToBalance }
-                        }
-                        return account
-                    })
-                )
-
+                updateBalance(selectedAccount.id, withdrawResult.balance)
+                updateBalance(selectedToAccount.id, depositResult.balance)
                 setSuccess(
                     `${formatKr(numericAmount)} har flyttats från ${selectedAccount.name} till ${selectedToAccount.name}.`
                 )
                 setAmount('')
-            } catch (error) {
-                setError(error instanceof Error ? error.message : 'Överföringen misslyckades.')
+            } catch {
+                try {
+                    const restoreResult = await deposit(selectedAccount.id, numericAmount)
+
+                    updateBalance(selectedAccount.id, restoreResult.balance)
+                    setError(
+                        `Överföringen kunde inte genomföras. ${formatKr(numericAmount)} är tillbaka på ${selectedAccount.name}.`
+                    )
+                } catch {
+                    // Pengarna är uttagna men kunde inte sättas tillbaka: saldot ska visa det
+                    updateBalance(selectedAccount.id, withdrawResult.balance)
+                    setError(
+                        `${formatKr(numericAmount)} kunde inte sättas tillbaka. Ring kundservice: ${customerServiceContact.phone}.`
+                    )
+                }
             } finally {
                 setIsSubmitting(false)
             }
