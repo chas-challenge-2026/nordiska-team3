@@ -63,6 +63,9 @@ public class ApplicationDbContext : DbContext
             .HasForeignKey(t => t.AccountId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<Transaction>()
+            .HasIndex(t => t.TransferId);
+
         // Notification relationships
         modelBuilder.Entity<Notification>()
             .HasOne(n => n.User)
