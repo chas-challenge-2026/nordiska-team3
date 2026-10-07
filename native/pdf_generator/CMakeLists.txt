@@ -30,3 +30,12 @@ add_custom_command(
         "${CMAKE_CURRENT_SOURCE_DIR}/assets/DejaVuSans.ttf"
         "$<TARGET_FILE_DIR:pdf_generator>/assets/DejaVuSans.ttf"
 )
+
+if(BUILD_TESTING)
+    add_test(
+        NAME pdf_generator_usage
+        COMMAND "${CMAKE_COMMAND}"
+            "-DGENERATOR=$<TARGET_FILE:pdf_generator>"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/check_usage.cmake"
+    )
+endif()
