@@ -15,6 +15,8 @@
 #include <filesystem>
 #include <fstream>
 #include <nlohmann/json.hpp>
+#include <algorithm>
+#include <vector>
 
 static void print_haru_error(
     HPDF_STATUS error_number,
@@ -23,6 +25,57 @@ static void print_haru_error(
 {
     std::cerr << "LibHaru error: " << error_number
               << ", detail: " << detail_number << "\n";
+}
+
+static std::vector<std::string> wrap_text(
+    HPDF_Page page,
+    const std::string& text,
+    HPDF_REAL max_width)
+{
+    std::vector<std::string> lines;
+    std::string line;
+
+    for (std::size_t position = 0; position < text.size();)
+    {
+        std::size_t next = position + 1;
+
+        //Keep all bytes of one UTF-8 character together.
+        while (next < text.size() && (static_cast<unsigned char>(text[next]) & 0xC0) == 0x80)
+        {
+            ++next;
+        }
+
+        std::string character = text.substr(position, next - position);
+        position = next;
+
+        if (character == "\r")
+            continue;
+
+        if (character == "\n")
+        {
+            lines.push_back(line);
+            line.clear();
+            continue;
+        }
+
+        if (character == "\t")
+            character = " ";
+
+        const std::string candidate = line + character;
+        
+        if (!line.empty() && HPDF_Page_TextWidth(page, candidate.c_str()) > max_width)
+        {
+            lines.push_back(line);
+            line = character;
+        }
+        else
+        {
+            line = candidate;
+        }
+    }
+
+    lines.push_back(line);
+    return lines;
 }
 
 int main(int argc, char* argv[])
@@ -347,38 +400,55 @@ int main(int argc, char* argv[])
 
         for (const auto& transaction : account["transactions"])
         {
-            if (account_y < 50)
-            {
-                if (!start_next_page())
-                {
-                    std::cerr << "Error: report requires multiple pages\n";
-                    HPDF_Free(pdf);
-                    return NORDISKA_EXIT_PDF_GENERATION_ERROR;
-                }
-
-                HPDF_Page_SetFontAndSize(page, font, 12);
-                HPDF_Page_TextOut(page, 50, account_y, account_line.c_str());
-                account_y -= 26;
-
-                HPDF_Page_SetFontAndSize(page, font, 10);
-                HPDF_Page_TextOut(page, 50, account_y, "Datum");
-                HPDF_Page_TextOut(page, 120, account_y, "Typ");
-                HPDF_Page_TextOut(page, 220, account_y, "Beskrivning");
-                HPDF_Page_TextOut(page, 440, account_y, amount_heading.c_str());
-                account_y -= 18;
-            }
 
             const std::string date = transaction["bookedAt"].get<std::string>().substr(0, 10);
-            const std::string type = transaction["type"].get<std::string>();
-            const std::string description = transaction["description"].get<std::string>();
             const std::string amount = transaction["amount"].get<std::string>();
 
-            HPDF_Page_TextOut(page, 50, account_y, date.c_str());
-            HPDF_Page_TextOut(page, 120, account_y, type.c_str());
-            HPDF_Page_TextOut(page, 220, account_y, description.c_str());
-            HPDF_Page_TextOut(page, 440, account_y, amount.c_str());
+            HPDF_Page_SetFontAndSize(page, font, 10);
 
-            account_y -= 18;
+            const auto type_lines = wrap_text(page, transaction["type"].get<std::string>(), 90);
+            const auto description_lines = wrap_text(page, transaction["description"].get<std::string>(), 210);
+            
+            const std::size_t line_count = std::max(type_lines.size(), description_lines.size());
+
+            for (std::size_t index = 0; index < line_count; ++index)
+            {
+                if (account_y < 50)
+                {
+                    if (!start_next_page())
+                    {
+                        std::cerr << "Error: could not create continuation page\n";
+                        HPDF_Free(pdf);
+                        return NORDISKA_EXIT_PDF_GENERATION_ERROR;
+                    }
+                
+                    HPDF_Page_SetFontAndSize(page, font, 12);
+                    HPDF_Page_TextOut(page, 50, account_y, account_line.c_str());
+                    account_y -= 26;
+                
+                    HPDF_Page_SetFontAndSize(page, font, 10);
+                    HPDF_Page_TextOut(page, 50, account_y, "Datum");
+                    HPDF_Page_TextOut(page, 120, account_y, "Typ");
+                    HPDF_Page_TextOut(page, 220, account_y, "Beskrivning");
+                    HPDF_Page_TextOut(page, 440, account_y, amount_heading.c_str());
+                    account_y -= 18;
+                }
+
+                if (index == 0)
+                {
+                    HPDF_Page_TextOut(page, 50, account_y, date.c_str());
+                    HPDF_Page_TextOut(page, 440, account_y, amount.c_str());
+                }
+                if (index < type_lines.size())
+                {
+                    HPDF_Page_TextOut(page, 120, account_y, type_lines[index].c_str());
+                }
+                if (index < description_lines.size())
+                {
+                    HPDF_Page_TextOut(page, 220, account_y, description_lines[index].c_str()); // Susie Deltarune
+                }
+                account_y -= 18;
+            }
         }
 
         account_y -= 24;
