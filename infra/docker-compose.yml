@@ -58,6 +58,7 @@ services:
     volumes:
       - api_secrets:/secrets
       - db_secret:/run/secrets:ro
+      - tax_reports:/app/tax-reports
     depends_on:
       db:
         condition: service_healthy
@@ -66,3 +67,4 @@ volumes:
   postgres_data:
   api_secrets:
   db_secret:
+  tax_reports:
