@@ -17,3 +17,4 @@ broken.json
 
 # Local PDF pagination fixture
 /backend/NordiskaPortal.API/tax-reports/pagination-test-60.json
+/backend/NordiskaPortal.API/tax-reports/empty-transactions-test.json

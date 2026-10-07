@@ -304,6 +304,13 @@ int main(int argc, char* argv[])
         return true;
     };
 
+    if (accounts.empty())
+    {
+        HPDF_Page_TextOut(page, 50, account_y, "Inga konton att redovisa.");
+
+        account_y -= 26;
+    }
+
     for (const auto& account : accounts)
     {
         if (account_y < 130 && !start_next_page())
@@ -331,6 +338,12 @@ int main(int argc, char* argv[])
         const std::string amount_heading = "Belopp (" + currency + ")";
         HPDF_Page_TextOut(page, 440, account_y, amount_heading.c_str());
         account_y -= 18;
+
+        if (account["transactions"].empty())
+        {
+            HPDF_Page_TextOut(page, 50, account_y, "Inga transactioner under rapportåret.");
+            account_y -= 18;
+        }
 
         for (const auto& transaction : account["transactions"])
         {
