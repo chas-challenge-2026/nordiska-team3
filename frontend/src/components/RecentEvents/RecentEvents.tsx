@@ -4,17 +4,18 @@ import { type RecentEvent } from './mockRecentEvents'
 
 type RecentEventsProps = {
   events?: RecentEvent[]
+  title?: string
 }
 
-export function RecentEvents({ events = [] }: RecentEventsProps) {
+export function RecentEvents({ events = [], title = 'Senaste händelser' }: RecentEventsProps) {
   return (
     <section className="recent-events">
-      <h2 className="recent-events__title" tabIndex={0}>Senaste händelser</h2>
+      <h2 className="recent-events__title">{title}</h2>
 
       <div className={`recent-events__list ${events.length === 0 ? 'recent-events__list--empty' : ''}`}>
         {events.length === 0 ? (
           <div className="recent-events__empty">
-            <h3 tabIndex={0}>Inga händelser ännu</h3>
+            <h3>Inga händelser ännu</h3>
           </div>
         ) : (
           events.map((event) => (
@@ -31,8 +32,8 @@ export function RecentEvents({ events = [] }: RecentEventsProps) {
               </div>
 
               <div className="recent-events__content">
-                <h3 tabIndex={0}>{event.title}</h3>
-                <p tabIndex={0}>
+                <h3>{event.title}</h3>
+                <p>
                   {event.accountName} - {event.date}
                 </p>
               </div>
@@ -40,13 +41,11 @@ export function RecentEvents({ events = [] }: RecentEventsProps) {
               <div className="recent-events__meta">
                 <strong
                   className={event.amount >= 0 ? 'is-positive' : 'is-negative'}
-                  tabIndex={0}
                 >
                   {formatAmount(event.amount)}
                 </strong>
                 <span
                   className={`recent-events__badge recent-events__badge--${event.type}`}
-                  tabIndex={0}
                 >
                   {getEventLabel(event.type)}
                 </span>

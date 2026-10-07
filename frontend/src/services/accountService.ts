@@ -12,6 +12,8 @@ export type BackendAccount = {
     // Skickas inte av backend än, se utils/accountInterest.ts
     interestRate?: string
     interestType?: 'VARIABLE' | 'FIXED'
+    // Skickas inte av backend än, se utils/nextEvent.ts
+    nextInterestPayoutDate?: string
 }
 
 export type AccountsResponse = {
@@ -129,6 +131,8 @@ export type BackendTransaction = {
     status: string
     createdAt: string
     completedAt: string | null
+    // Skickas inte av backend än, se utils/nextEvent.ts
+    expectedCompletionDate?: string | null
 }
 
 export type TransactionHistoryResponse = {

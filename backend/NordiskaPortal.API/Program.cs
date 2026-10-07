@@ -57,7 +57,13 @@ if (app.Environment.IsDevelopment())
 app.UseExceptionHandler();
 
 app.ApplyMigrations();
-await app.SeedTestDataAsync();
+
+await app.ProtectExistingPersonalNumbersAsync();
+
+if (app.Environment.IsDevelopment())
+{
+    await app.SeedTestDataAsync();
+}
 
 app.UseCors("Frontend");
 

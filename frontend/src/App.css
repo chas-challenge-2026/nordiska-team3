@@ -309,7 +309,6 @@
 .tax-download-btn:focus-visible,
 .theme-toggle:focus-visible,
 .password-toggle:focus-visible,
-.bankid-options button:focus-visible,
 .modal-close:focus-visible {
   outline: 3px solid var(--color-primary-soft);
   outline-offset: 4px;

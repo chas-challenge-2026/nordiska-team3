@@ -2,8 +2,10 @@ import { type TransactionType } from './mockHistoryTransaction'
 import { UserProfile } from '../components/UserProfile'
 import './HistoryPage.css'
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { type BackendAccount, type BackendTransaction } from '../services/accountService'
 import { useAccountsWithTransactions } from '../hooks/useAccountsWithTransactions'
+import { getTransactionsNewestFirst } from '../utils/transactionOrder'
 import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import { AppNav } from '../components/AppNav'
 import { DecorativeCircle } from '../components/DecorativeCircle'
@@ -74,6 +76,34 @@ function formatTransactionDate(date: string) {
     }).format(new Date(date))
 }
 
+// API:t skickar UTC ("…Z"), webbläsaren visar svensk tid
+function formatTransactionTime(date: string) {
+    return new Intl.DateTimeFormat('sv-SE', {
+        hour: '2-digit',
+        minute: '2-digit',
+    }).format(new Date(date))
+}
+
+type TransactionStatus = 'pending' | 'failed'
+
+// Genomförda transaktioner får ingen etikett, bara de som inte är klara
+function mapBackendTransactionStatus(status: string): TransactionStatus | null {
+    if (status === 'FAILED') {
+        return 'failed'
+    }
+
+    if (status === 'PENDING' || status === 'PROCESSING') {
+        return 'pending'
+    }
+
+    return null
+}
+
+const transactionStatusLabels: Record<TransactionStatus, string> = {
+    pending: 'Pågår',
+    failed: 'Misslyckades',
+}
+
 function formatTransactionMonth(date: string) {
     const formatted = new Intl.DateTimeFormat('sv-SE', {
         month: 'long',
@@ -108,8 +138,9 @@ function mapBackendTransactionToHistoryTransaction(
         id: transaction.id,
         title: getTransactionTitle(type),
         accountName: account.name,
-        date: formatTransactionDate(date),
+        date: `${formatTransactionDate(date)} · ${formatTransactionTime(date)}`,
         month: formatTransactionMonth(date),
+        status: mapBackendTransactionStatus(transaction.status),
         amount,
         type,
     }
@@ -118,13 +149,15 @@ function mapBackendTransactionToHistoryTransaction(
 function HistoryPage() {
     const handleLogout = useLogout()
     const { toggleTheme } = useTheme()
+    const [searchParams, setSearchParams] = useSearchParams()
     const [activeFilter, setActiveFilter] = useState<HistoryFilter>('all')
-    const [activeAccount, setActiveAccount] = useState<AccountFilter>('all')
     const [currentPage, setCurrentPage] = useState(1)
     const pageSize = 20
+    const accountParam = searchParams.get('konto')?.trim()
+    const activeAccount: AccountFilter = accountParam || 'all'
     const { data: accountTransactionGroups, isLoading: isLoadingTransactions, isError: transactionsError } = useAccountsWithTransactions(currentPage, pageSize)
-    const transactions = (accountTransactionGroups ?? []).flatMap(({ account, history }) =>
-        history.transactions.map((transaction) => mapBackendTransactionToHistoryTransaction(transaction, account))
+    const transactions = getTransactionsNewestFirst(accountTransactionGroups ?? []).map(({ account, transaction }) =>
+        mapBackendTransactionToHistoryTransaction(transaction, account)
     )
 
     const accountFilters = (accountTransactionGroups ?? []).map(({ account }) => account.name)
@@ -141,7 +174,15 @@ function HistoryPage() {
     })
 
     function handleAccountChange(accountName: AccountFilter) {
-        setActiveAccount(accountName)
+        const nextSearchParams = new URLSearchParams(searchParams)
+
+        if (accountName === 'all') {
+            nextSearchParams.delete('konto')
+        } else {
+            nextSearchParams.set('konto', accountName)
+        }
+
+        setSearchParams(nextSearchParams)
         setCurrentPage(1)
     }
 
@@ -194,7 +235,7 @@ function HistoryPage() {
 
                 <section className="history-content">
                     <header className="history-header">
-                        <h1 tabIndex={0}>Transaktionshistorik</h1>
+                        <h1>Transaktionshistorik</h1>
                         <p>Alla rörelser på dina sparkonton.</p>
                     </header>
 
@@ -284,19 +325,19 @@ function HistoryPage() {
 
                     {isLoadingTransactions ? (
                         <div className="history-empty">
-                            <h2 tabIndex={0}>Laddar transaktioner</h2>
+                            <h2>Laddar transaktioner</h2>
                             <p>Hämtar historik för dina konton.</p>
                         </div>
                     ) : transactionsError ? (
                         <div className="history-empty">
-                            <h2 tabIndex={0}>Historiken kunde inte hämtas</h2>
+                            <h2>Historiken kunde inte hämtas</h2>
                             <p>{transactionsError}</p>
                         </div>
                     ) : visibleTransactions.length > 0 ? (
                         <div className="history-list">
                             {Object.entries(groupedTransactions).map(([month, transactions]) => (
                                 <section className="history-month" key={month}>
-                                    <h2 tabIndex={0}>{month}</h2>
+                                    <h2>{month}</h2>
 
                                     {transactions.map((transaction) => (
                                         <article className="transaction-card" key={transaction.id}>
@@ -309,9 +350,17 @@ function HistoryPage() {
                                             </div>
 
                                             <div className="transaction-info">
-                                                <h3 tabIndex={0}>{transaction.title}</h3>
+                                                <h3>{transaction.title}</h3>
                                                 <p>
-                                                    {transaction.accountName} · {transaction.date}
+                                                    {transaction.accountName} ·{' '}
+                                                    <span className="transaction-date">{transaction.date}</span>
+                                                    {transaction.status && (
+                                                        <span
+                                                            className={`transaction-status transaction-status--${transaction.status}`}
+                                                        >
+                                                            {transactionStatusLabels[transaction.status]}
+                                                        </span>
+                                                    )}
                                                 </p>
                                             </div>
 
@@ -335,7 +384,7 @@ function HistoryPage() {
                         </div>
                     ) : (
                         <div className="history-empty">
-                            <h2 tabIndex={0}>Inga transaktioner hittades</h2>
+                            <h2>Inga transaktioner hittades</h2>
                             <p>Det finns inga rörelser för {selectedAccountLabel} som matchar det valda filtret.</p>
                         </div>
                     )}

@@ -38,6 +38,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IEmailSender, LoggingEmailSender>();
         services.AddHostedService<NotificationBackgroundWorker>();
         services.AddScoped<IFaqService, FaqService>();
+        services.AddSingleton<IPersonalNumberProtector, PersonalNumberProtector>();
 
         // Validation
         services.AddValidatorsFromAssemblyContaining<Program>(); // Letar alla klasser som ärver AbstractValidator<T>
@@ -48,6 +49,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
         var jwtKey = configuration["Jwt:Key"] ?? GetOrCreateSigningKey("/secrets/jwt.key");
+        configuration["Jwt:Key"] = jwtKey;
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -84,6 +86,8 @@ public static class ServiceCollectionExtensions
 
         var key = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
         File.WriteAllText(path, key);
+        if (!OperatingSystem.IsWindows())
+            File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite);
         return key;
     }
 
@@ -190,20 +194,86 @@ public static class ServiceCollectionExtensions
     {
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var protector = scope.ServiceProvider.GetRequiredService<IPersonalNumberProtector>();
 
         const string testPersonalNumber = "19900101-1234";
-        if (!await db.Users.AnyAsync(u => u.PersonalNumber == testPersonalNumber))
+        var testHash = protector.ComputeHash(testPersonalNumber);
+        if (!await db.Users.AnyAsync(u => u.PersonalNumberHash == testHash))
         {
             db.Users.Add(new User
             {
                 Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
-                PersonalNumber = testPersonalNumber,
+                PersonalNumber = protector.Protect(testPersonalNumber),
+                PersonalNumberHash = testHash,
                 FirstName = "Test",
                 LastName = "Testsson",
                 Email = "test@example.com",
                 PinHash = "$2b$12$Ma9ikA7xtUOXMH86.OZA7eYIEb.yDiazDkk5uu5M/4PpbuC3ORvSu"
             });
 
+            await db.SaveChangesAsync();
+        }
+    }
+
+    // Krypterar personnummer som fortfarande ligger i klartext (demoanvandaren från migrationen
+    // och rader från innan krypteringen infördes). Körs efter migrationerna och är idempotent.
+    public static async Task ProtectExistingPersonalNumbersAsync(this WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var protector = scope.ServiceProvider.GetRequiredService<IPersonalNumberProtector>();
+
+        var sample = await db.Users
+            .Where(u => u.PersonalNumber.StartsWith(PersonalNumberProtector.Prefix))
+            .Select(u => u.PersonalNumber)
+            .FirstOrDefaultAsync();
+
+        if (!protector.IsKeyAvailable)
+        {
+            // Finns det redan krypterade personnummer får vi ALDRIG skapa en ny nyckel,
+            if (sample is not null)
+            {
+                throw new InvalidOperationException(
+                    "Personal number key is missing but encrypted personal numbers exist. " +
+                    "Restore /secrets/pn.key (or PersonalNumberProtection:Key). Refusing to generate a new key.");
+            }
+
+            // Allra första starten: inga krypterade rader finns än, skapa nyckeln.
+            protector.GenerateNewKey();
+        }
+        else if (sample is not null)
+        {
+            // Nyckeln finns: kontrollera att den faktiskt kan öppna befintliga krypterade rader.
+            try
+            {
+                protector.Unprotect(sample);
+            }
+            catch (CryptographicException)
+            {
+                throw new InvalidOperationException(
+                    "Personal number key does not match the encrypted data. Is the api_secrets volume missing?");
+            }
+        }
+
+        var users = await db.Users
+            .Where(u => !u.PersonalNumber.StartsWith(PersonalNumberProtector.Prefix)
+                        || u.PersonalNumberHash == null)
+            .ToListAsync();
+
+        foreach (var user in users)
+        {
+            var plain = protector.Unprotect(user.PersonalNumber);
+
+            if (!protector.IsProtected(user.PersonalNumber))
+            {
+                user.PersonalNumber = protector.Protect(plain);
+            }
+
+            user.PersonalNumberHash = protector.ComputeHash(plain);
+        }
+
+        if (users.Count > 0)
+        {
             await db.SaveChangesAsync();
         }
     }

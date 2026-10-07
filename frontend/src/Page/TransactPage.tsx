@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { type FormEvent, useEffect, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { UserProfile } from '../components/UserProfile'
 import { useLogout } from '../hooks/useLogout'
 import './TransactPage.css'
@@ -10,26 +11,20 @@ import { deposit, getAccounts, withdraw, type BackendAccount } from '../services
 import { ChevronDown } from 'lucide-react'
 import { useTheme } from '../context/useTheme'
 import { CustomerServiceFooter } from '../components/CustomerServiceFooter'
+import { customerServiceContact } from '../content/customerServiceContact'
+import { OrderReceipt, type OrderReceiptData } from '../components/OrderReceipt/OrderReceipt'
 import {
     getAccountIcon,
     getAccountPresentation,
     type AccountPresentation,
 } from '../utils/accountPresentation'
-import { transactSchema } from '../schemas/transactionSchema'
+import { amountSchema, transactSchema } from '../schemas/transactionSchema'
 
 const transferSchema = z
     .object({
         accountId: z.string().trim().min(1, 'Välj ett konto att flytta från.'),
         toAccountId: z.string().trim().min(1, 'Välj ett konto att flytta till.'),
-        amount: z
-            .string()
-            .trim()
-            .min(1, 'Ange ett belopp.')
-            .refine((value) => {
-                const numericAmount = Number(value.replace(',', '.'))
-
-                return !Number.isNaN(numericAmount) && numericAmount > 0
-            }, 'Ange ett giltigt belopp större än 0.'),
+        amount: amountSchema,
     })
     .refine((data) => data.accountId !== data.toAccountId, {
         message: 'Från- och till-konto måste vara olika.',
@@ -62,6 +57,7 @@ function mapBackendAccountToTransactAccount(
 function TransactPage() {
     const handleLogout = useLogout()
     const { toggleTheme } = useTheme()
+    const queryClient = useQueryClient()
 
     const [mode, setMode] = useState<Mode>('deposit')
     const [accounts, setAccounts] = useState<TransactAccount[]>([])
@@ -71,11 +67,12 @@ function TransactPage() {
     const [accountsError, setAccountsError] = useState('')
     const [amount, setAmount] = useState('')
     const [error, setError] = useState('')
-    const [success, setSuccess] = useState('')
+    const [receipt, setReceipt] = useState<OrderReceiptData | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
 
+    const transferToAccounts = accounts.filter((acc) => acc.id !== accountId)
     const selectedAccount = accounts.find((acc) => acc.id === accountId) ?? accounts[0] ?? null
-    const selectedToAccount = accounts.find((acc) => acc.id === toAccountId) ?? null
+    const selectedToAccount = transferToAccounts.find((acc) => acc.id === toAccountId) ?? null
 
     useEffect(() => {
         let isMounted = true
@@ -115,14 +112,28 @@ function TransactPage() {
     }, [])
 
     function handleModeChange(newMode: Mode) {
+        if (newMode === 'transfer' && (toAccountId === accountId || !transferToAccounts.some((account) => account.id === toAccountId))) {
+            setToAccountId(transferToAccounts[0]?.id ?? '')
+        }
+
         setMode(newMode)
         setError('')
-        setSuccess('')
+        setReceipt(null)
+    }
+
+    function handleFromAccountChange(nextAccountId: string) {
+        const nextToAccounts = accounts.filter((account) => account.id !== nextAccountId)
+
+        setAccountId(nextAccountId)
+
+        if (toAccountId === nextAccountId || !nextToAccounts.some((account) => account.id === toAccountId)) {
+            setToAccountId(nextToAccounts[0]?.id ?? '')
+        }
     }
 
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
-        setSuccess('')
+        setReceipt(null)
 
         if (mode === 'transfer') {
             const validation = transferSchema.safeParse({
@@ -151,31 +162,56 @@ function TransactPage() {
             setError('')
             setIsSubmitting(true)
 
+            // Backend saknar en endpoint för överföring, så den görs som uttag + insättning.
+            // Misslyckas insättningen sätts pengarna tillbaka på från-kontot.
+            // Knappen är låst (isSubmitting) under alla steg, även återställningen.
+            function updateBalance(accountId: string, balance: string) {
+                setAccounts((currentAccounts) =>
+                    currentAccounts.map((account) =>
+                        account.id === accountId ? { ...account, balance: parseBackendBalance(balance) } : account
+                    )
+                )
+            }
+
+            let withdrawResult: Awaited<ReturnType<typeof withdraw>>
+
             try {
-                const withdrawResult = await withdraw(selectedAccount.id, numericAmount)
+                withdrawResult = await withdraw(selectedAccount.id, numericAmount)
+            } catch {
+                setError('Överföringen kunde inte genomföras. Inga pengar har flyttats.')
+                setIsSubmitting(false)
+                return
+            }
+
+            try {
                 const depositResult = await deposit(selectedToAccount.id, numericAmount)
 
-                const updatedFromBalance = parseBackendBalance(withdrawResult.balance)
-                const updatedToBalance = parseBackendBalance(depositResult.balance)
-
-                setAccounts((currentAccounts) =>
-                    currentAccounts.map((account) => {
-                        if (account.id === selectedAccount.id) {
-                            return { ...account, balance: updatedFromBalance }
-                        }
-                        if (account.id === selectedToAccount.id) {
-                            return { ...account, balance: updatedToBalance }
-                        }
-                        return account
-                    })
-                )
-
-                setSuccess(
-                    `${formatKr(numericAmount)} har flyttats från ${selectedAccount.name} till ${selectedToAccount.name}.`
-                )
+                updateBalance(selectedAccount.id, withdrawResult.balance)
+                updateBalance(selectedToAccount.id, depositResult.balance)
+                setReceipt({
+                    type: 'transfer',
+                    amount: numericAmount,
+                    accountName: selectedAccount.name,
+                    toAccountName: selectedToAccount.name,
+                    balance: parseBackendBalance(withdrawResult.balance),
+                })
                 setAmount('')
-            } catch (error) {
-                setError(error instanceof Error ? error.message : 'Överföringen misslyckades.')
+                await queryClient.invalidateQueries({ queryKey: ['accountsWithTransactions'] })
+            } catch {
+                try {
+                    const restoreResult = await deposit(selectedAccount.id, numericAmount)
+
+                    updateBalance(selectedAccount.id, restoreResult.balance)
+                    setError(
+                        `Överföringen kunde inte genomföras. ${formatKr(numericAmount)} är tillbaka på ${selectedAccount.name}.`
+                    )
+                } catch {
+                    // Pengarna är uttagna men kunde inte sättas tillbaka: saldot ska visa det
+                    updateBalance(selectedAccount.id, withdrawResult.balance)
+                    setError(
+                        `${formatKr(numericAmount)} kunde inte sättas tillbaka. Ring kundservice: ${customerServiceContact.phone}.`
+                    )
+                }
             } finally {
                 setIsSubmitting(false)
             }
@@ -224,12 +260,14 @@ function TransactPage() {
                 )
             )
 
-            setSuccess(
-                mode === 'deposit'
-                    ? `${formatKr(numericAmount)} har satts in på ${selectedAccount.name}.`
-                    : `${formatKr(numericAmount)} har tagits ut från ${selectedAccount.name}.`
-            )
+            setReceipt({
+                type: mode === 'deposit' ? 'deposit' : 'withdrawal',
+                amount: numericAmount,
+                accountName: selectedAccount.name,
+                balance: updatedBalance,
+            })
             setAmount('')
+            await queryClient.invalidateQueries({ queryKey: ['accountsWithTransactions'] })
         } catch (error) {
             setError(error instanceof Error ? error.message : 'Transaktionen misslyckades.')
         } finally {
@@ -257,7 +295,7 @@ function TransactPage() {
 
         <div className="transact-content">
                 <div className="transact-header">
-                    <h1 tabIndex={0}>Flytta pengar</h1>
+                    <h1>Flytta pengar</h1>
                     <p>Sätt in, ta ut eller flytta medel mellan dina sparkonton.</p>
                 </div>
 
@@ -287,37 +325,51 @@ function TransactPage() {
 
                     {isLoadingAccounts ? (
                         <div className="transact-empty-card">
-                            <h2 tabIndex={0}>Laddar konton</h2>
+                            <h2>Laddar konton</h2>
                         </div>
                     ) : accountsError ? (
                         <div className="transact-empty-card">
-                            <h2 tabIndex={0}>{accountsError}</h2>
+                            <h2>{accountsError}</h2>
                         </div>
                     ) : selectedAccount ? (
-                        <div className={`account-preview-card account-preview-card--${selectedAccount.variant ?? 'default'}`}>
-                            <div className={`account-preview-header account-preview-header--${selectedAccount.variant ?? 'default'}`}>
-                                {selectedAccount.icon}
-                                <span>{selectedAccount.name.toUpperCase()}</span>
+                        <div className={`account-preview-grid ${mode === 'transfer' ? '' : 'account-preview-grid--single'}`}>
+                            <div className="account-preview-group">
+                                <p
+                                    className={`account-preview-label ${
+                                        mode === 'transfer' ? '' : 'account-preview-label--empty'
+                                    }`}
+                                >
+                                    Från konto
+                                </p>
+                                <div className={`account-preview-card account-preview-card--${selectedAccount.variant ?? 'default'}`}>
+                                    <div className={`account-preview-header account-preview-header--${selectedAccount.variant ?? 'default'}`}>
+                                        {selectedAccount.icon}
+                                        <span>{selectedAccount.name.toUpperCase()}</span>
+                                    </div>
+                                    <p className={`account-preview-value account-preview-value--${selectedAccount.variant ?? 'default'}`}>
+                                        {formatKr(selectedAccount.balance)}
+                                    </p>
+                                </div>
                             </div>
-                            <p className={`account-preview-value account-preview-value--${selectedAccount.variant ?? 'default'}`}>
-                                {formatKr(selectedAccount.balance)}
-                            </p>
+
+                            {mode === 'transfer' && selectedToAccount && (
+                                <div className="account-preview-group">
+                                    <p className="account-preview-label">Till konto</p>
+                                    <div className={`account-preview-card account-preview-card--${selectedToAccount.variant ?? 'default'}`}>
+                                        <div className={`account-preview-header account-preview-header--${selectedToAccount.variant ?? 'default'}`}>
+                                            {selectedToAccount.icon}
+                                            <span>{selectedToAccount.name.toUpperCase()}</span>
+                                        </div>
+                                        <p className={`account-preview-value account-preview-value--${selectedToAccount.variant ?? 'default'}`}>
+                                            {formatKr(selectedToAccount.balance)}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <div className="transact-empty-card">
-                            <h2 tabIndex={0}>Inga konton hittades</h2>
-                        </div>
-                    )}
-
-                    {mode === 'transfer' && selectedToAccount && (
-                        <div className={`account-preview-card account-preview-card--${selectedToAccount.variant ?? 'default'}`}>
-                            <div className={`account-preview-header account-preview-header--${selectedToAccount.variant ?? 'default'}`}>
-                                {selectedToAccount.icon}
-                                <span>TILL: {selectedToAccount.name.toUpperCase()}</span>
-                            </div>
-                            <p className={`account-preview-value account-preview-value--${selectedToAccount.variant ?? 'default'}`}>
-                                {formatKr(selectedToAccount.balance)}
-                            </p>
+                            <h2>Inga konton hittades</h2>
                         </div>
                     )}
 
@@ -328,7 +380,7 @@ function TransactPage() {
                                 <select
                                     className="transact-pill-input"
                                     value={accountId}
-                                    onChange={(e) => setAccountId(e.target.value)}
+                                    onChange={(e) => handleFromAccountChange(e.target.value)}
                                 >
                                 {accounts.map((acc) => (
                                     <option key={acc.id} value={acc.id}>
@@ -346,10 +398,10 @@ function TransactPage() {
                                 <div className="select-wrapper">
                                     <select
                                         className="transact-pill-input"
-                                        value={toAccountId}
+                                        value={selectedToAccount?.id ?? ''}
                                         onChange={(e) => setToAccountId(e.target.value)}
                                     >
-                                    {accounts.map((acc) => (
+                                    {transferToAccounts.map((acc) => (
                                         <option key={acc.id} value={acc.id}>
                                             {acc.name} — {formatKr(acc.balance)}
                                         </option>
@@ -369,18 +421,26 @@ function TransactPage() {
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
                             />
+                            <p
+                                className={`transact-available-balance ${
+                                    mode === 'deposit' ? 'transact-available-balance--empty' : ''
+                                }`}
+                            >
+                                Tillgängligt: {selectedAccount ? formatKr(selectedAccount.balance) : '0 kr'}
+                            </p>
                         </div>
 
                         <p
                             className={`transact-message ${
                                 error
                                     ? 'transact-message--error'
-                                    : success
-                                      ? 'transact-message--success'
-                                      : 'transact-message--empty'
+                                    : receipt
+                                    ? 'transact-message--success'
+                                    : 'transact-message--empty'
                             }`}
+                            role={error ? 'alert' : receipt ? 'status' : undefined}
                         >
-                            {error || success}
+                            {error || (receipt && <OrderReceipt receipt={receipt} />)}
                         </p>
 
                         <button type="submit" className="transact-submit-btn" disabled={isSubmitting}>

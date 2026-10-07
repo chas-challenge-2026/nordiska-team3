@@ -14,9 +14,6 @@ function LoginPage() {
     const { theme, toggleTheme } = useTheme()
 
     const [isCheckingPin, setIsCheckingPin] = useState(false)
-    const [isStartingBankId, setIsStartingBankId] = useState(false)
-    const [showBankIdOptions, setShowBankIdOptions] = useState(false)
-    const [bankIdMode, setBankIdMode] = useState('')
     const [personalNumber, setPersonalNumber] = useState('')
     const [pin, setPin] = useState('')
     const [showPin, setShowPin] = useState(false)
@@ -25,7 +22,6 @@ function LoginPage() {
     // Körs när användaren skickar PIN-formuläret.
     async function handlePinLogin(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
-        setIsStartingBankId(false)
 
         const validation = loginSchema.safeParse({
             personalNumber,
@@ -56,22 +52,7 @@ function LoginPage() {
 
     function handleBankIdLogin() {
         setIsCheckingPin(false)
-        setIsStartingBankId(false)
-        setErrorMessage('')
-        setShowBankIdOptions(true)
-    }
-
-    // TODO: Koppla BankID-inloggning till backend när API-stöd finns.
-    function startBankIdLogin(mode: 'same-device' | 'other-device') {
-        setBankIdMode(mode)
-        setShowBankIdOptions(false)
-        setIsStartingBankId(true)
-
-        // Mock: simulerar att BankID-appen bekräftats efter en kort väntan
-        setTimeout(() => {
-            setIsStartingBankId(false)
-            navigate('/dashboard')
-        }, 1400)
+        setErrorMessage('BankID kommer snart. Logga in med PIN-kod så länge.')
     }
 
     return (
@@ -100,8 +81,8 @@ function LoginPage() {
 
                     <form className="login-card" onSubmit={handlePinLogin}>
                         <div>
-                            <h1 tabIndex={0}>Välkommen tillbaka</h1>
-                            <p>Logga in med BankID eller PIN.</p>
+                            <h1>Välkommen tillbaka</h1>
+                            <p>Logga in med PIN-kod. BankID kommer snart.</p>
                         </div>
 
                         <Input
@@ -133,7 +114,7 @@ function LoginPage() {
                             </div>
                         </div>
 
-                        <p className="login-error">
+                        <p className="login-error" role={errorMessage ? 'alert' : undefined}>
                             {errorMessage}
                         </p>
 
@@ -141,25 +122,10 @@ function LoginPage() {
                             {isCheckingPin ? 'Kontrollerar PIN...' : 'Logga in'}
                         </Button>
 
-                        {showBankIdOptions ? (
-                            <div className="bankid-options">
-                                <button type="button" onClick={() => startBankIdLogin('same-device')}>
-                                    Samma enhet
-                                </button>
-                                <button type="button" onClick={() => startBankIdLogin('other-device')}>
-                                    Annan enhet
-                                </button>
-                            </div>
-                        ) : (
-                            <Button type="button" variant="secondary" onClick={handleBankIdLogin} disabled={isStartingBankId}>
-                                {!isStartingBankId && <PlusSquare size={16} />}
-                                {isStartingBankId
-                                    ? bankIdMode === 'same-device'
-                                        ? 'Öppnar BankID...'
-                                        : 'Väntar på BankID...'
-                                    : 'Logga in med BankID'}
-                            </Button>
-                        )}
+                        <Button type="button" variant="secondary" onClick={handleBankIdLogin}>
+                            <PlusSquare size={16} />
+                            Logga in med BankID
+                        </Button>
 
                         <p className="secure-text">
                             <ShieldCheck size={16} />
