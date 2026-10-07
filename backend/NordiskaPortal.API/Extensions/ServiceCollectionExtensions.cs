@@ -49,6 +49,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
         var jwtKey = configuration["Jwt:Key"] ?? GetOrCreateSigningKey("/secrets/jwt.key");
+        configuration["Jwt:Key"] = jwtKey;
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -85,6 +86,8 @@ public static class ServiceCollectionExtensions
 
         var key = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
         File.WriteAllText(path, key);
+        if (!OperatingSystem.IsWindows())
+            File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite);
         return key;
     }
 
