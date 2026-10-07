@@ -607,6 +607,15 @@ function DashboardPage() {
                                                 value={modalAmount}
                                                 onChange={(e) => setModalAmount(e.target.value)}
                                             />
+                                            <p
+                                                className={`dashboard-available-balance ${
+                                                    modalTransactionType === 'deposit'
+                                                        ? 'dashboard-available-balance--empty'
+                                                        : ''
+                                                }`}
+                                            >
+                                                Tillgängligt: {selectedAccount.value}
+                                            </p>
                                         </div>
 
                                         <p
@@ -670,14 +679,16 @@ function DashboardPage() {
                                         setDashboardReceipt(null)
                                     }}
                                 />
-
                                 <p
                                     className={`dashboard-transaction-modal__message ${
-                                        dashboardTransactionMessage || dashboardReceipt ? '' : 'dashboard-transaction-modal__message--empty'
+                                        dashboardTransactionType === 'deposit' && !dashboardTransactionMessage && !dashboardReceipt
+                                            ? 'dashboard-transaction-modal__message--empty'
+                                            : ''
                                     }`}
                                 >
                                     {dashboardTransactionMessage ||
-                                        (dashboardReceipt && <OrderReceipt receipt={dashboardReceipt} />)}
+                                        (dashboardReceipt && <OrderReceipt receipt={dashboardReceipt} />) ||
+                                        `Tillgängligt: ${dashboardTransactionAccount.value}`}
                                 </p>
 
                                 <div className="dashboard-transaction-modal__actions">

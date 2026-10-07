@@ -18,21 +18,13 @@ import {
     getAccountPresentation,
     type AccountPresentation,
 } from '../utils/accountPresentation'
-import { transactSchema } from '../schemas/transactionSchema'
+import { amountSchema, transactSchema } from '../schemas/transactionSchema'
 
 const transferSchema = z
     .object({
         accountId: z.string().trim().min(1, 'Välj ett konto att flytta från.'),
         toAccountId: z.string().trim().min(1, 'Välj ett konto att flytta till.'),
-        amount: z
-            .string()
-            .trim()
-            .min(1, 'Ange ett belopp.')
-            .refine((value) => {
-                const numericAmount = Number(value.replace(',', '.'))
-
-                return !Number.isNaN(numericAmount) && numericAmount > 0
-            }, 'Ange ett giltigt belopp större än 0.'),
+        amount: amountSchema,
     })
     .refine((data) => data.accountId !== data.toAccountId, {
         message: 'Från- och till-konto måste vara olika.',
@@ -78,8 +70,9 @@ function TransactPage() {
     const [receipt, setReceipt] = useState<OrderReceiptData | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
 
+    const transferToAccounts = accounts.filter((acc) => acc.id !== accountId)
     const selectedAccount = accounts.find((acc) => acc.id === accountId) ?? accounts[0] ?? null
-    const selectedToAccount = accounts.find((acc) => acc.id === toAccountId) ?? null
+    const selectedToAccount = transferToAccounts.find((acc) => acc.id === toAccountId) ?? null
 
     useEffect(() => {
         let isMounted = true
@@ -119,9 +112,23 @@ function TransactPage() {
     }, [])
 
     function handleModeChange(newMode: Mode) {
+        if (newMode === 'transfer' && (toAccountId === accountId || !transferToAccounts.some((account) => account.id === toAccountId))) {
+            setToAccountId(transferToAccounts[0]?.id ?? '')
+        }
+
         setMode(newMode)
         setError('')
         setReceipt(null)
+    }
+
+    function handleFromAccountChange(nextAccountId: string) {
+        const nextToAccounts = accounts.filter((account) => account.id !== nextAccountId)
+
+        setAccountId(nextAccountId)
+
+        if (toAccountId === nextAccountId || !nextToAccounts.some((account) => account.id === toAccountId)) {
+            setToAccountId(nextToAccounts[0]?.id ?? '')
+        }
     }
 
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -325,30 +332,44 @@ function TransactPage() {
                             <h2 tabIndex={0}>{accountsError}</h2>
                         </div>
                     ) : selectedAccount ? (
-                        <div className={`account-preview-card account-preview-card--${selectedAccount.variant ?? 'default'}`}>
-                            <div className={`account-preview-header account-preview-header--${selectedAccount.variant ?? 'default'}`}>
-                                {selectedAccount.icon}
-                                <span>{selectedAccount.name.toUpperCase()}</span>
+                        <div className={`account-preview-grid ${mode === 'transfer' ? '' : 'account-preview-grid--single'}`}>
+                            <div className="account-preview-group">
+                                <p
+                                    className={`account-preview-label ${
+                                        mode === 'transfer' ? '' : 'account-preview-label--empty'
+                                    }`}
+                                >
+                                    Från konto
+                                </p>
+                                <div className={`account-preview-card account-preview-card--${selectedAccount.variant ?? 'default'}`}>
+                                    <div className={`account-preview-header account-preview-header--${selectedAccount.variant ?? 'default'}`}>
+                                        {selectedAccount.icon}
+                                        <span>{selectedAccount.name.toUpperCase()}</span>
+                                    </div>
+                                    <p className={`account-preview-value account-preview-value--${selectedAccount.variant ?? 'default'}`}>
+                                        {formatKr(selectedAccount.balance)}
+                                    </p>
+                                </div>
                             </div>
-                            <p className={`account-preview-value account-preview-value--${selectedAccount.variant ?? 'default'}`}>
-                                {formatKr(selectedAccount.balance)}
-                            </p>
+
+                            {mode === 'transfer' && selectedToAccount && (
+                                <div className="account-preview-group">
+                                    <p className="account-preview-label">Till konto</p>
+                                    <div className={`account-preview-card account-preview-card--${selectedToAccount.variant ?? 'default'}`}>
+                                        <div className={`account-preview-header account-preview-header--${selectedToAccount.variant ?? 'default'}`}>
+                                            {selectedToAccount.icon}
+                                            <span>{selectedToAccount.name.toUpperCase()}</span>
+                                        </div>
+                                        <p className={`account-preview-value account-preview-value--${selectedToAccount.variant ?? 'default'}`}>
+                                            {formatKr(selectedToAccount.balance)}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <div className="transact-empty-card">
                             <h2 tabIndex={0}>Inga konton hittades</h2>
-                        </div>
-                    )}
-
-                    {mode === 'transfer' && selectedToAccount && (
-                        <div className={`account-preview-card account-preview-card--${selectedToAccount.variant ?? 'default'}`}>
-                            <div className={`account-preview-header account-preview-header--${selectedToAccount.variant ?? 'default'}`}>
-                                {selectedToAccount.icon}
-                                <span>TILL: {selectedToAccount.name.toUpperCase()}</span>
-                            </div>
-                            <p className={`account-preview-value account-preview-value--${selectedToAccount.variant ?? 'default'}`}>
-                                {formatKr(selectedToAccount.balance)}
-                            </p>
                         </div>
                     )}
 
@@ -359,7 +380,7 @@ function TransactPage() {
                                 <select
                                     className="transact-pill-input"
                                     value={accountId}
-                                    onChange={(e) => setAccountId(e.target.value)}
+                                    onChange={(e) => handleFromAccountChange(e.target.value)}
                                 >
                                 {accounts.map((acc) => (
                                     <option key={acc.id} value={acc.id}>
@@ -377,10 +398,10 @@ function TransactPage() {
                                 <div className="select-wrapper">
                                     <select
                                         className="transact-pill-input"
-                                        value={toAccountId}
+                                        value={selectedToAccount?.id ?? ''}
                                         onChange={(e) => setToAccountId(e.target.value)}
                                     >
-                                    {accounts.map((acc) => (
+                                    {transferToAccounts.map((acc) => (
                                         <option key={acc.id} value={acc.id}>
                                             {acc.name} — {formatKr(acc.balance)}
                                         </option>
@@ -400,6 +421,13 @@ function TransactPage() {
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
                             />
+                            <p
+                                className={`transact-available-balance ${
+                                    mode === 'deposit' ? 'transact-available-balance--empty' : ''
+                                }`}
+                            >
+                                Tillgängligt: {selectedAccount ? formatKr(selectedAccount.balance) : '0 kr'}
+                            </p>
                         </div>
 
                         <p
