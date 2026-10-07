@@ -14,3 +14,6 @@ dist/
 .env.local
 
 broken.json
+
+# Local PDF pagination fixture
+/backend/NordiskaPortal.API/tax-reports/pagination-test-60.json
