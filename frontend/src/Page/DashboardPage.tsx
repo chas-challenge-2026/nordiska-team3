@@ -334,8 +334,8 @@ function DashboardPage() {
                     ? `${formatKr(amount)} har satts in på kontot.`
                     : `${formatKr(amount)} har tagits ut från kontot.`
             )
-
             setModalAmount('')
+            await queryClient.invalidateQueries({ queryKey: ['accountsWithTransactions'] })
         } catch (error) {
             setModalTransactionMessage(error instanceof Error ? error.message : 'Transaktionen misslyckades.')
         }
@@ -399,6 +399,7 @@ function DashboardPage() {
                     : `${formatKr(amount)} har tagits ut från ${formatAccountName(dashboardTransactionAccount.label)}.`
             )
             setDashboardTransactionAmount('')
+            await queryClient.invalidateQueries({ queryKey: ['accountsWithTransactions'] })
         } catch (error) {
             setDashboardTransactionMessage(error instanceof Error ? error.message : 'Transaktionen misslyckades.')
         }
@@ -639,7 +640,7 @@ function DashboardPage() {
                                     >
                                         {accounts.map((account) => (
                                             <option key={account.id} value={account.id}>
-                                                {formatAccountName(account.label)}
+                                                {formatAccountName(account.label)} - {account.value}
                                             </option>
                                         ))}
                                     </select>
