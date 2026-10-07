@@ -2,6 +2,7 @@ import { type TransactionType } from './mockHistoryTransaction'
 import { UserProfile } from '../components/UserProfile'
 import './HistoryPage.css'
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { type BackendAccount, type BackendTransaction } from '../services/accountService'
 import { useAccountsWithTransactions } from '../hooks/useAccountsWithTransactions'
 import { getTransactionsNewestFirst } from '../utils/transactionOrder'
@@ -148,10 +149,12 @@ function mapBackendTransactionToHistoryTransaction(
 function HistoryPage() {
     const handleLogout = useLogout()
     const { toggleTheme } = useTheme()
+    const [searchParams, setSearchParams] = useSearchParams()
     const [activeFilter, setActiveFilter] = useState<HistoryFilter>('all')
-    const [activeAccount, setActiveAccount] = useState<AccountFilter>('all')
     const [currentPage, setCurrentPage] = useState(1)
     const pageSize = 20
+    const accountParam = searchParams.get('konto')?.trim()
+    const activeAccount: AccountFilter = accountParam || 'all'
     const { data: accountTransactionGroups, isLoading: isLoadingTransactions, isError: transactionsError } = useAccountsWithTransactions(currentPage, pageSize)
     const transactions = getTransactionsNewestFirst(accountTransactionGroups ?? []).map(({ account, transaction }) =>
         mapBackendTransactionToHistoryTransaction(transaction, account)
@@ -171,7 +174,15 @@ function HistoryPage() {
     })
 
     function handleAccountChange(accountName: AccountFilter) {
-        setActiveAccount(accountName)
+        const nextSearchParams = new URLSearchParams(searchParams)
+
+        if (accountName === 'all') {
+            nextSearchParams.delete('konto')
+        } else {
+            nextSearchParams.set('konto', accountName)
+        }
+
+        setSearchParams(nextSearchParams)
         setCurrentPage(1)
     }
 

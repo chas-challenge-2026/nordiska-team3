@@ -685,6 +685,40 @@
   gap: var(--space-4);
 }
 
+.account-modal__history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.account-modal__history-link {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--dashboard-card-bg, var(--color-surface-soft));
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 800;
+  padding: 12px 20px;
+  text-decoration: none;
+}
+
+.account-modal__history-link svg {
+  flex-shrink: 0;
+}
+
+.account-modal__history-link:hover {
+  color: var(--color-primary-text);
+}
+
+.account-modal__history-link:focus-visible {
+  outline: 3px solid var(--color-primary-soft);
+  outline-offset: 3px;
+}
+
 .account-modal__section h3 {
   margin: 0;
   color: var(--color-text-primary);
@@ -822,28 +856,87 @@
 }
 
 .account-modal__transfer-card {
-  gap: 0;
+  gap: 2px;
+  padding: 14px;
+  position: relative;
 }
 
 .account-modal__transfer-card .transact-field {
-  gap: 0;
+  gap: 7px;
 }
 
 .account-modal__transfer-card .transact-pill-input {
-  margin-top: 6px;
+  height: 34px;
+  min-height: 34px;
+  box-sizing: border-box;
+  margin-top: 0;
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  background: var(--color-text-inverted);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  padding: 6px 14px;
 }
 
 .account-modal__transfer-card .dashboard-available-balance {
   margin-top: 0;
   font-size: 11px;
-  line-height: 12px;
-  min-height: 12px;
+  line-height: 9px;
+  min-height: 9px;
+}
+
+.account-modal__transfer-card .dashboard-available-balance--empty {
+  display: none;
 }
 
 .account-modal__transfer-card .transact-message {
-  min-height: 12px;
+  position: absolute;
+  left: 24px;
+  right: auto;
+  bottom: 46px;
+  z-index: 2;
+  max-width: min(280px, calc(100% - 36px));
+  min-height: 0;
+  margin: 0;
+  padding: 9px 12px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  border-radius: 16px 4px 16px 16px;
+  background: var(--dashboard-card-bg, var(--color-text-inverted));
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-secondary);
   font-size: 11px;
-  line-height: 12px;
+  line-height: 14px;
+}
+
+.account-modal__transfer-card .account-modal__message--error {
+  border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.account-modal__transfer-card .transact-message::after {
+  content: "";
+  position: absolute;
+  left: 28px;
+  top: -6px;
+  width: 12px;
+  height: 12px;
+  background: inherit;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  transform: rotate(45deg);
+}
+
+.account-modal__transfer-card .account-modal__message--error::after {
+  border-top-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+  border-left-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+}
+
+.account-modal__transfer-card .transact-submit-btn {
+  min-height: 40px;
+  padding: 10px 14px;
+  margin-top: 0;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--color-primary) 32%, transparent);
 }
 
 .account-modal__message {
@@ -851,7 +944,7 @@
 }
 
 .account-modal__message--empty {
-  visibility: hidden;
+  display: none;
 }
 
 .account-modal__empty {
@@ -1031,13 +1124,16 @@
   }
 
   .account-modal {
-    gap: var(--space-4);
-    padding-bottom: var(--space-4);
+    gap: var(--space-3);
+    padding-bottom: var(--space-3);
   }
 
-  .account-modal__balance-card,
-  .account-modal .transact-form-card {
+  .account-modal__balance-card {
     padding: var(--space-4);
+  }
+
+  .account-modal .transact-form-card {
+    padding: 12px;
   }
 
   .account-modal__balance-value {
@@ -1045,17 +1141,25 @@
   }
 
   .account-modal .pill-toggle-row {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
   }
 
   .account-modal .pill-toggle {
-    width: 100%;
-    padding-inline: var(--space-3);
+    width: auto;
+    min-height: 36px;
+    padding: 0 18px;
   }
 
   .account-modal .transact-pill-input {
     font-size: 14px;
+  }
+
+  .account-modal__transfer-card .transact-pill-input {
+    height: 34px;
+    min-height: 34px;
+    padding: 6px 14px;
   }
 
   .account-modal .recent-events__item {
