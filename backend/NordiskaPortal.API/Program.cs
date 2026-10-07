@@ -5,6 +5,7 @@ using NordiskaPortal.API.Data;
 using NordiskaPortal.API.DTOs.ErrorResponse;
 using NordiskaPortal.API.Extensions;
 using NordiskaPortal.API.Filters;
+using NordiskaPortal.API.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +21,8 @@ builder.Services.AddControllers(options =>
 {
     options.Filters.Add<ValidationFilter>();
 });
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks()
+    .AddCheck<DatabaseHealthCheck>("database");
 
 builder.WebHost.ConfigureKestrel(options => options.AddServerHeader = false);
 
