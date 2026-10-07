@@ -92,7 +92,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
             >
                 <div className="modal-header">
                     {title && (
-                        <h2 id={titleId} tabIndex={0}>
+                        <h2 id={titleId}>
                             {title}
                         </h2>
                     )}

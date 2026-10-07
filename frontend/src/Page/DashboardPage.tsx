@@ -444,16 +444,16 @@ function DashboardPage() {
 
                     {isLoadingAccounts ? (
                         <div className="dashboard-empty-card">
-                            <h2 tabIndex={0}>Laddar konton</h2>
+                            <h2>Laddar konton</h2>
                             <p>Hämtar dina konton...</p>
                         </div>
                     ) : accountsError ? (
                         <div className="dashboard-empty-card">
-                            <h2 tabIndex={0}>Konton kunde inte hämtas</h2>
+                            <h2>Konton kunde inte hämtas</h2>
                         </div>
                     ) : accounts.length === 0 ? (
                         <div className="dashboard-empty-card">
-                            <h2 tabIndex={0}>Du har inga konton än</h2>
+                            <h2>Du har inga konton än</h2>
                             <p>Skapa ett sparkonto för att komma igång.</p>
                         </div>
                     ) : (
@@ -499,7 +499,7 @@ function DashboardPage() {
                                 }}
                             />
 
-                            <p className="create-account-modal__message">
+                            <p className="create-account-modal__message" role={createAccountError ? 'alert' : undefined}>
                                 {createAccountError}
                             </p>
 
@@ -657,6 +657,7 @@ function DashboardPage() {
                                             className={`transact-message account-modal__message ${
                                                 modalTransactionMessage || modalReceipt ? '' : 'account-modal__message--empty'
                                             } ${modalTransactionMessage ? 'account-modal__message--error' : ''}`}
+                                            role={modalTransactionMessage ? 'alert' : modalReceipt ? 'status' : undefined}
                                         >
                                             {modalTransactionMessage ||
                                                 (modalReceipt && <OrderReceipt receipt={modalReceipt} />)}
@@ -720,6 +721,7 @@ function DashboardPage() {
                                             ? 'dashboard-transaction-modal__message--empty'
                                             : ''
                                     }`}
+                                    role={dashboardTransactionMessage ? 'alert' : dashboardReceipt ? 'status' : undefined}
                                 >
                                     {dashboardTransactionMessage ||
                                         (dashboardReceipt && <OrderReceipt receipt={dashboardReceipt} />) ||
