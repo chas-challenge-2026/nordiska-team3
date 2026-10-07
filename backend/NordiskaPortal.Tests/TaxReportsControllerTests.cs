@@ -81,6 +81,38 @@ public class TaxReportsControllerTests : IDisposable
         ok.Value.Should().BeEquivalentTo(new { Status = "READY", Signed = false });
     }
 
+    [Fact]
+    public async Task GetTaxReports_ReturnsTheReportsAndWhetherEachPdfIsStillAvailable()
+    {
+        File.WriteAllBytes(_pdfPath, new byte[] { 1 });
+        var withFile = new TaxReport { UserId = _userId, ReportYear = 2026, Status = "READY", PdfPath = _pdfPath };
+        var withoutFile = new TaxReport
+        {
+            UserId = _userId,
+            ReportYear = 2025,
+            Status = "READY",
+            PdfPath = Path.Combine(Path.GetTempPath(), "missing-" + Guid.NewGuid() + ".pdf")
+        };
+        var queued = new TaxReport { UserId = _userId, ReportYear = 2024, Status = "QUEUED" };
+
+        _serviceMock
+            .Setup(s => s.GetReportsForUserAsync(_userId))
+            .ReturnsAsync((IReadOnlyList<TaxReport>)new List<TaxReport> { withFile, withoutFile, queued });
+
+        var result = await CreateController().GetTaxReports();
+
+        var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+        ok.Value.Should().BeEquivalentTo(new
+        {
+            Reports = new[]
+            {
+                new { ReportYear = 2026, Status = "READY", PdfAvailable = true },
+                new { ReportYear = 2025, Status = "READY", PdfAvailable = false },
+                new { ReportYear = 2024, Status = "QUEUED", PdfAvailable = false }
+            }
+        }, options => options.WithStrictOrdering());
+    }
+
     private TaxReport SetupReport(string status, string? pdfPath = null, int reportYear = 2026)
     {
         var report = new TaxReport { UserId = _userId, ReportYear = reportYear, Status = status, PdfPath = pdfPath };
