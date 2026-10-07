@@ -41,6 +41,7 @@ import {
 } from '../utils/accountPresentation'
 import { formatAccountInterest, getAccountInterest } from '../utils/accountInterest'
 import { getNextEvent } from '../utils/nextEvent'
+import { getTransactionsNewestFirst } from '../utils/transactionOrder'
 import { createAccountSchema } from '../schemas/accountSchema'
 import { transactionAmountSchema } from '../schemas/transactionSchema'
 
@@ -139,8 +140,8 @@ function DashboardPage() {
         mapBackendAccountToDashboardAccount(account, index)
     )
     const nextEvent = getNextEvent(accountTransactionGroups ?? [])
-    const accountTransactions = (accountTransactionGroups ?? []).flatMap(({ account, history }) =>
-        history.transactions.map((transaction) => mapBackendTransactionToDashboardTransaction(transaction, account.id))
+    const accountTransactions = getTransactionsNewestFirst(accountTransactionGroups ?? []).map(({ account, transaction }) =>
+        mapBackendTransactionToDashboardTransaction(transaction, account.id)
     )
 
     const [createAccountError, setCreateAccountError] = useState('')

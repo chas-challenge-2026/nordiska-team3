@@ -4,6 +4,7 @@ import './HistoryPage.css'
 import { useState } from 'react'
 import { type BackendAccount, type BackendTransaction } from '../services/accountService'
 import { useAccountsWithTransactions } from '../hooks/useAccountsWithTransactions'
+import { getTransactionsNewestFirst } from '../utils/transactionOrder'
 import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import { AppNav } from '../components/AppNav'
 import { DecorativeCircle } from '../components/DecorativeCircle'
@@ -123,8 +124,8 @@ function HistoryPage() {
     const [currentPage, setCurrentPage] = useState(1)
     const pageSize = 20
     const { data: accountTransactionGroups, isLoading: isLoadingTransactions, isError: transactionsError } = useAccountsWithTransactions(currentPage, pageSize)
-    const transactions = (accountTransactionGroups ?? []).flatMap(({ account, history }) =>
-        history.transactions.map((transaction) => mapBackendTransactionToHistoryTransaction(transaction, account))
+    const transactions = getTransactionsNewestFirst(accountTransactionGroups ?? []).map(({ account, transaction }) =>
+        mapBackendTransactionToHistoryTransaction(transaction, account)
     )
 
     const accountFilters = (accountTransactionGroups ?? []).map(({ account }) => account.name)
