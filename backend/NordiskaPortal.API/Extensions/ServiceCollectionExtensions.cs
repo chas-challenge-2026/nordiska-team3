@@ -39,6 +39,7 @@ public static class ServiceCollectionExtensions
         services.AddHostedService<NotificationBackgroundWorker>();
         services.AddScoped<IFaqService, FaqService>();
         services.AddSingleton<IPersonalNumberProtector, PersonalNumberProtector>();
+        services.AddSingleton<INativeProcessRunner, NativeProcessRunner>();
 
         // Validation
         services.AddValidatorsFromAssemblyContaining<Program>(); // Letar alla klasser som ärver AbstractValidator<T>

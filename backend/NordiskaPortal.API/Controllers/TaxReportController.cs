@@ -36,20 +36,32 @@ namespace NordiskaPortal.API.Controllers
             var report = await _taxReportProcessingService.GetStatusAsync(CurrentUserId, id);
             if (report is null) return NotFound();
 
-            return Ok(new { report.Id, report.Status, report.CreatedAt, report.CompletedAt, report.ErrorMessage });
+            // Signed stays false until the native signer is wired in, so the client can label the PDF as unsigned.
+            return Ok(new
+            {
+                report.Id,
+                report.Status,
+                report.CreatedAt,
+                report.CompletedAt,
+                report.ErrorMessage,
+                Signed = report.SignaturePath is not null
+            });
         }
 
-        // Shell for future download so task can be checked
         [HttpGet("{id}/download")]
         public async Task<IActionResult> DownloadTaxReport(Guid id)
         {
+            // GetStatusAsync only returns the report if it belongs to the signed-in customer.
             var report = await _taxReportProcessingService.GetStatusAsync(CurrentUserId, id);
             if (report is null) return NotFound();
 
             if (report.Status != "READY")
                 return Conflict(new { message = $"Report is not ready yet (status: {report.Status})" });
 
-            return StatusCode(501, new { message = "PDF download not implemented yet, waiting on native PDF generation" }); // TODO: stream the signed PDF from report.PdfPath once native generation exists.
+            if (report.PdfPath is null || !System.IO.File.Exists(report.PdfPath))
+                return NotFound(new { message = "The report file is no longer available." });
+
+            return PhysicalFile(report.PdfPath, "application/pdf", $"skatterapport-{report.ReportYear}.pdf");
         }
 
         private Guid CurrentUserId => Guid.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub)!);
