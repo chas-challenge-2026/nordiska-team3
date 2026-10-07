@@ -2,6 +2,7 @@ using System.Net;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using NordiskaPortal.API.Data;
+using NordiskaPortal.API.DTOs.ErrorResponse;
 using NordiskaPortal.API.Extensions;
 using NordiskaPortal.API.Filters;
 
@@ -19,6 +20,7 @@ builder.Services.AddControllers(options =>
 {
     options.Filters.Add<ValidationFilter>();
 });
+builder.Services.AddHealthChecks();
 
 builder.WebHost.ConfigureKestrel(options => options.AddServerHeader = false);
 
@@ -81,31 +83,11 @@ app.UseRateLimiter();
 
 app.MapControllers();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+app.MapHealthChecks("/health");
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
+// Unknown API routes must give a 404, not the frontend's index.html.
+app.MapFallback("/api/{**path}", () => Results.NotFound(new ErrorResponseDto("Not found.")));
 
 app.MapFallbackToFile("index.html");
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
