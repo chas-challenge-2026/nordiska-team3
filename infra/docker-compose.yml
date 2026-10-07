@@ -13,26 +13,20 @@
 name: nordiska
 
 services:
-  secrets-init:
-    image: alpine:3.19
-    volumes:
-      - db_secret:/secrets
-    entrypoint: ["/bin/sh", "-c", "test -f /secrets/db_password || (head -c 24 /dev/urandom | base64 > /secrets/db_password)"]
-
   db:
     image: postgres:15
+    # The platform restarts every service that exits, so a separate one-shot "secrets-init" container loops forever.
+    # The password is generated here on first start instead, and shared with app through the db_secret volume.
+    entrypoint: ["/bin/sh", "-c", "test -f /run/secrets/db_password || (head -c 24 /dev/urandom | base64 > /run/secrets/db_password); exec docker-entrypoint.sh postgres"]
     environment:
       POSTGRES_DB: nordiska
       POSTGRES_USER: nordiska
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - db_secret:/run/secrets:ro
+      - db_secret:/run/secrets
     expose:
       - "5432"
-    depends_on:
-      secrets-init:
-        condition: service_completed_successfully
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U nordiska"]
       interval: 5s
