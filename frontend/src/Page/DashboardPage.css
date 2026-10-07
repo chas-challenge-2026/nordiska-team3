@@ -50,6 +50,10 @@
   z-index: 1;
 }
 
+.dashboard-main:has(.modal-overlay) .customer-service-footer {
+  z-index: 0;
+}
+
 /* Brand-card (identisk logik som LoginPage.css, unikt namn) */
 .dashboard-brand-card {
   position: absolute;
@@ -164,7 +168,7 @@
 .dashboard-transaction-modal {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: 6px;
   color: var(--color-text-primary);
 }
 
@@ -241,28 +245,37 @@
   font-weight: 800;
 }
 
+.dashboard-available-balance {
+  margin: 6px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  min-height: 16px;
+}
+
+.dashboard-available-balance--empty {
+  visibility: hidden;
+}
+
 .dashboard-transaction-modal__message {
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--color-primary-pale) 70%, var(--color-text-inverted));
   color: var(--color-text-secondary);
   font-size: 12px;
   font-weight: 800;
   line-height: 16px;
-  /* Två rader text + padding, så modalen har samma höjd med och utan meddelande */
-  min-height: calc(2 * 16px + 2 * var(--space-3));
+  min-height: 16px;
   margin: 0;
-  padding: var(--space-3);
 }
 
 .dashboard-transaction-modal__message--empty {
-  visibility: hidden;
+  display: none;
 }
 
 .dashboard-transaction-modal__actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-3);
-  margin-top: var(--space-1);
+  margin-top: 0;
 }
 
 .dashboard-transaction-modal__actions .button {
@@ -767,7 +780,7 @@
 }
 
 .account-modal .transact-message {
-  min-height: 32px;
+  min-height: 16px;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.01em;
@@ -806,6 +819,31 @@
 
 .account-modal__transfer {
   padding-top: 0;
+}
+
+.account-modal__transfer-card {
+  gap: 0;
+}
+
+.account-modal__transfer-card .transact-field {
+  gap: 0;
+}
+
+.account-modal__transfer-card .transact-pill-input {
+  margin-top: 6px;
+}
+
+.account-modal__transfer-card .dashboard-available-balance {
+  margin-top: 0;
+  font-size: 11px;
+  line-height: 12px;
+  min-height: 12px;
+}
+
+.account-modal__transfer-card .transact-message {
+  min-height: 12px;
+  font-size: 11px;
+  line-height: 12px;
 }
 
 .account-modal__message {

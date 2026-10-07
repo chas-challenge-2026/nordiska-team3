@@ -596,6 +596,15 @@ function DashboardPage() {
                                                 value={modalAmount}
                                                 onChange={(e) => setModalAmount(e.target.value)}
                                             />
+                                            <p
+                                                className={`dashboard-available-balance ${
+                                                    modalTransactionType === 'deposit'
+                                                        ? 'dashboard-available-balance--empty'
+                                                        : ''
+                                                }`}
+                                            >
+                                                Tillgängligt: {selectedAccount.value}
+                                            </p>
                                         </div>
 
                                         <p
@@ -656,13 +665,14 @@ function DashboardPage() {
                                         setDashboardTransactionMessage('')
                                     }}
                                 />
-
                                 <p
-                                    className={`dashboard-transaction-modal__message ${
-                                        dashboardTransactionMessage ? '' : 'dashboard-transaction-modal__message--empty'
+                                    className={`dashboard-available-balance ${
+                                        dashboardTransactionType === 'deposit' && !dashboardTransactionMessage
+                                            ? 'dashboard-available-balance--empty'
+                                            : ''
                                     }`}
                                 >
-                                    {dashboardTransactionMessage}
+                                    {dashboardTransactionMessage || `Tillgängligt: ${dashboardTransactionAccount.value}`}
                                 </p>
 
                                 <div className="dashboard-transaction-modal__actions">
