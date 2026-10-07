@@ -425,7 +425,7 @@ function DashboardPage() {
                     {isLoadingAccounts ? (
                         <div className="dashboard-empty-card">
                             <h2 tabIndex={0}>Laddar konton</h2>
-                            <p>Hämtar dina konton från backend.</p>
+                            <p>Hämtar dina konton...</p>
                         </div>
                     ) : accountsError ? (
                         <div className="dashboard-empty-card">
@@ -433,8 +433,8 @@ function DashboardPage() {
                         </div>
                     ) : accounts.length === 0 ? (
                         <div className="dashboard-empty-card">
-                            <h2 tabIndex={0}>Inga konton hittades</h2>
-                            <p>När backend har testdata visas dina konton här.</p>
+                            <h2 tabIndex={0}>Du har inga konton än</h2>
+                            <p>Skapa ett sparkonto för att komma igång.</p>
                         </div>
                     ) : (
                         <BalanceOverview
