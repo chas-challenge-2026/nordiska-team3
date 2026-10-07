@@ -1,0 +1,1261 @@
+.dashboard-page {
+  --dashboard-card-bg: var(--color-text-inverted);
+  --dashboard-card-shadow: 0 10px 24px var(--color-shadow);
+  --dashboard-action-deposit-bg: var(--color-success-soft);
+  --dashboard-action-withdraw-bg: var(--color-primary-pale);
+  --dashboard-action-neutral-bg: var(--color-text-inverted);
+
+  position: relative;
+  overflow-x: hidden;
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-page-bg);
+}
+
+[data-theme="dark"] .dashboard-page {
+  --dashboard-card-bg: var(--color-yale-blue-900);
+  --dashboard-card-shadow: 0 16px 34px var(--color-shadow);
+  --dashboard-action-deposit-bg: var(--color-success-soft);
+  --dashboard-action-withdraw-bg: var(--color-primary-pale);
+  --dashboard-action-neutral-bg: var(--color-yale-blue-900);
+}
+
+/* Huvudyta */
+.dashboard-main {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding-left: 64px;
+  overflow: visible;
+}
+
+/* Innehållsyta - centrerad kolumn */
+.dashboard-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: var(--desktop-content-width);
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 150px var(--space-5) var(--space-7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.dashboard-main:has(.modal-overlay) .user-profile {
+  z-index: 1;
+}
+
+.dashboard-main:has(.modal-overlay) .customer-service-footer {
+  z-index: 0;
+}
+
+/* Brand-card (identisk logik som LoginPage.css, unikt namn) */
+.dashboard-brand-card {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 190px;
+  height: 108px;
+  border-radius: 42px;
+  background: var(--color-primary-pale);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  line-height: 1;
+  color: var(--color-text-primary);
+  z-index: 3;
+}
+
+.dashboard-brand-card > span {
+  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--color-amber-honey-deep);
+}
+
+.dashboard-brand-card strong {
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  font-size: 36px;
+  color: var(--color-yale-blue-900);
+}
+
+.dashboard-brand-dot {
+  color: var(--color-amber-honey-deep);
+  font: inherit;
+}
+
+.dashboard-empty-card {
+  width: 100%;
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--color-text-inverted);
+  text-align: center;
+}
+
+.dashboard-empty-card h2 {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-inverted);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.dashboard-empty-card p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.create-account-btn {
+  width: 100%;
+  border: 1.5px dashed color-mix(in srgb, var(--color-text-inverted) 30%, transparent);
+  background: transparent;
+  color: var(--color-text-inverted);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.create-account-btn:hover {
+  border-color: color-mix(in srgb, var(--color-text-inverted) 50%, transparent);
+  background: color-mix(in srgb, var(--color-text-inverted) 5%, transparent);
+}
+
+.create-account-modal__actions {
+  margin-top: var(--space-4);
+}
+
+.create-account-modal__actions .button--primary {
+  color: var(--color-text-inverted);
+}
+
+[data-theme="dark"] .create-account-modal__actions .button--primary {
+  color: var(--color-yale-blue-900);
+}
+
+.modal-card:has(.dashboard-transaction-modal) {
+  width: min(420px, calc(100vw - 32px));
+  border: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-card:has(.dashboard-transaction-modal) .modal-header {
+  margin-bottom: var(--space-4);
+}
+
+.modal-card:has(.dashboard-transaction-modal) .modal-header h2 {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.dashboard-transaction-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--color-text-primary);
+}
+
+.dashboard-transaction-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.dashboard-transaction-modal__field span {
+  color: var(--color-text-primary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.dashboard-transaction-modal__field select {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-text-inverted);
+  background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m6 9 6 6 6-6' stroke='%237399ae' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-position: right 20px center;
+  background-repeat: no-repeat;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 14px;
+  padding: 14px 48px 14px 20px;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-text-inverted) 70%, transparent);
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+
+.dashboard-transaction-modal__field select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 28%, transparent);
+}
+
+.dashboard-transaction-modal .input-group {
+  margin: 0;
+}
+
+.dashboard-transaction-modal .input-label {
+  color: var(--color-text-primary);
+  letter-spacing: 0.06em;
+}
+
+.dashboard-transaction-modal .input-wrapper {
+  border-radius: var(--radius-pill);
+}
+
+.dashboard-transaction-modal .input {
+  min-height: 48px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  background: var(--color-text-inverted);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  padding-right: 48px;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+
+.dashboard-transaction-modal .input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 28%, transparent);
+}
+
+.dashboard-transaction-modal .input-suffix {
+  color: var(--color-yale-blue-900);
+  font-weight: 800;
+}
+
+.dashboard-available-balance {
+  margin: 6px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  min-height: 16px;
+}
+
+.dashboard-available-balance--empty {
+  visibility: hidden;
+}
+
+.dashboard-transaction-modal__message {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 16px;
+  min-height: 16px;
+  margin: 0;
+}
+
+.dashboard-transaction-modal__message--empty {
+  visibility: hidden;
+}
+
+.dashboard-transaction-modal__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-top: 0;
+}
+
+.dashboard-transaction-modal__actions .button {
+  min-height: 48px;
+  border-radius: var(--radius-pill);
+  font-weight: 800;
+  transition: box-shadow 0.2s, background-color 0.2s, opacity 0.2s;
+}
+
+.dashboard-transaction-modal__actions .button--primary {
+  color: var(--color-text-inverted);
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--color-primary) 28%, transparent);
+}
+
+.dashboard-transaction-modal__actions .button--secondary {
+  border-color: color-mix(in srgb, var(--color-border) 86%, transparent);
+  background: var(--color-text-inverted);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.dashboard-transaction-modal__actions .button--secondary:hover:not(:disabled) {
+  background: var(--color-surface-soft);
+}
+
+[data-theme="dark"] .dashboard-transaction-modal__field select {
+  background-color: var(--color-surface-soft);
+  border-color: color-mix(in srgb, var(--color-text-secondary) 12%, transparent);
+  box-shadow: none;
+}
+
+[data-theme="dark"] .dashboard-transaction-modal .input {
+  background: var(--color-surface-soft);
+  border-color: color-mix(in srgb, var(--color-text-secondary) 12%, transparent);
+}
+
+[data-theme="dark"] .dashboard-transaction-modal .input::placeholder {
+  color: color-mix(in srgb, var(--color-text-inverted) 72%, transparent);
+}
+
+[data-theme="dark"] .dashboard-transaction-modal .input-suffix {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .dashboard-transaction-modal__message {
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .dashboard-transaction-modal__actions .button--primary {
+  color: var(--color-yale-blue-900);
+}
+
+[data-theme="dark"] .dashboard-transaction-modal__actions .button--secondary {
+  background: var(--color-surface-soft);
+  border-color: color-mix(in srgb, var(--color-text-secondary) 14%, transparent);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 420px) {
+  .dashboard-transaction-modal__actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+.modal-card:has(.create-account-modal) {
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+
+.create-account-modal {
+  display: flex;
+  flex-direction: column;
+}
+
+.create-account-modal__message {
+  min-height: 32px;
+  margin: 6px 0 0;
+  color: var(--color-danger);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 16px;
+}
+
+.create-account-modal__field {
+  margin-top: var(--space-4);
+}
+
+.create-account-modal__field p {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-primary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.create-account-modal__option-grid {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.create-account-modal__icon-option,
+.create-account-modal__color-option {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.create-account-modal__icon-option {
+  aspect-ratio: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.create-account-modal__icon-option svg {
+  color: var(--color-text-primary);
+  stroke-width: 2.6;
+}
+
+.create-account-modal__icon-option--active,
+.create-account-modal__color-option--active {
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
+  border-color: var(--color-primary);
+  color: var(--color-text-inverted);
+}
+
+.create-account-modal__icon-option--active svg {
+  color: var(--color-text-inverted);
+}
+
+.create-account-modal__icon-option:focus-visible,
+.create-account-modal__color-option:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 32%, transparent);
+}
+
+.create-account-modal__color-option--active span {
+  box-shadow: 0 0 0 2px var(--color-border);
+}
+
+.create-account-modal__color-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.create-account-modal__color-option {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+}
+
+.create-account-modal__color-option span {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-pill);
+  background: var(--color-text-primary);
+}
+
+.create-account-modal__color-option--accent span {
+  background: var(--color-primary);
+}
+
+.create-account-modal__color-option--success span {
+  background: var(--color-jungle-teal);
+}
+
+.create-account-modal__color-option--danger span {
+  background: var(--color-danger);
+}
+
+.create-account-modal__color-option--purple span {
+  background: var(--color-yale-blue-800);
+}
+
+.create-account-modal__color-option--pink span {
+  background: var(--color-danger);
+}
+
+[data-theme="dark"] .create-account-modal__icon-option,
+[data-theme="dark"] .create-account-modal__color-option {
+  background: var(--color-surface-soft);
+}
+
+[data-theme="dark"] .create-account-modal__icon-option--active,
+[data-theme="dark"] .create-account-modal__color-option--active {
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
+  color: var(--color-yale-blue-900);
+}
+
+[data-theme="dark"] .create-account-modal__icon-option--active svg {
+  color: var(--color-yale-blue-900);
+}
+
+.modal-card:has(.account-modal) {
+  width: min(680px, calc(100vw - 32px));
+  max-width: 680px;
+  max-height: calc(100vh - 48px);
+  margin-top: 32px;
+  margin-bottom: auto;
+  overflow-y: auto;
+}
+
+.modal-card:has(.account-modal) .modal-header {
+  justify-content: flex-end;
+  margin-bottom: var(--space-2);
+}
+
+.account-modal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  color: var(--color-text-primary);
+}
+
+.account-modal__balance-card {
+  margin-bottom: 0;
+}
+
+.account-modal__balance-card--accent {
+  background: linear-gradient(180deg, var(--color-text-inverted) 0%, var(--color-primary-pale) 100%);
+}
+
+.account-modal__balance-card--success {
+  background: linear-gradient(180deg, var(--color-text-inverted) 0%, var(--color-success-soft) 100%);
+}
+
+.account-modal__balance-card--danger {
+  background: linear-gradient(180deg, var(--color-text-inverted) 0%, var(--color-danger-soft) 100%);
+}
+
+.account-modal__balance-card--purple {
+  background: linear-gradient(180deg, var(--color-text-inverted) 0%, var(--color-alice-blue) 100%);
+}
+
+.account-modal__balance-card--pink {
+  background: linear-gradient(180deg, var(--color-text-inverted) 0%, var(--color-danger-soft) 100%);
+}
+
+[data-theme="dark"] .account-modal__balance-card--accent,
+[data-theme="dark"] .account-modal__balance-card--success,
+[data-theme="dark"] .account-modal__balance-card--danger,
+[data-theme="dark"] .account-modal__balance-card--purple,
+[data-theme="dark"] .account-modal__balance-card--pink {
+  background: var(--dashboard-card-bg, var(--color-surface-soft));
+}
+
+[data-theme="dark"] .account-modal__balance-card {
+  border: 1px solid color-mix(in srgb, var(--color-text-secondary) 12%, transparent);
+}
+
+/* Kontots viktigaste uppgifter under saldot: ränta och kontonummer */
+.account-modal__details {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2) var(--space-6);
+  margin: var(--space-4) 0 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid color-mix(in srgb, var(--color-text-secondary) 20%, transparent);
+}
+
+.account-modal__details div {
+  display: grid;
+  gap: 2px;
+  text-align: center;
+}
+
+.account-modal__details dt {
+  color: var(--color-text-secondary);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.account-modal__details dd {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.account-modal__account-name {
+  width: fit-content;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  color: var(--color-primary);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  margin: 0 auto var(--space-3);
+  padding: 8px 14px;
+  text-transform: uppercase;
+}
+
+.account-modal__account-name svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  stroke-width: 2.6;
+}
+
+.account-modal__account-name--default {
+  color: var(--color-text-primary);
+}
+
+.account-modal__account-name--accent,
+.account-modal__balance-value--accent {
+  color: var(--color-primary);
+}
+
+.account-modal__account-name--accent {
+  background: var(--color-primary-pale);
+  border-color: color-mix(in srgb, var(--color-primary) 36%, transparent);
+}
+
+.account-modal__account-name--success,
+.account-modal__balance-value--success {
+  color: var(--color-jungle-teal);
+}
+
+.account-modal__account-name--success {
+  background: var(--color-success-soft);
+  border-color: color-mix(in srgb, var(--color-success) 36%, transparent);
+}
+
+[data-theme="dark"] .account-modal__account-name--success,
+[data-theme="dark"] .account-modal__balance-value--success {
+  color: var(--color-success);
+}
+
+.account-modal__account-name--danger,
+.account-modal__balance-value--danger {
+  color: var(--color-danger);
+}
+
+.account-modal__account-name--danger {
+  background: var(--color-danger-soft);
+  border-color: color-mix(in srgb, var(--color-danger) 42%, transparent);
+}
+
+.account-modal__account-name--purple,
+.account-modal__balance-value--purple {
+  color: var(--color-yale-blue-800);
+}
+
+.account-modal__account-name--purple {
+  background: var(--color-alice-blue);
+  border-color: color-mix(in srgb, var(--color-yale-blue-800) 42%, transparent);
+}
+
+.account-modal__account-name--pink,
+.account-modal__balance-value--pink {
+  color: var(--color-danger);
+}
+
+.account-modal__account-name--pink {
+  background: var(--color-danger-soft);
+  border-color: color-mix(in srgb, var(--color-danger) 42%, transparent);
+}
+
+[data-theme="dark"] .account-modal__account-name {
+  background: var(--color-surface-soft);
+}
+
+[data-theme="dark"] .account-modal__account-name--accent {
+  background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+}
+
+[data-theme="dark"] .account-modal__account-name--success {
+  background: color-mix(in srgb, var(--color-success) 14%, transparent);
+}
+
+[data-theme="dark"] .account-modal__account-name--danger {
+  background: color-mix(in srgb, var(--color-danger) 16%, transparent);
+  color: var(--color-danger);
+}
+
+[data-theme="dark"] .account-modal__balance-value--danger {
+  color: var(--color-danger);
+}
+
+[data-theme="dark"] .account-modal__account-name--purple {
+  background: color-mix(in srgb, var(--color-yale-blue-800) 18%, transparent);
+  color: var(--color-alice-blue);
+}
+
+[data-theme="dark"] .account-modal__balance-value--purple {
+  color: var(--color-alice-blue);
+}
+
+[data-theme="dark"] .account-modal__account-name--pink {
+  background: color-mix(in srgb, var(--color-danger) 18%, transparent);
+  color: var(--color-danger-soft);
+}
+
+[data-theme="dark"] .account-modal__balance-value--pink {
+  color: var(--color-danger-soft);
+}
+
+.account-modal__balance-card .balance-sub {
+  color: var(--color-primary-text);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  margin: 0 0 var(--space-2);
+  text-transform: uppercase;
+}
+
+.account-modal__balance-value {
+  font-family: monospace;
+  font-size: 48px;
+  font-weight: 700;
+}
+
+.account-modal__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.account-modal__history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.account-modal__history-link {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--dashboard-card-bg, var(--color-surface-soft));
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 800;
+  padding: 12px 20px;
+  text-decoration: none;
+}
+
+.account-modal__history-link svg {
+  flex-shrink: 0;
+}
+
+.account-modal__history-link:hover {
+  color: var(--color-primary-text);
+}
+
+.account-modal__history-link:focus-visible {
+  outline: 3px solid var(--color-primary-soft);
+  outline-offset: 3px;
+}
+
+.account-modal__section h3 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.account-modal .pill-toggle-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: flex-start;
+}
+
+.account-modal .pill-toggle {
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--dashboard-card-bg, var(--color-surface-soft));
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 12px 28px;
+}
+
+.account-modal .pill-toggle.pill-toggle--active {
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
+  color: var(--color-on-primary);
+}
+
+.account-modal .transact-form-card {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--dashboard-card-bg, var(--color-text-inverted));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--dashboard-card-shadow, var(--shadow-sm));
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.account-modal .transact-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.account-modal .transact-label {
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.account-modal .transact-pill-input {
+  width: 100%;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-soft);
+  color: var(--color-text-primary);
+  font-family: monospace;
+  padding: 14px 20px;
+  font-size: 18px;
+  font-weight: 700;
+  box-sizing: border-box;
+  outline: none;
+  appearance: none;
+}
+
+.account-modal .transact-pill-input:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
+
+[data-theme="dark"] .account-modal .transact-pill-input {
+  background: var(--color-surface-soft);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .account-modal .pill-toggle,
+[data-theme="dark"] .account-modal .transact-form-card {
+  background: var(--dashboard-card-bg, var(--color-surface-soft));
+  border: 1px solid color-mix(in srgb, var(--color-text-secondary) 12%, transparent);
+}
+
+[data-theme="dark"] .account-modal .pill-toggle.pill-toggle--active {
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
+  color: var(--color-on-primary);
+}
+
+.account-modal .transact-message {
+  min-height: 16px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  line-height: 16px;
+  margin: 0;
+}
+
+.account-modal .transact-submit-btn {
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 15px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-text-inverted);
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
+  box-shadow: 0 0 24px 4px color-mix(in srgb, var(--color-primary) 50%, transparent);
+  cursor: pointer;
+}
+
+[data-theme="dark"] .account-modal .transact-submit-btn {
+  color: var(--color-text-inverted);
+  box-shadow: 0 0 18px 2px color-mix(in srgb, var(--color-primary) 28%, transparent);
+}
+
+.account-modal .recent-events {
+  max-width: none;
+}
+
+.account-modal .recent-events__title {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .account-modal .recent-events__list {
+  border: 1px solid color-mix(in srgb, var(--color-text-secondary) 12%, transparent);
+}
+
+.account-modal__transfer {
+  padding-top: 0;
+}
+
+.account-modal__transfer-card {
+  gap: 2px;
+  padding: 14px;
+  position: relative;
+}
+
+.account-modal__transfer-card .transact-field {
+  gap: 7px;
+}
+
+.account-modal__transfer-card .transact-pill-input {
+  height: 34px;
+  min-height: 34px;
+  box-sizing: border-box;
+  margin-top: 0;
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  background: var(--color-text-inverted);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  padding: 6px 14px;
+}
+
+.account-modal__transfer-card .dashboard-available-balance {
+  margin-top: 0;
+  font-size: 11px;
+  line-height: 9px;
+  min-height: 9px;
+}
+
+.account-modal__transfer-card .dashboard-available-balance--empty {
+  display: none;
+}
+
+.account-modal__transfer-card .transact-message {
+  position: absolute;
+  left: 24px;
+  right: auto;
+  bottom: 46px;
+  z-index: 2;
+  max-width: min(280px, calc(100% - 36px));
+  min-height: 0;
+  margin: 0;
+  padding: 9px 12px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  border-radius: 16px 4px 16px 16px;
+  background: var(--dashboard-card-bg, var(--color-text-inverted));
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  line-height: 14px;
+}
+
+.account-modal__transfer-card .account-modal__message--error {
+  border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.account-modal__transfer-card .transact-message::after {
+  content: "";
+  position: absolute;
+  left: 28px;
+  top: -6px;
+  width: 12px;
+  height: 12px;
+  background: inherit;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  transform: rotate(45deg);
+}
+
+.account-modal__transfer-card .account-modal__message--error::after {
+  border-top-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+  border-left-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+}
+
+.account-modal__transfer-card .transact-submit-btn {
+  min-height: 40px;
+  padding: 10px 14px;
+  margin-top: 0;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--color-primary) 32%, transparent);
+}
+
+.account-modal__message {
+  color: var(--color-text-secondary);
+}
+
+.account-modal__message--empty {
+  display: none;
+}
+
+.account-modal__empty {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  margin: 0;
+}
+
+.account-modal .transact-submit-btn {
+  width: 100%;
+}
+
+/* Responsivt: mobil */
+@media (max-width: 700px) {
+  .dashboard-page {
+    flex-direction: column;
+    min-height: 100vh;
+    padding-bottom: 0;
+    overflow-x: hidden;
+  }
+
+  .dashboard-content {
+    padding: 32px var(--space-4) var(--space-6);
+  }
+
+  .dashboard-main {
+    margin-left: 0;
+    padding-left: 0;
+    min-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .dashboard-brand-card {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 188px;
+    height: 104px;
+    border-radius: 52px;
+    background: linear-gradient(
+      0deg,
+      var(--color-text-inverted) 0%,
+      var(--color-text-inverted) 28%,
+      var(--color-primary-pale) 46%,
+      var(--color-primary-pale) 64%,
+      var(--color-primary-soft) 86%,
+      var(--color-primary) 100%
+    );
+  }
+
+  .dashboard-brand-card strong {
+    font-size: 0;
+  }
+
+  .dashboard-brand-card strong::before {
+    content: "n";
+    font-size: 84px;
+    line-height: 0.75;
+  }
+
+  .dashboard-brand-card > span {
+    order: 2;
+    margin-top: 4px;
+    font-size: 9px;
+    font-weight: 800;
+  }
+
+  .dashboard-brand-card .dashboard-brand-dot {
+    font-size: 84px;
+    line-height: 0.75;
+  }
+
+  .dashboard-content {
+    padding-top: 124px;
+  }
+
+  .create-account-modal__option-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .modal-card:has(.create-account-modal) {
+    width: min(340px, calc(100vw - 48px));
+    height: auto;
+    max-height: calc(100vh - 144px);
+    margin: auto;
+    padding: var(--space-4);
+  }
+
+  .modal-card:has(.create-account-modal) .modal-header {
+    margin-bottom: var(--space-2);
+  }
+
+  .modal-card:has(.create-account-modal) .modal-header h2 {
+    font-size: 20px;
+  }
+
+  .create-account-modal .input-wrapper {
+    gap: 6px;
+  }
+
+  .create-account-modal .input-label {
+    font-size: 10px;
+  }
+
+  .create-account-modal .input {
+    min-height: 42px;
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  .create-account-modal__message {
+    min-height: 28px;
+    margin-top: 4px;
+    font-size: 10px;
+    line-height: 14px;
+  }
+
+  .create-account-modal__field {
+    margin-top: var(--space-3);
+  }
+
+  .create-account-modal__field p {
+    margin-bottom: 6px;
+    font-size: 10px;
+  }
+
+  .create-account-modal__option-grid {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .create-account-modal__icon-option {
+    border-radius: var(--radius-sm);
+  }
+
+  .create-account-modal__icon-option svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .create-account-modal__color-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .create-account-modal__color-option {
+    min-height: 34px;
+    gap: 6px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    padding: 6px;
+  }
+
+  .create-account-modal__color-option span {
+    width: 11px;
+    height: 11px;
+  }
+
+  .create-account-modal__actions {
+    margin-top: var(--space-3);
+  }
+
+  .create-account-modal__actions .button {
+    min-height: 42px;
+    padding: 10px 16px;
+  }
+
+  .modal-card:has(.account-modal) {
+    width: calc(100vw - 16px);
+    max-height: calc(100vh - 96px);
+    margin-top: 24px;
+    margin-bottom: 88px;
+    padding: var(--space-4);
+  }
+
+  .account-modal {
+    gap: var(--space-3);
+    padding-bottom: var(--space-3);
+  }
+
+  .account-modal__balance-card {
+    padding: var(--space-4);
+  }
+
+  .account-modal .transact-form-card {
+    padding: 12px;
+  }
+
+  .account-modal__balance-value {
+    font-size: 36px;
+  }
+
+  .account-modal .pill-toggle-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .account-modal .pill-toggle {
+    width: auto;
+    min-height: 36px;
+    padding: 0 18px;
+  }
+
+  .account-modal .transact-pill-input {
+    font-size: 14px;
+  }
+
+  .account-modal__transfer-card .transact-pill-input {
+    height: 34px;
+    min-height: 34px;
+    padding: 6px 14px;
+  }
+
+  .account-modal .recent-events__item {
+    min-height: 58px;
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 0;
+  }
+
+  .account-modal .recent-events__icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .account-modal .recent-events__meta {
+    grid-column: auto;
+    align-items: flex-end;
+    justify-self: end;
+    min-width: auto;
+  }
+
+  .account-modal .recent-events__content h3,
+  .account-modal .recent-events__content p {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .account-modal .recent-events__content h3 {
+    margin-bottom: 2px;
+    font-size: 11px;
+  }
+
+  .account-modal .recent-events__content p {
+    font-size: 8px;
+  }
+
+  .account-modal .recent-events__meta strong {
+    font-size: 10px;
+  }
+
+  .account-modal .recent-events__badge {
+    display: block;
+    min-width: 42px;
+    padding: 3px 6px;
+    font-size: 7px;
+  }
+}
+
+@media (max-height: 760px) and (min-width: 701px) {
+  .modal-card:has(.account-modal) {
+    max-height: calc(100vh - 40px);
+    margin-top: 20px;
+  }
+
+  .account-modal {
+    gap: var(--space-4);
+  }
+
+  .account-modal .transact-form-card,
+  .account-modal__balance-card {
+    padding: var(--space-5);
+  }
+}

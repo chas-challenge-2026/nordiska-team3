@@ -1,0 +1,426 @@
+import { type TransactionType } from './mockHistoryTransaction'
+import { UserProfile } from '../components/UserProfile'
+import './HistoryPage.css'
+import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { type BackendAccount, type BackendTransaction } from '../services/accountService'
+import { useAccountsWithTransactions } from '../hooks/useAccountsWithTransactions'
+import { getTransactionsNewestFirst } from '../utils/transactionOrder'
+import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react'
+import { AppNav } from '../components/AppNav'
+import { DecorativeCircle } from '../components/DecorativeCircle'
+import { CustomerServiceFooter } from '../components/CustomerServiceFooter'
+import { useLogout } from '../hooks/useLogout'
+import { useTheme } from '../context/useTheme'
+
+type HistoryFilter = 'all' | 'deposit' | 'withdrawal' | 'interest'
+type AccountFilter = 'all' | string
+
+const historyFilters: { value: HistoryFilter; label: string }[] = [
+    { value: 'all', label: 'Alla' },
+    { value: 'deposit', label: 'Insättningar' },
+    { value: 'withdrawal', label: 'Uttag' },
+    { value: 'interest', label: 'Ränta' },
+]
+
+function formatTransactionAmount(amount: number) {
+    const sign = amount > 0 ? '+' : ''
+
+    return `${sign}${amount.toLocaleString('sv-SE', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    })} kr`
+}
+
+function getTransactionDirection(amount: number) {
+    return amount < 0 ? 'negative' : 'positive'
+}
+
+function getTransactionIcon(amount: number) {
+    return amount < 0 ? <ArrowUpRight size={14} strokeWidth={2.6} /> : <ArrowDownLeft size={14} strokeWidth={2.6} />
+}
+
+function getTransactionLabel(type: TransactionType) {
+    if (type === 'deposit') {
+        return 'Insättning'
+    }
+
+    if (type === 'withdrawal') {
+        return 'Uttag'
+    }
+
+    return 'Ränta'
+}
+
+function parseBackendAmount(amount: string) {
+    return Number(amount.replace(/\s/g, '').replace(',', '.'))
+}
+
+function mapBackendTransactionType(transactionType: string): TransactionType {
+    if (transactionType === 'DEPOSIT') {
+        return 'deposit'
+    }
+
+    if (transactionType === 'WITHDRAWAL') {
+        return 'withdrawal'
+    }
+
+    return 'interest'
+}
+
+function formatTransactionDate(date: string) {
+    return new Intl.DateTimeFormat('sv-SE', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+    }).format(new Date(date))
+}
+
+// API:t skickar UTC ("…Z"), webbläsaren visar svensk tid
+function formatTransactionTime(date: string) {
+    return new Intl.DateTimeFormat('sv-SE', {
+        hour: '2-digit',
+        minute: '2-digit',
+    }).format(new Date(date))
+}
+
+type TransactionStatus = 'pending' | 'failed'
+
+// Genomförda transaktioner får ingen etikett, bara de som inte är klara
+function mapBackendTransactionStatus(status: string): TransactionStatus | null {
+    if (status === 'FAILED') {
+        return 'failed'
+    }
+
+    if (status === 'PENDING' || status === 'PROCESSING') {
+        return 'pending'
+    }
+
+    return null
+}
+
+const transactionStatusLabels: Record<TransactionStatus, string> = {
+    pending: 'Pågår',
+    failed: 'Misslyckades',
+}
+
+function formatTransactionMonth(date: string) {
+    const formatted = new Intl.DateTimeFormat('sv-SE', {
+        month: 'long',
+        year: 'numeric',
+    }).format(new Date(date))
+
+    return formatted.charAt(0).toUpperCase() + formatted.slice(1)
+}
+
+function getTransactionTitle(type: TransactionType) {
+    if (type === 'deposit') {
+        return 'Insättning'
+    }
+
+    if (type === 'withdrawal') {
+        return 'Uttag'
+    }
+
+    return 'Ränta'
+}
+
+function mapBackendTransactionToHistoryTransaction(
+    transaction: BackendTransaction,
+    account: BackendAccount
+) {
+    const type = mapBackendTransactionType(transaction.transactionType)
+    const rawAmount = parseBackendAmount(transaction.amount)
+    const amount = type === 'withdrawal' ? -Math.abs(rawAmount) : rawAmount
+    const date = transaction.completedAt ?? transaction.createdAt
+
+    return {
+        id: transaction.id,
+        title: getTransactionTitle(type),
+        accountName: account.name,
+        date: `${formatTransactionDate(date)} · ${formatTransactionTime(date)}`,
+        month: formatTransactionMonth(date),
+        status: mapBackendTransactionStatus(transaction.status),
+        amount,
+        type,
+    }
+}
+
+function HistoryPage() {
+    const handleLogout = useLogout()
+    const { toggleTheme } = useTheme()
+    const [searchParams, setSearchParams] = useSearchParams()
+    const [activeFilter, setActiveFilter] = useState<HistoryFilter>('all')
+    const [currentPage, setCurrentPage] = useState(1)
+    const pageSize = 20
+    const accountParam = searchParams.get('konto')?.trim()
+    const activeAccount: AccountFilter = accountParam || 'all'
+    const { data: accountTransactionGroups, isLoading: isLoadingTransactions, isError: transactionsError } = useAccountsWithTransactions(currentPage, pageSize)
+    const transactions = getTransactionsNewestFirst(accountTransactionGroups ?? []).map(({ account, transaction }) =>
+        mapBackendTransactionToHistoryTransaction(transaction, account)
+    )
+
+    const accountFilters = (accountTransactionGroups ?? []).map(({ account }) => account.name)
+    const matchingHistoryGroups = (accountTransactionGroups ?? []).filter(({ account }) =>
+        activeAccount === 'all' || account.name === activeAccount
+    )
+    const totalPages = Math.max(1, ...matchingHistoryGroups.map(({ history }) => history.totalPages))
+
+    const visibleTransactions = transactions.filter((transaction) => {
+        const matchesType = activeFilter === 'all' || transaction.type === activeFilter
+        const matchesAccount = activeAccount === 'all' || transaction.accountName === activeAccount
+
+        return matchesType && matchesAccount
+    })
+
+    function handleAccountChange(accountName: AccountFilter) {
+        const nextSearchParams = new URLSearchParams(searchParams)
+
+        if (accountName === 'all') {
+            nextSearchParams.delete('konto')
+        } else {
+            nextSearchParams.set('konto', accountName)
+        }
+
+        setSearchParams(nextSearchParams)
+        setCurrentPage(1)
+    }
+
+    function handleTypeChange(filter: HistoryFilter) {
+        setActiveFilter(filter)
+        setCurrentPage(1)
+    }
+
+    function goToPreviousPage() {
+        setCurrentPage((page) => Math.max(1, page - 1))
+    }
+
+    function goToNextPage() {
+        setCurrentPage((page) => Math.min(totalPages, page + 1))
+    }
+
+    const selectedAccountLabel = activeAccount === 'all' ? 'Alla konton' : activeAccount
+
+    const groupedTransactions = visibleTransactions.reduce<Record<string, typeof transactions>>(
+        (groups, transaction) => {
+            if (!groups[transaction.month]) {
+                groups[transaction.month] = []
+            }
+
+            groups[transaction.month].push(transaction)
+            return groups
+        },
+        {}
+    )
+
+    return (
+        <div className="history-page">
+            <DecorativeCircle color="orange" size={150} left={-35} top={210} />
+            <DecorativeCircle color="blue" size={120} left={55} top={390} opacity={0.92} />
+            <DecorativeCircle color="orange" size={170} left={220} bottom={80} opacity={0.95} />
+            <DecorativeCircle color="green" size={96} right={90} top={250} opacity={0.82} />
+            <DecorativeCircle color="green" size={140} right={-30} top={360} opacity={0.82} />
+
+            <div className="history-brand-mark brand-logo" aria-hidden="true">
+                <span>Sparportal</span>
+                <strong>
+                    nordiska<span>.</span>
+                </strong>
+            </div>
+
+            <AppNav onLogout={handleLogout} onThemeToggle={toggleTheme} />
+
+            <main className="history-main">
+                <UserProfile />
+
+                <section className="history-content">
+                    <header className="history-header">
+                        <h1 tabIndex={0}>Transaktionshistorik</h1>
+                        <p>Alla rörelser på dina sparkonton.</p>
+                    </header>
+
+                    <div className="history-controls">
+                        <div className="history-controls-desktop">
+                            <label
+                                className={`history-select-filter ${
+                                    activeAccount !== 'all' ? 'history-select-filter--active' : ''
+                                }`}
+                            >
+                                <span>Konto</span>
+                                <select
+                                    aria-label="Välj konto"
+                                    value={activeAccount}
+                                    onChange={(event) => handleAccountChange(event.target.value)}
+                                >
+                                    <option value="all">Alla konton</option>
+                                    {accountFilters.map((accountName) => (
+                                        <option value={accountName} key={accountName}>
+                                            {accountName}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+
+                            {historyFilters
+                                .filter((filter) => filter.value !== 'all')
+                                .map((filter) => (
+                                    <button
+                                        className={`history-filter ${
+                                            activeFilter === filter.value ? 'history-filter--active' : ''
+                                        }`}
+                                        type="button"
+                                        key={filter.value}
+                                        aria-pressed={activeFilter === filter.value}
+                                        onClick={() => handleTypeChange(activeFilter === filter.value ? 'all' : filter.value)}
+                                    >
+                                        {filter.label}
+                                    </button>
+                                ))}
+                        </div>
+
+                        <div className="history-controls-mobile">
+                            <label
+                                className={`history-select-filter ${
+                                    activeAccount !== 'all' ? 'history-select-filter--active' : ''
+                                }`}
+                            >
+                                <span>Konto</span>
+                                <select
+                                    aria-label="Välj konto"
+                                    value={activeAccount}
+                                    onChange={(event) => handleAccountChange(event.target.value)}
+                                >
+                                    <option value="all">Alla konton</option>
+                                    {accountFilters.map((accountName) => (
+                                        <option value={accountName} key={accountName}>
+                                            {accountName}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+
+                            <label
+                                className={`history-select-filter ${
+                                    activeFilter !== 'all' ? 'history-select-filter--active' : ''
+                                }`}
+                            >
+                                <span>Typ</span>
+                                <select
+                                    aria-label="Välj transaktionstyp"
+                                    value={activeFilter}
+                                    onChange={(event) => handleTypeChange(event.target.value as HistoryFilter)}
+                                >
+                                    <option value="all">Alla typer</option>
+                                    {historyFilters
+                                        .filter((filter) => filter.value !== 'all')
+                                        .map((filter) => (
+                                            <option value={filter.value} key={filter.value}>
+                                                {filter.label}
+                                            </option>
+                                        ))}
+                                </select>
+                            </label>
+                        </div>
+                    </div>
+
+                    {isLoadingTransactions ? (
+                        <div className="history-empty">
+                            <h2 tabIndex={0}>Laddar transaktioner</h2>
+                            <p>Hämtar historik för dina konton.</p>
+                        </div>
+                    ) : transactionsError ? (
+                        <div className="history-empty">
+                            <h2 tabIndex={0}>Historiken kunde inte hämtas</h2>
+                            <p>{transactionsError}</p>
+                        </div>
+                    ) : visibleTransactions.length > 0 ? (
+                        <div className="history-list">
+                            {Object.entries(groupedTransactions).map(([month, transactions]) => (
+                                <section className="history-month" key={month}>
+                                    <h2 tabIndex={0}>{month}</h2>
+
+                                    {transactions.map((transaction) => (
+                                        <article className="transaction-card" key={transaction.id}>
+                                            <div
+                                                className={`transaction-icon transaction-icon--${getTransactionDirection(
+                                                    transaction.amount
+                                                )}`}
+                                            >
+                                                {getTransactionIcon(transaction.amount)}
+                                            </div>
+
+                                            <div className="transaction-info">
+                                                <h3 tabIndex={0}>{transaction.title}</h3>
+                                                <p>
+                                                    {transaction.accountName} ·{' '}
+                                                    <span className="transaction-date">{transaction.date}</span>
+                                                    {transaction.status && (
+                                                        <span
+                                                            className={`transaction-status transaction-status--${transaction.status}`}
+                                                        >
+                                                            {transactionStatusLabels[transaction.status]}
+                                                        </span>
+                                                    )}
+                                                </p>
+                                            </div>
+
+                                            <div className="transaction-meta">
+                                                <strong
+                                                    className={`transaction-amount transaction-amount--${getTransactionDirection(
+                                                        transaction.amount
+                                                    )}`}
+                                                >
+                                                    {formatTransactionAmount(transaction.amount)}
+                                                </strong>
+
+                                                <span className={`transaction-badge transaction-badge--${transaction.type}`}>
+                                                    {getTransactionLabel(transaction.type)}
+                                                </span>
+                                            </div>
+                                        </article>
+                                    ))}
+                                </section>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="history-empty">
+                            <h2 tabIndex={0}>Inga transaktioner hittades</h2>
+                            <p>Det finns inga rörelser för {selectedAccountLabel} som matchar det valda filtret.</p>
+                        </div>
+                    )}
+
+                    {!isLoadingTransactions && !transactionsError && totalPages > 1 && (
+                        <nav className="history-pagination" aria-label="Sidnavigering för transaktionshistorik">
+                            <button
+                                type="button"
+                                className="history-pagination__button"
+                                onClick={goToPreviousPage}
+                                disabled={currentPage === 1}
+                                aria-label="Visa föregående sida"
+                            >
+                                <ChevronLeft size={16} />
+                            </button>
+                            <span className="history-pagination__status">
+                                Sida {currentPage} av {totalPages}
+                            </span>
+                            <button
+                                type="button"
+                                className="history-pagination__button"
+                                onClick={goToNextPage}
+                                disabled={currentPage === totalPages}
+                                aria-label="Visa nästa sida"
+                            >
+                                <ChevronRight size={16} />
+                            </button>
+                        </nav>
+                    )}
+
+                </section>
+
+                <CustomerServiceFooter />
+            </main>
+        </div>
+    )
+}
+
+export default HistoryPage
