@@ -82,6 +82,7 @@ function mapBackendAccountToDashboardAccount(account: BackendAccount, index: num
         value: formatBackendBalance(account.balance),
         interest: interest ? formatAccountInterest(interest) : undefined,
         interestType: interest?.type,
+        accountNumber: account.accountNumber,
         variant: presentation.variant,
     }
 }
@@ -571,6 +572,23 @@ function DashboardPage() {
                                     >
                                         {selectedAccount.value}
                                     </p>
+
+                                    {(selectedAccount.interest || selectedAccount.accountNumber) && (
+                                        <dl className="account-modal__details">
+                                            {selectedAccount.interest && (
+                                                <div>
+                                                    <dt>Ränta</dt>
+                                                    <dd>{selectedAccount.interest}</dd>
+                                                </div>
+                                            )}
+                                            {selectedAccount.accountNumber && (
+                                                <div>
+                                                    <dt>Kontonummer</dt>
+                                                    <dd>{selectedAccount.accountNumber}</dd>
+                                                </div>
+                                            )}
+                                        </dl>
+                                    )}
                                 </div>
 
                                 <div className="account-modal__history">
