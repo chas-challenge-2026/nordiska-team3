@@ -10,17 +10,21 @@ public class AuthService : IAuthService
     private readonly IUserRepository _userRepository;
     private readonly ITokenService _tokenService;
     private readonly ILogger<AuthService> _logger;
+    private readonly IPersonalNumberProtector _personalNumberProtector;
 
-    public AuthService(IUserRepository userRepository, ITokenService tokenService, ILogger<AuthService> logger)
+    public AuthService(IUserRepository userRepository, ITokenService tokenService,
+        IPersonalNumberProtector personalNumberProtector, ILogger<AuthService> logger)
     {
         _userRepository = userRepository;
         _tokenService = tokenService;
+        _personalNumberProtector = personalNumberProtector;
         _logger = logger;
     }
 
     public async Task<AuthResult?> LoginWithPinAsync(LoginPinRequestDto request)
     {
-        var user = await _userRepository.GetByPersonalNumberAsync(request.PersonalNumber);
+        var personalNumberHash = _personalNumberProtector.ComputeHash(request.PersonalNumber);
+        var user = await _userRepository.GetByPersonalNumberHashAsync(personalNumberHash);
 
         if (user is null || !BCrypt.Net.BCrypt.Verify(request.Pin, user.PinHash))
         {
@@ -72,8 +76,9 @@ public class AuthService : IAuthService
         }
     }
 
-    private static UserDto MapToUserDto(User user) =>
-        new(user.Id, $"{user.FirstName} {user.LastName}", user.Email, user.PersonalNumber);
+    private UserDto MapToUserDto(User user) =>
+        new(user.Id, $"{user.FirstName} {user.LastName}", user.Email,
+            _personalNumberProtector.Unprotect(user.PersonalNumber));
 
     private async Task<AuthResult> IssueTokensAsync(User user)
     {
@@ -97,7 +102,9 @@ public class AuthService : IAuthService
         const string genericConflictMessage =
             "Registration could not be completed with the provided details.";
 
-        if (await _userRepository.GetByPersonalNumberAsync(request.PersonalNumber) is not null)
+        var personalNumberHash = _personalNumberProtector.ComputeHash(request.PersonalNumber);
+
+        if (await _userRepository.GetByPersonalNumberHashAsync(personalNumberHash) is not null)
         {
             _logger.LogWarning("Registration attempt with already-registered personal number.");
             return RegisterResult.Failure(genericConflictMessage);
@@ -111,7 +118,8 @@ public class AuthService : IAuthService
 
         var user = new User
         {
-            PersonalNumber = request.PersonalNumber,
+            PersonalNumber = _personalNumberProtector.Protect(request.PersonalNumber),
+            PersonalNumberHash = personalNumberHash,
             FirstName = request.FirstName,
             LastName = request.LastName,
             Email = request.Email,

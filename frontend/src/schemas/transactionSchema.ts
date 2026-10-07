@@ -1,26 +1,37 @@
 import { z } from 'zod'
 
-export const transactionAmountSchema = z.object({
-    amount: z
-        .string()
-        .trim()
-        .min(1, 'Ange ett belopp.')
-        .refine((value) => {
-            const amount = Number(value.replace(',', '.'))
+export const amountSchema = z.string().trim().superRefine((value, context) => {
+    if (!value) {
+        context.addIssue({
+            code: 'custom',
+            message: 'Ange ett belopp.',
+        })
+        return
+    }
 
-            return !Number.isNaN(amount) && amount > 0
-        }, 'Ange ett giltigt belopp större än 0 kr.'),
+    const amount = Number(value.replace(',', '.'))
+
+    if (Number.isNaN(amount)) {
+        context.addIssue({
+            code: 'custom',
+            message: 'Ange ett giltigt belopp.',
+        })
+        return
+    }
+
+    if (amount <= 0) {
+        context.addIssue({
+            code: 'custom',
+            message: 'Ange ett belopp som är större än 0 kr.',
+        })
+    }
+})
+
+export const transactionAmountSchema = z.object({
+    amount: amountSchema,
 })
 
 export const transactSchema = z.object({
     accountId: z.string().trim().min(1, 'Välj ett konto.'),
-    amount: z
-        .string()
-        .trim()
-        .min(1, 'Ange ett belopp.')
-        .refine((value) => {
-            const numericAmount = Number(value.replace(',', '.'))
-
-            return !Number.isNaN(numericAmount) && numericAmount > 0
-        }, 'Ange ett giltigt belopp större än 0.'),
+    amount: amountSchema,
 })

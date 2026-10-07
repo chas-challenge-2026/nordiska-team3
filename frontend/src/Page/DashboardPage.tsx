@@ -1,6 +1,6 @@
 import { type DashboardAccountTransaction } from '../components/DashboardActions/mockDashboardAccountTransactions'
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { UserProfile } from '../components/UserProfile'
 import './DashboardPage.css'
 import { AppNav } from '../components/AppNav'
@@ -28,7 +28,7 @@ import { useTheme } from '../context/useTheme'
 import { Modal } from '../components/Modal'
 import { Input } from '../components/Input'
 import { Button } from '../components/Button'
-import { Plus } from 'lucide-react'
+import { ArrowRight, Plus } from 'lucide-react'
 import {
     accountIconOptions,
     accountVariantOptions,
@@ -82,6 +82,7 @@ function mapBackendAccountToDashboardAccount(account: BackendAccount, index: num
         value: formatBackendBalance(account.balance),
         interest: interest ? formatAccountInterest(interest) : undefined,
         interestType: interest?.type,
+        accountNumber: account.accountNumber,
         variant: presentation.variant,
     }
 }
@@ -162,6 +163,8 @@ function DashboardPage() {
     const [dashboardReceipt, setDashboardReceipt] = useState<OrderReceiptData | null>(null)
 
     const selectedAccount = accounts.find((account) => account.id === selectedAccountId) ?? null
+    const selectedBackendAccountName =
+        accountTransactionGroups?.find(({ account }) => account.id === selectedAccountId)?.account.name ?? null
 
     const dashboardTransactionAccount =
         accounts.find((account) => account.id === dashboardTransactionAccountId) ?? accounts[0] ?? null
@@ -180,6 +183,10 @@ function DashboardPage() {
         amount: transaction.amount,
         type: transaction.type,
     }))
+    const selectedAccountRecentEvents = selectedAccountEvents.slice(0, 5)
+    const selectedAccountHistoryUrl = selectedBackendAccountName
+        ? `/historik?konto=${encodeURIComponent(selectedBackendAccountName)}`
+        : '/historik'
 
     const recentDashboardEvents = accountTransactions
         .map((transaction) => {
@@ -565,13 +572,37 @@ function DashboardPage() {
                                     >
                                         {selectedAccount.value}
                                     </p>
+
+                                    {(selectedAccount.interest || selectedAccount.accountNumber) && (
+                                        <dl className="account-modal__details">
+                                            {selectedAccount.interest && (
+                                                <div>
+                                                    <dt>Ränta</dt>
+                                                    <dd>{selectedAccount.interest}</dd>
+                                                </div>
+                                            )}
+                                            {selectedAccount.accountNumber && (
+                                                <div>
+                                                    <dt>Kontonummer</dt>
+                                                    <dd>{selectedAccount.accountNumber}</dd>
+                                                </div>
+                                            )}
+                                        </dl>
+                                    )}
                                 </div>
 
-                                {selectedAccountEvents.length > 0 ? (
-                                    <RecentEvents events={selectedAccountEvents} />
-                                ) : (
-                                    <p className="account-modal__empty">Inga händelser hittades för kontot.</p>
-                                )}
+                                <div className="account-modal__history">
+                                    {selectedAccountEvents.length > 0 ? (
+                                        <RecentEvents events={selectedAccountRecentEvents} title="De 5 senaste händelserna" />
+                                    ) : (
+                                        <p className="account-modal__empty">Inga händelser hittades för kontot.</p>
+                                    )}
+
+                                    <Link className="account-modal__history-link" to={selectedAccountHistoryUrl}>
+                                        <span>Visa fler händelser</span>
+                                        <ArrowRight size={16} />
+                                    </Link>
+                                </div>
 
                                 <div className="account-modal__section account-modal__transfer">
                                     <h3>Flytta pengar</h3>
@@ -605,14 +636,27 @@ function DashboardPage() {
                                                 type="text"
                                                 placeholder="0"
                                                 value={modalAmount}
-                                                onChange={(e) => setModalAmount(e.target.value)}
+                                                onChange={(e) => {
+                                                    setModalAmount(e.target.value)
+                                                    setModalTransactionMessage('')
+                                                    setModalReceipt(null)
+                                                }}
                                             />
+                                            <p
+                                                className={`dashboard-available-balance ${
+                                                    modalTransactionType === 'deposit'
+                                                        ? 'dashboard-available-balance--empty'
+                                                        : ''
+                                                }`}
+                                            >
+                                                Tillgängligt: {selectedAccount.value}
+                                            </p>
                                         </div>
 
                                         <p
                                             className={`transact-message account-modal__message ${
                                                 modalTransactionMessage || modalReceipt ? '' : 'account-modal__message--empty'
-                                            }`}
+                                            } ${modalTransactionMessage ? 'account-modal__message--error' : ''}`}
                                         >
                                             {modalTransactionMessage ||
                                                 (modalReceipt && <OrderReceipt receipt={modalReceipt} />)}
@@ -670,14 +714,16 @@ function DashboardPage() {
                                         setDashboardReceipt(null)
                                     }}
                                 />
-
                                 <p
                                     className={`dashboard-transaction-modal__message ${
-                                        dashboardTransactionMessage || dashboardReceipt ? '' : 'dashboard-transaction-modal__message--empty'
+                                        dashboardTransactionType === 'deposit' && !dashboardTransactionMessage && !dashboardReceipt
+                                            ? 'dashboard-transaction-modal__message--empty'
+                                            : ''
                                     }`}
                                 >
                                     {dashboardTransactionMessage ||
-                                        (dashboardReceipt && <OrderReceipt receipt={dashboardReceipt} />)}
+                                        (dashboardReceipt && <OrderReceipt receipt={dashboardReceipt} />) ||
+                                        `Tillgängligt: ${dashboardTransactionAccount.value}`}
                                 </p>
 
                                 <div className="dashboard-transaction-modal__actions">
