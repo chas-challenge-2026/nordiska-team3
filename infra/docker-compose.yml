@@ -20,7 +20,7 @@ services:
     entrypoint: ["/bin/sh", "-c", "test -f /secrets/db_password || (head -c 24 /dev/urandom | base64 > /secrets/db_password)"]
 
   db:
-    image: postgres:12
+    image: postgres:15
     environment:
       POSTGRES_DB: nordiska
       POSTGRES_USER: nordiska
