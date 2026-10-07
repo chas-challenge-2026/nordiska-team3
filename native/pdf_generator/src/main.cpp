@@ -17,6 +17,7 @@
 #include <nlohmann/json.hpp>
 #include <algorithm>
 #include <vector>
+#include <system_error>
 
 static void print_haru_error(
     HPDF_STATUS error_number,
@@ -278,9 +279,35 @@ int main(int argc, char* argv[])
 
     const char* output_pdf_path = argv[2]; // Path for creating a PDF-File
 
-    if (std::filesystem::exists(output_pdf_path))
+    std::error_code path_error;
+
+    const bool output_exists = std::filesystem::exists(output_pdf_path, path_error);
+
+    if (path_error)
+    {
+        std::cerr << "Error: could not inspect output path: " << path_error.message() << "\n";
+        return NORDISKA_EXIT_FILE_ERROR;
+    }
+    if (output_exists)
     {
         std::cerr << "Error: output PDF already exists: " << output_pdf_path << "\n";
+        return NORDISKA_EXIT_FILE_ERROR;
+    }
+
+    const std::filesystem::path output_path(output_pdf_path);
+
+    const std::filesystem::path output_folder = 
+        output_path.has_parent_path()
+        ? output_path.parent_path()
+        : std::filesystem::path(".");
+
+    path_error.clear();
+
+    const bool folder_exists = std::filesystem::is_directory(output_folder, path_error);
+
+    if (path_error || !folder_exists)
+    {
+        std::cerr << "Error: output folder is missing or inaccessible: " << output_folder << "\n";
         return NORDISKA_EXIT_FILE_ERROR;
     }
 
@@ -521,10 +548,21 @@ int main(int argc, char* argv[])
 
     HPDF_Page_EndText(page);
 
-    if (HPDF_SaveToFile(pdf, output_pdf_path) != HPDF_OK)
+    const HPDF_STATUS save_status = HPDF_SaveToFile(pdf, output_pdf_path);
+
+    if (save_status != HPDF_OK)
     {
         std::cerr << "Error: could not save PDF: " << output_pdf_path << "\n";
         HPDF_Free(pdf);
+
+        if 
+        (
+            save_status == HPDF_FILE_OPEN_ERROR ||
+            save_status == HPDF_FILE_IO_ERROR
+        )
+        {
+            return NORDISKA_EXIT_FILE_ERROR;
+        }
         return NORDISKA_EXIT_PDF_GENERATION_ERROR;
     }
 
