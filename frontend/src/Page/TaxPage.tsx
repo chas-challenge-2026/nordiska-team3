@@ -154,7 +154,7 @@ function TaxPage() {
 
                 <div className="tax-content">
                     <div className="tax-header">
-                        <h1 tabIndex={0}>Skatterapport</h1>
+                        <h1>Skatterapport</h1>
                         <p>Sammanställning av ränteintäkter för deklaration.</p>
                     </div>
 

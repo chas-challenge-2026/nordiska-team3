@@ -295,7 +295,7 @@ function TransactPage() {
 
         <div className="transact-content">
                 <div className="transact-header">
-                    <h1 tabIndex={0}>Flytta pengar</h1>
+                    <h1>Flytta pengar</h1>
                     <p>Sätt in, ta ut eller flytta medel mellan dina sparkonton.</p>
                 </div>
 
@@ -325,11 +325,11 @@ function TransactPage() {
 
                     {isLoadingAccounts ? (
                         <div className="transact-empty-card">
-                            <h2 tabIndex={0}>Laddar konton</h2>
+                            <h2>Laddar konton</h2>
                         </div>
                     ) : accountsError ? (
                         <div className="transact-empty-card">
-                            <h2 tabIndex={0}>{accountsError}</h2>
+                            <h2>{accountsError}</h2>
                         </div>
                     ) : selectedAccount ? (
                         <div className={`account-preview-grid ${mode === 'transfer' ? '' : 'account-preview-grid--single'}`}>
@@ -369,7 +369,7 @@ function TransactPage() {
                         </div>
                     ) : (
                         <div className="transact-empty-card">
-                            <h2 tabIndex={0}>Inga konton hittades</h2>
+                            <h2>Inga konton hittades</h2>
                         </div>
                     )}
 
@@ -435,9 +435,10 @@ function TransactPage() {
                                 error
                                     ? 'transact-message--error'
                                     : receipt
-                                      ? 'transact-message--success'
-                                      : 'transact-message--empty'
+                                    ? 'transact-message--success'
+                                    : 'transact-message--empty'
                             }`}
+                            role={error ? 'alert' : receipt ? 'status' : undefined}
                         >
                             {error || (receipt && <OrderReceipt receipt={receipt} />)}
                         </p>

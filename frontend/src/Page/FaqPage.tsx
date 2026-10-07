@@ -80,7 +80,7 @@ function FaqPage() {
 
                 <div className="faq-content">
                     <header className="faq-header">
-                        <h1 tabIndex={0}>Vanliga frågor</h1>
+                        <h1>Vanliga frågor</h1>
                         <p>Sök bland vanliga frågor eller kontakta kundservice om du behöver mer hjälp.</p>
                     </header>
 
@@ -127,7 +127,7 @@ function FaqPage() {
                         </div>
                     ) : (
                         <section className="faq-no-results" aria-live="polite">
-                            <h2 tabIndex={0}>Inget svar hittades</h2>
+                            <h2>Inget svar hittades</h2>
                             <p>
                                 Vi hittade ingen fråga som matchar din sökning. Testa att formulera om
                                 eller använd kontaktvägarna längre ner på sidan.

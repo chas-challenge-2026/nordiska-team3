@@ -235,7 +235,7 @@ function HistoryPage() {
 
                 <section className="history-content">
                     <header className="history-header">
-                        <h1 tabIndex={0}>Transaktionshistorik</h1>
+                        <h1>Transaktionshistorik</h1>
                         <p>Alla rörelser på dina sparkonton.</p>
                     </header>
 
@@ -325,19 +325,19 @@ function HistoryPage() {
 
                     {isLoadingTransactions ? (
                         <div className="history-empty">
-                            <h2 tabIndex={0}>Laddar transaktioner</h2>
+                            <h2>Laddar transaktioner</h2>
                             <p>Hämtar historik för dina konton.</p>
                         </div>
                     ) : transactionsError ? (
                         <div className="history-empty">
-                            <h2 tabIndex={0}>Historiken kunde inte hämtas</h2>
+                            <h2>Historiken kunde inte hämtas</h2>
                             <p>{transactionsError}</p>
                         </div>
                     ) : visibleTransactions.length > 0 ? (
                         <div className="history-list">
                             {Object.entries(groupedTransactions).map(([month, transactions]) => (
                                 <section className="history-month" key={month}>
-                                    <h2 tabIndex={0}>{month}</h2>
+                                    <h2>{month}</h2>
 
                                     {transactions.map((transaction) => (
                                         <article className="transaction-card" key={transaction.id}>
@@ -350,7 +350,7 @@ function HistoryPage() {
                                             </div>
 
                                             <div className="transaction-info">
-                                                <h3 tabIndex={0}>{transaction.title}</h3>
+                                                <h3>{transaction.title}</h3>
                                                 <p>
                                                     {transaction.accountName} ·{' '}
                                                     <span className="transaction-date">{transaction.date}</span>
@@ -384,7 +384,7 @@ function HistoryPage() {
                         </div>
                     ) : (
                         <div className="history-empty">
-                            <h2 tabIndex={0}>Inga transaktioner hittades</h2>
+                            <h2>Inga transaktioner hittades</h2>
                             <p>Det finns inga rörelser för {selectedAccountLabel} som matchar det valda filtret.</p>
                         </div>
                     )}
