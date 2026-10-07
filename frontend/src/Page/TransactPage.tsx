@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { type FormEvent, useEffect, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { UserProfile } from '../components/UserProfile'
 import { useLogout } from '../hooks/useLogout'
 import './TransactPage.css'
@@ -63,6 +64,7 @@ function mapBackendAccountToTransactAccount(
 function TransactPage() {
     const handleLogout = useLogout()
     const { toggleTheme } = useTheme()
+    const queryClient = useQueryClient()
 
     const [mode, setMode] = useState<Mode>('deposit')
     const [accounts, setAccounts] = useState<TransactAccount[]>([])
@@ -182,6 +184,7 @@ function TransactPage() {
                     `${formatKr(numericAmount)} har flyttats från ${selectedAccount.name} till ${selectedToAccount.name}.`
                 )
                 setAmount('')
+                await queryClient.invalidateQueries({ queryKey: ['accountsWithTransactions'] })
             } catch {
                 try {
                     const restoreResult = await deposit(selectedAccount.id, numericAmount)
@@ -251,6 +254,7 @@ function TransactPage() {
                     : `${formatKr(numericAmount)} har tagits ut från ${selectedAccount.name}.`
             )
             setAmount('')
+            await queryClient.invalidateQueries({ queryKey: ['accountsWithTransactions'] })
         } catch (error) {
             setError(error instanceof Error ? error.message : 'Transaktionen misslyckades.')
         } finally {
