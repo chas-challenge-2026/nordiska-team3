@@ -189,4 +189,75 @@ public class AccountServiceTests
         result!.OwnerName.Should().Be("Anna L.");
         result.AccountNumber.Should().Be("NKM-22222");
     }
+
+    [Fact]
+    public async Task GetUserTransactionsAsync_WhenAccountBelongsToAnotherUser_ShouldReturnNull()
+    {
+        var callerUserId = Guid.NewGuid();
+        var accountId = Guid.NewGuid();
+
+        _accountRepoMock.Setup(r => r.GetByIdAsync(accountId)).ReturnsAsync(new Account
+        {
+            Id = accountId,
+            UserId = Guid.NewGuid(),
+            AccountNumber = "NKM-88888",
+            AccountType = "SAVINGS",
+            Name = "Sparkonto"
+        });
+
+        var service = CreateService();
+
+        var result = await service.GetUserTransactionsAsync(callerUserId, accountId, null, null, null, 1, 20);
+
+        result.Should().BeNull();
+        _transactionRepoMock.Verify(r => r.GetByUserIdAsync(
+            It.IsAny<Guid>(), It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<DateTime?>(),
+            It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetUserTransactionsAsync_ShouldTreatDatesAsInclusiveUtcDays()
+    {
+        var userId = Guid.NewGuid();
+
+        _transactionRepoMock
+            .Setup(r => r.GetByUserIdAsync(userId, null, null,
+                new DateTime(2026, 10, 6, 0, 0, 0, DateTimeKind.Utc),
+                new DateTime(2026, 10, 8, 0, 0, 0, DateTimeKind.Utc), 1, 20))
+            .ReturnsAsync(((IReadOnlyList<Transaction>)new List<Transaction>(), 0));
+
+        var service = CreateService();
+
+        var result = await service.GetUserTransactionsAsync(
+            userId, null, null, new DateOnly(2026, 10, 6), new DateOnly(2026, 10, 7), 1, 20);
+
+        result.Should().NotBeNull();
+        result!.TotalCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task GetUserTransactionsAsync_ShouldIncludeAccountIdAndTotalPages()
+    {
+        var userId = Guid.NewGuid();
+        var accountA = Guid.NewGuid();
+        var accountB = Guid.NewGuid();
+
+        var transactions = new List<Transaction>
+        {
+            new() { AccountId = accountA, Amount = 100m, TransactionType = "DEPOSIT", Status = "COMPLETED" },
+            new() { AccountId = accountB, Amount = 50m, TransactionType = "WITHDRAWAL", Status = "COMPLETED" }
+        };
+
+        _transactionRepoMock
+            .Setup(r => r.GetByUserIdAsync(userId, null, null, null, null, 1, 20))
+            .ReturnsAsync(((IReadOnlyList<Transaction>)transactions, 45));
+
+        var service = CreateService();
+
+        var result = await service.GetUserTransactionsAsync(userId, null, null, null, null, 1, 20);
+
+        result.Should().NotBeNull();
+        result!.TotalPages.Should().Be(3);
+        result.Transactions.Select(t => t.AccountId).Should().Equal(accountA, accountB);
+    }
 }

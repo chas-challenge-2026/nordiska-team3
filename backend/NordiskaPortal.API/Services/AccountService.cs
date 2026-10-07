@@ -366,9 +366,41 @@ public class AccountService : IAccountService
 
         var (transactions, totalCount) = await _transactionRepository.GetByAccountIdAsync(accountId, page, pageSize);
 
+        return BuildHistoryResponse(transactions, totalCount, page, pageSize);
+    }
+
+    // Alla konton för en användare i datumordning, med valfria filter. Null om accountId inte tillhör användaren.
+    public async Task<TransactionHistoryResponseDto?> GetUserTransactionsAsync(
+        Guid userId, Guid? accountId, string? type, DateOnly? fromDate, DateOnly? toDate, int page, int pageSize)
+    {
+        if (accountId.HasValue)
+        {
+            var account = await _accountRepository.GetByIdAsync(accountId.Value);
+            if (account is null || account.UserId != userId) return null;
+        }
+
+        // Datum tolkas som hela UTC-dagar, båda inkluderade
+        DateTime? fromUtc = fromDate.HasValue
+            ? DateTime.SpecifyKind(fromDate.Value.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc)
+            : null;
+
+        DateTime? toUtcExclusive = toDate.HasValue && toDate.Value < DateOnly.MaxValue
+            ? DateTime.SpecifyKind(toDate.Value.AddDays(1).ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc)
+            : null;
+
+        var (transactions, totalCount) = await _transactionRepository.GetByUserIdAsync(
+            userId, accountId, type, fromUtc, toUtcExclusive, page, pageSize);
+
+        return BuildHistoryResponse(transactions, totalCount, page, pageSize);
+    }
+
+    private static TransactionHistoryResponseDto BuildHistoryResponse(
+        IReadOnlyList<Transaction> transactions, int totalCount, int page, int pageSize)
+    {
         var dtos = transactions
             .Select(t => new TransactionDto(
                 t.Id,
+                t.AccountId,
                 t.TransactionType,
                 t.Amount.ToString("F2", CultureInfo.InvariantCulture),
                 t.Status,
