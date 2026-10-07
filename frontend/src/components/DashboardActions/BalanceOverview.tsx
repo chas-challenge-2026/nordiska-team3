@@ -10,6 +10,7 @@ export interface Account {
     value: string
     interest?: string
     interestType?: InterestType
+    accountNumber?: string
     variant?: 'default' | 'accent' | 'success' | 'danger' | 'purple' | 'pink'
 }
 

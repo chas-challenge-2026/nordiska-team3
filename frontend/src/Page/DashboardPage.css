@@ -541,6 +541,40 @@
   border: 1px solid color-mix(in srgb, var(--color-text-secondary) 12%, transparent);
 }
 
+/* Kontots viktigaste uppgifter under saldot: ränta och kontonummer */
+.account-modal__details {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2) var(--space-6);
+  margin: var(--space-4) 0 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid color-mix(in srgb, var(--color-text-secondary) 20%, transparent);
+}
+
+.account-modal__details div {
+  display: grid;
+  gap: 2px;
+  text-align: center;
+}
+
+.account-modal__details dt {
+  color: var(--color-text-secondary);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.account-modal__details dd {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .account-modal__account-name {
   width: fit-content;
   display: flex;
