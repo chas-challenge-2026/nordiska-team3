@@ -12,6 +12,7 @@ import { ChevronDown } from 'lucide-react'
 import { useTheme } from '../context/useTheme'
 import { CustomerServiceFooter } from '../components/CustomerServiceFooter'
 import { customerServiceContact } from '../content/customerServiceContact'
+import { OrderReceipt, type OrderReceiptData } from '../components/OrderReceipt/OrderReceipt'
 import {
     getAccountIcon,
     getAccountPresentation,
@@ -66,7 +67,7 @@ function TransactPage() {
     const [accountsError, setAccountsError] = useState('')
     const [amount, setAmount] = useState('')
     const [error, setError] = useState('')
-    const [success, setSuccess] = useState('')
+    const [receipt, setReceipt] = useState<OrderReceiptData | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     const transferToAccounts = accounts.filter((acc) => acc.id !== accountId)
@@ -117,7 +118,7 @@ function TransactPage() {
 
         setMode(newMode)
         setError('')
-        setSuccess('')
+        setReceipt(null)
     }
 
     function handleFromAccountChange(nextAccountId: string) {
@@ -132,7 +133,7 @@ function TransactPage() {
 
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
-        setSuccess('')
+        setReceipt(null)
 
         if (mode === 'transfer') {
             const validation = transferSchema.safeParse({
@@ -187,9 +188,13 @@ function TransactPage() {
 
                 updateBalance(selectedAccount.id, withdrawResult.balance)
                 updateBalance(selectedToAccount.id, depositResult.balance)
-                setSuccess(
-                    `${formatKr(numericAmount)} har flyttats från ${selectedAccount.name} till ${selectedToAccount.name}.`
-                )
+                setReceipt({
+                    type: 'transfer',
+                    amount: numericAmount,
+                    accountName: selectedAccount.name,
+                    toAccountName: selectedToAccount.name,
+                    balance: parseBackendBalance(withdrawResult.balance),
+                })
                 setAmount('')
                 await queryClient.invalidateQueries({ queryKey: ['accountsWithTransactions'] })
             } catch {
@@ -255,11 +260,12 @@ function TransactPage() {
                 )
             )
 
-            setSuccess(
-                mode === 'deposit'
-                    ? `${formatKr(numericAmount)} har satts in på ${selectedAccount.name}.`
-                    : `${formatKr(numericAmount)} har tagits ut från ${selectedAccount.name}.`
-            )
+            setReceipt({
+                type: mode === 'deposit' ? 'deposit' : 'withdrawal',
+                amount: numericAmount,
+                accountName: selectedAccount.name,
+                balance: updatedBalance,
+            })
             setAmount('')
             await queryClient.invalidateQueries({ queryKey: ['accountsWithTransactions'] })
         } catch (error) {
@@ -428,12 +434,12 @@ function TransactPage() {
                             className={`transact-message ${
                                 error
                                     ? 'transact-message--error'
-                                    : success
+                                    : receipt
                                       ? 'transact-message--success'
                                       : 'transact-message--empty'
                             }`}
                         >
-                            {error || success}
+                            {error || (receipt && <OrderReceipt receipt={receipt} />)}
                         </p>
 
                         <button type="submit" className="transact-submit-btn" disabled={isSubmitting}>

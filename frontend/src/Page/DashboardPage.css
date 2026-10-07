@@ -268,7 +268,7 @@
 }
 
 .dashboard-transaction-modal__message--empty {
-  display: none;
+  visibility: hidden;
 }
 
 .dashboard-transaction-modal__actions {

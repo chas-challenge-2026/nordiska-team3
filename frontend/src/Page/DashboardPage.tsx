@@ -42,6 +42,7 @@ import {
 import { formatAccountInterest, getAccountInterest } from '../utils/accountInterest'
 import { getNextEvent } from '../utils/nextEvent'
 import { getTransactionsNewestFirst } from '../utils/transactionOrder'
+import { OrderReceipt, type OrderReceiptData } from '../components/OrderReceipt/OrderReceipt'
 import { createAccountSchema } from '../schemas/accountSchema'
 import { transactionAmountSchema } from '../schemas/transactionSchema'
 
@@ -153,10 +154,12 @@ function DashboardPage() {
     const [modalTransactionType, setModalTransactionType] = useState<'deposit' | 'withdrawal'>('deposit')
     const [modalAmount, setModalAmount] = useState('')
     const [modalTransactionMessage, setModalTransactionMessage] = useState('')
+    const [modalReceipt, setModalReceipt] = useState<OrderReceiptData | null>(null)
     const [dashboardTransactionType, setDashboardTransactionType] = useState<'deposit' | 'withdrawal' | null>(null)
     const [dashboardTransactionAccountId, setDashboardTransactionAccountId] = useState('')
     const [dashboardTransactionAmount, setDashboardTransactionAmount] = useState('')
     const [dashboardTransactionMessage, setDashboardTransactionMessage] = useState('')
+    const [dashboardReceipt, setDashboardReceipt] = useState<OrderReceiptData | null>(null)
 
     const selectedAccount = accounts.find((account) => account.id === selectedAccountId) ?? null
 
@@ -196,11 +199,13 @@ function DashboardPage() {
     function handleAccountClick(accountId: string) {
         setSelectedAccountId(accountId)
         setModalTransactionMessage('')
+        setModalReceipt(null)
     }
 
     function handleModalTransactionTypeChange(type: 'deposit' | 'withdrawal') {
         setModalTransactionType(type)
         setModalTransactionMessage('')
+        setModalReceipt(null)
     }
 
     function openDashboardTransactionModal(type: 'deposit' | 'withdrawal') {
@@ -208,12 +213,14 @@ function DashboardPage() {
         setDashboardTransactionAccountId((currentAccountId) => currentAccountId || accounts[0]?.id || '')
         setDashboardTransactionAmount('')
         setDashboardTransactionMessage('')
+        setDashboardReceipt(null)
     }
 
     function closeDashboardTransactionModal() {
         setDashboardTransactionType(null)
         setDashboardTransactionAmount('')
         setDashboardTransactionMessage('')
+        setDashboardReceipt(null)
     }
 
     function handleActionClick(action: DashboardAction['action']) {
@@ -329,11 +336,13 @@ function DashboardPage() {
                         : group
                 )
             )
-            setModalTransactionMessage(
-                modalTransactionType === 'deposit'
-                    ? `${formatKr(amount)} har satts in på kontot.`
-                    : `${formatKr(amount)} har tagits ut från kontot.`
-            )
+            setModalTransactionMessage('')
+            setModalReceipt({
+                type: modalTransactionType,
+                amount,
+                accountName: formatAccountName(selectedAccount.label),
+                balance: parseBackendBalance(result.balance),
+            })
             setModalAmount('')
             await queryClient.invalidateQueries({ queryKey: ['accountsWithTransactions'] })
         } catch (error) {
@@ -393,11 +402,13 @@ function DashboardPage() {
                         : group
                 )
             )
-            setDashboardTransactionMessage(
-                dashboardTransactionType === 'deposit'
-                    ? `${formatKr(amount)} har satts in på ${formatAccountName(dashboardTransactionAccount.label)}.`
-                    : `${formatKr(amount)} har tagits ut från ${formatAccountName(dashboardTransactionAccount.label)}.`
-            )
+            setDashboardTransactionMessage('')
+            setDashboardReceipt({
+                type: dashboardTransactionType,
+                amount,
+                accountName: formatAccountName(dashboardTransactionAccount.label),
+                balance: parseBackendBalance(result.balance),
+            })
             setDashboardTransactionAmount('')
             await queryClient.invalidateQueries({ queryKey: ['accountsWithTransactions'] })
         } catch (error) {
@@ -609,10 +620,11 @@ function DashboardPage() {
 
                                         <p
                                             className={`transact-message account-modal__message ${
-                                                modalTransactionMessage ? '' : 'account-modal__message--empty'
+                                                modalTransactionMessage || modalReceipt ? '' : 'account-modal__message--empty'
                                             }`}
                                         >
-                                            {modalTransactionMessage}
+                                            {modalTransactionMessage ||
+                                                (modalReceipt && <OrderReceipt receipt={modalReceipt} />)}
                                         </p>
 
                                         <button
@@ -645,6 +657,7 @@ function DashboardPage() {
                                         onChange={(e) => {
                                             setDashboardTransactionAccountId(e.target.value)
                                             setDashboardTransactionMessage('')
+                                            setDashboardReceipt(null)
                                         }}
                                     >
                                         {accounts.map((account) => (
@@ -663,16 +676,19 @@ function DashboardPage() {
                                     onChange={(e) => {
                                         setDashboardTransactionAmount(e.target.value)
                                         setDashboardTransactionMessage('')
+                                        setDashboardReceipt(null)
                                     }}
                                 />
                                 <p
-                                    className={`dashboard-available-balance ${
-                                        dashboardTransactionType === 'deposit' && !dashboardTransactionMessage
-                                            ? 'dashboard-available-balance--empty'
+                                    className={`dashboard-transaction-modal__message ${
+                                        dashboardTransactionType === 'deposit' && !dashboardTransactionMessage && !dashboardReceipt
+                                            ? 'dashboard-transaction-modal__message--empty'
                                             : ''
                                     }`}
                                 >
-                                    {dashboardTransactionMessage || `Tillgängligt: ${dashboardTransactionAccount.value}`}
+                                    {dashboardTransactionMessage ||
+                                        (dashboardReceipt && <OrderReceipt receipt={dashboardReceipt} />) ||
+                                        `Tillgängligt: ${dashboardTransactionAccount.value}`}
                                 </p>
 
                                 <div className="dashboard-transaction-modal__actions">
