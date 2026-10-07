@@ -75,6 +75,34 @@ function formatTransactionDate(date: string) {
     }).format(new Date(date))
 }
 
+// API:t skickar UTC ("…Z"), webbläsaren visar svensk tid
+function formatTransactionTime(date: string) {
+    return new Intl.DateTimeFormat('sv-SE', {
+        hour: '2-digit',
+        minute: '2-digit',
+    }).format(new Date(date))
+}
+
+type TransactionStatus = 'pending' | 'failed'
+
+// Genomförda transaktioner får ingen etikett, bara de som inte är klara
+function mapBackendTransactionStatus(status: string): TransactionStatus | null {
+    if (status === 'FAILED') {
+        return 'failed'
+    }
+
+    if (status === 'PENDING' || status === 'PROCESSING') {
+        return 'pending'
+    }
+
+    return null
+}
+
+const transactionStatusLabels: Record<TransactionStatus, string> = {
+    pending: 'Pågår',
+    failed: 'Misslyckades',
+}
+
 function formatTransactionMonth(date: string) {
     const formatted = new Intl.DateTimeFormat('sv-SE', {
         month: 'long',
@@ -109,8 +137,9 @@ function mapBackendTransactionToHistoryTransaction(
         id: transaction.id,
         title: getTransactionTitle(type),
         accountName: account.name,
-        date: formatTransactionDate(date),
+        date: `${formatTransactionDate(date)} · ${formatTransactionTime(date)}`,
         month: formatTransactionMonth(date),
+        status: mapBackendTransactionStatus(transaction.status),
         amount,
         type,
     }
@@ -312,7 +341,15 @@ function HistoryPage() {
                                             <div className="transaction-info">
                                                 <h3 tabIndex={0}>{transaction.title}</h3>
                                                 <p>
-                                                    {transaction.accountName} · {transaction.date}
+                                                    {transaction.accountName} ·{' '}
+                                                    <span className="transaction-date">{transaction.date}</span>
+                                                    {transaction.status && (
+                                                        <span
+                                                            className={`transaction-status transaction-status--${transaction.status}`}
+                                                        >
+                                                            {transactionStatusLabels[transaction.status]}
+                                                        </span>
+                                                    )}
                                                 </p>
                                             </div>
 
