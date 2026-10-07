@@ -10,6 +10,10 @@
 
 #include <hpdf.h>
 
+#include <cstdlib>
+#include <cerrno>
+#include <cstring>
+#include <unistd.h>
 #include <iostream>
 #include <string>
 #include <filesystem>
@@ -18,6 +22,8 @@
 #include <algorithm>
 #include <vector>
 #include <system_error>
+#include <memory>
+#include <type_traits>
 
 static void print_haru_error(
     HPDF_STATUS error_number,
@@ -313,18 +319,22 @@ int main(int argc, char* argv[])
 
     HPDF_Doc pdf = HPDF_New(print_haru_error, nullptr); // Create new PDF in memory
 
-    if (pdf == nullptr) // 
+    if (pdf == nullptr) // PDF allocation failure
     {
         std::cerr << "Error: could not create PDF document\n";
         return NORDISKA_EXIT_PDF_GENERATION_ERROR;
     }
+
+    std::unique_ptr<
+        std::remove_pointer_t<HPDF_Doc>,
+        decltype(&HPDF_Free)
+    > pdf_guard(pdf, &HPDF_Free);
 
     HPDF_Page page = HPDF_AddPage(pdf); // Create a page in the PDF-File
 
     if (page == nullptr)
     {
         std::cerr << "Error: could not add PDF page\n";
-        HPDF_Free(pdf);
         return NORDISKA_EXIT_PDF_GENERATION_ERROR;
     }
 
@@ -333,7 +343,6 @@ int main(int argc, char* argv[])
     if (HPDF_UseUTFEncodings(pdf) != HPDF_OK)
     {
         std::cerr << "Error: could not enable UTF-8 PDF encoding\n";
-        HPDF_Free(pdf);
         return NORDISKA_EXIT_PDF_GENERATION_ERROR;
     }
 
@@ -353,7 +362,6 @@ int main(int argc, char* argv[])
     if (font_name == nullptr)
     {
         std::cerr << "Error: could not load PDF font\n";
-        HPDF_Free(pdf);
         return NORDISKA_EXIT_PDF_GENERATION_ERROR;
     }
 
@@ -362,7 +370,6 @@ int main(int argc, char* argv[])
     if (font == nullptr)
     {
         std::cerr << "Error: could not create UTF-8 PDF font\n";
-        HPDF_Free(pdf);
         return NORDISKA_EXIT_PDF_GENERATION_ERROR;
     }
 
@@ -429,7 +436,6 @@ int main(int argc, char* argv[])
         if (account_y < 130 && !start_next_page())
         {
             std::cerr << "Error: could not create continuation page\n";
-            HPDF_Free(pdf);
             return NORDISKA_EXIT_PDF_GENERATION_ERROR;
         }
 
@@ -479,7 +485,6 @@ int main(int argc, char* argv[])
                     if (!start_next_page())
                     {
                         std::cerr << "Error: could not create continuation page\n";
-                        HPDF_Free(pdf);
                         return NORDISKA_EXIT_PDF_GENERATION_ERROR;
                     }
                 
@@ -521,7 +526,6 @@ int main(int argc, char* argv[])
     if (account_y < 170 && !start_next_page())
     {
         std::cerr << "Error: could not create summary page\n";
-        HPDF_Free(pdf);
         return NORDISKA_EXIT_PDF_GENERATION_ERROR;
     }
     
@@ -546,14 +550,48 @@ int main(int argc, char* argv[])
         account_y -= 18;
     }
 
-    HPDF_Page_EndText(page);
+    if (HPDF_Page_EndText(page) != HPDF_OK)
+    {
+        std::cerr << "Error: could not finish PDF text\n";
+        return NORDISKA_EXIT_PDF_GENERATION_ERROR;
+    }
 
-    const HPDF_STATUS save_status = HPDF_SaveToFile(pdf, output_pdf_path);
+    // Create a unique temporary file beside the requested PDF
+    std::string temporary_path = std::string(output_pdf_path) + ".tmp.XXXXXX"; // that buncha X's is placeholder for mkstemp
+
+    const int temporary_fd = mkstemp(temporary_path.data());
+
+    if (temporary_fd == -1)
+    {
+        std::cerr << "Error: could not create temporary PDF: " << std::strerror(errno) << "\n";
+        return NORDISKA_EXIT_FILE_ERROR;
+    }
+
+    // Remove only temp file when this scope ends
+    const auto remove_temporary = [](char* path)
+    {
+        std::error_code cleanup_error;
+        std::filesystem::remove(path, cleanup_error);
+
+        if (cleanup_error)
+        {
+            std::cerr << "Warning: could not remove temporary PDF: " << path << ": " << cleanup_error.message() << "\n";
+        }
+    };
+
+    std::unique_ptr<char, decltype(remove_temporary)>temporary_guard(temporary_path.data(), remove_temporary);
+
+    if (close(temporary_fd) != 0)
+    {
+        std::cerr << "Error: could not close temporary PDF: " <<  std::strerror(errno) << "\n";
+        return NORDISKA_EXIT_FILE_ERROR;
+    }
+
+    const HPDF_STATUS save_status = HPDF_SaveToFile(pdf, temporary_path.c_str());
 
     if (save_status != HPDF_OK)
     {
-        std::cerr << "Error: could not save PDF: " << output_pdf_path << "\n";
-        HPDF_Free(pdf);
+        std::cerr << "Error: could not save PDF\n";
 
         if 
         (
@@ -563,10 +601,20 @@ int main(int argc, char* argv[])
         {
             return NORDISKA_EXIT_FILE_ERROR;
         }
+
         return NORDISKA_EXIT_PDF_GENERATION_ERROR;
     }
 
-    HPDF_Free(pdf);
+    // Publish the completed file without replacing an existing destination
+    std::error_code publish_error;
+
+    std::filesystem::create_hard_link(temporary_path, output_pdf_path, publish_error);
+
+    if (publish_error)
+    {
+        std::cerr << "Error: could not publish PDF: " << publish_error.message() << "\n";
+        return NORDISKA_EXIT_FILE_ERROR;
+    }
 
     std::cout << "Created PDF: " << output_pdf_path << "\n";
     return NORDISKA_EXIT_SUCCESS;
