@@ -262,7 +262,7 @@ int main(int argc, char* argv[])
     HPDF_Page_BeginText(page);
 
     HPDF_Page_SetFontAndSize(page, font, 18);
-    HPDF_Page_TextOut(page, 50, 780, "NORDISKA Skatt Rapport");
+    HPDF_Page_TextOut(page, 50, 780, "NORDISKA Skatterapport");
 
     HPDF_Page_SetFontAndSize(page, font, 12);
     HPDF_Page_TextOut(page, 50, 750, bank_name.c_str());
@@ -279,12 +279,36 @@ int main(int argc, char* argv[])
 
     HPDF_REAL account_y = 588;
 
+    const auto start_next_page = [&]() -> bool
+    {
+        if (HPDF_Page_EndText(page) != HPDF_OK)
+            return false;
+        
+        page = HPDF_AddPage(pdf);
+
+        if (page == nullptr)
+            return false;
+        
+        if 
+        (
+            HPDF_Page_SetSize(page, HPDF_PAGE_SIZE_A4, HPDF_PAGE_PORTRAIT) != HPDF_OK ||
+            HPDF_Page_BeginText(page) != HPDF_OK ||
+            HPDF_Page_SetFontAndSize(page, font, 12) != HPDF_OK ||
+            HPDF_Page_TextOut(page, 50, 780, "NORDISKA Skatteraport") != HPDF_OK
+        )
+        {
+            return false;
+        }
+
+        account_y = 740;
+        return true;
+    };
+
     for (const auto& account : accounts)
     {
-        if (account_y < 110)
+        if (account_y < 130 && !start_next_page())
         {
-            std::cerr << "Error: report requires multiple pages\n";
-            HPDF_Page_EndText(page);
+            std::cerr << "Error: could not create continuation page\n";
             HPDF_Free(pdf);
             return NORDISKA_EXIT_PDF_GENERATION_ERROR;
         }
@@ -312,11 +336,25 @@ int main(int argc, char* argv[])
         {
             if (account_y < 50)
             {
-                std::cerr << "Error: report requires multiple pages\n";
-                HPDF_Page_EndText(page);
-                HPDF_Free(pdf);
-                return NORDISKA_EXIT_PDF_GENERATION_ERROR;
+                if (!start_next_page())
+                {
+                    std::cerr << "Error: report requires multiple pages\n";
+                    HPDF_Free(pdf);
+                    return NORDISKA_EXIT_PDF_GENERATION_ERROR;
+                }
+
+                HPDF_Page_SetFontAndSize(page, font, 12);
+                HPDF_Page_TextOut(page, 50, account_y, account_line.c_str());
+                account_y -= 26;
+
+                HPDF_Page_SetFontAndSize(page, font, 10);
+                HPDF_Page_TextOut(page, 50, account_y, "Datum");
+                HPDF_Page_TextOut(page, 120, account_y, "Typ");
+                HPDF_Page_TextOut(page, 220, account_y, "Beskrivning");
+                HPDF_Page_TextOut(page, 440, account_y, amount_heading.c_str());
+                account_y -= 18;
             }
+
             const std::string date = transaction["bookedAt"].get<std::string>().substr(0, 10);
             const std::string type = transaction["type"].get<std::string>();
             const std::string description = transaction["description"].get<std::string>();
@@ -333,10 +371,9 @@ int main(int argc, char* argv[])
         account_y -= 24;
     }
 
-    if (account_y < 170)
+    if (account_y < 170 && !start_next_page())
     {
-        std::cerr << "Error: report summary requires another page\n";
-        HPDF_Page_EndText(page);
+        std::cerr << "Error: could not create summary page\n";
         HPDF_Free(pdf);
         return NORDISKA_EXIT_PDF_GENERATION_ERROR;
     }
