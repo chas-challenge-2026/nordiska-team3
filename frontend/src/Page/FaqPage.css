@@ -188,6 +188,23 @@
     line-height: 1.45;
 }
 
+.faq-answer-link {
+    color: inherit;
+    font-weight: 800;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.faq-answer-link:hover {
+    text-decoration-thickness: 2px;
+}
+
+.faq-answer-link:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
 [data-theme="dark"] .faq-answer {
     background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
         color: var(--color-on-primary);
