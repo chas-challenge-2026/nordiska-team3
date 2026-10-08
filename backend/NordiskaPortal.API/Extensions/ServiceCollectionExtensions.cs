@@ -41,12 +41,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IPersonalNumberProtector, PersonalNumberProtector>();
         services.AddSingleton<INativeProcessRunner, NativeProcessRunner>();
         services.AddScoped<IAuditService, AuditService>();
-        services.AddSingleton(sp =>
-        {
-            // Same pattern as the JWT key. Configuration first, otherwise a key that is created once and kept in /secrets.
-            var key = sp.GetRequiredService<IConfiguration>()["Audit:Key"] ?? GetOrCreateSigningKey("/secrets/audit.key");
-            return new AuditKey(Convert.FromBase64String(key));
-        });
+        services.AddSingleton(sp => AuditKey.Load(sp.GetRequiredService<IConfiguration>()));
 
         // Validation
         services.AddValidatorsFromAssemblyContaining<Program>(); // Letar alla klasser som ärver AbstractValidator<T>
@@ -199,24 +194,15 @@ public static class ServiceCollectionExtensions
         return app;
     }
 
-    // Recomputes the audit chain at startup and logs the result. A broken chain never stops the app from starting.
+    // Creates the audit key on the first start and verifies the audit chain. A broken chain stops the app.
     public static async Task VerifyAuditChainAsync(this WebApplication app)
     {
         using var scope = app.Services.CreateScope();
-        var audit = scope.ServiceProvider.GetRequiredService<IAuditService>();
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<AuditService>>();
 
-        var result = await audit.VerifyChainAsync();
-
-        if (result.IsValid)
-        {
-            logger.LogInformation("Audit chain verified: {Count} entries.", result.CheckedCount);
-        }
-        else
-        {
-            logger.LogError("Audit chain is broken at entry {EntryId}, after {Count} valid entries.",
-                result.FirstInvalidId, result.CheckedCount);
-        }
+        await AuditStartup.RunAsync(
+            scope.ServiceProvider.GetRequiredService<IAuditService>(),
+            app.Configuration.GetValue<bool>("Audit:AllowBrokenChain"),
+            scope.ServiceProvider.GetRequiredService<ILogger<AuditService>>());
     }
 
     // Lägger in en testanvändare om den saknas, efter att migrationerna körts.

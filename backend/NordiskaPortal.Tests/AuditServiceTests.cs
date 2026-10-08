@@ -3,13 +3,14 @@ using Microsoft.EntityFrameworkCore;
 using NordiskaPortal.API.Data;
 using NordiskaPortal.API.Services;
 using Xunit;
+using Microsoft.Extensions.Configuration;
 
 namespace NordiskaPortal.Tests.Services;
 
 public class AuditServiceTests : IDisposable
 {
     private static readonly byte[] Key = Enumerable.Range(1, 32).Select(i => (byte)i).ToArray();
-
+    private readonly string _workDirectory = Path.Combine(Path.GetTempPath(), "audit-key-tests-" + Guid.NewGuid());
     private readonly ApplicationDbContext _context;
 
     public AuditServiceTests()
@@ -20,7 +21,16 @@ public class AuditServiceTests : IDisposable
         _context = new ApplicationDbContext(options);
     }
 
-    public void Dispose() => _context.Dispose();
+    public void Dispose()
+    {
+        _context.Dispose();
+        if (Directory.Exists(_workDirectory))
+        {
+            Directory.Delete(_workDirectory, recursive: true);
+        }
+    }
+
+    private string KeyFilePath => Path.Combine(_workDirectory, "audit.key");
 
     [Fact]
     public async Task AppendAsync_StoresWhoDidWhatToWhich()
@@ -141,6 +151,63 @@ public class AuditServiceTests : IDisposable
 
         result.IsValid.Should().BeFalse();
     }
+    [Fact]
+    public async Task EnsureKeyAsync_WhenEntriesExistButTheKeyIsMissing_ThrowsInsteadOfCreatingANewKey()
+    {
+        await AppendAndSaveAsync(CreateService());
+        var missingKey = AuditKey.Load(EmptyConfiguration(), KeyFilePath);
+
+        var act = () => new AuditService(_context, missingKey).EnsureKeyAsync();
+
+        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*Refusing to generate a new key*");
+        missingKey.IsAvailable.Should().BeFalse();
+        File.Exists(KeyFilePath).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task EnsureKeyAsync_WhenTheAuditLogIsEmpty_CreatesTheKeyFile()
+    {
+        var key = AuditKey.Load(EmptyConfiguration(), KeyFilePath);
+
+        await new AuditService(_context, key).EnsureKeyAsync();
+
+        key.IsAvailable.Should().BeTrue();
+        File.Exists(KeyFilePath).Should().BeTrue();
+        AuditKey.Load(EmptyConfiguration(), KeyFilePath).Bytes.Should().Equal(key.Bytes);
+    }
+
+    [Fact]
+    public async Task EnsureKeyAsync_WhenTheKeyExists_LeavesItAlone()
+    {
+        await AppendAndSaveAsync(CreateService());
+
+        var act = () => CreateService().EnsureKeyAsync();
+
+        await act.Should().NotThrowAsync();
+    }
+
+    [Fact]
+    public void Load_ReadsTheKeyFromConfiguration()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["Audit:Key"] = Convert.ToBase64String(Key) })
+            .Build();
+
+        var key = AuditKey.Load(configuration, KeyFilePath);
+
+        key.IsAvailable.Should().BeTrue();
+        key.Bytes.Should().Equal(Key);
+    }
+
+    [Fact]
+    public void Load_WhenThereIsNoKey_LeavesItUnavailable()
+    {
+        var key = AuditKey.Load(EmptyConfiguration(), KeyFilePath);
+
+        key.IsAvailable.Should().BeFalse();
+        var act = () => key.Bytes;
+        act.Should().Throw<InvalidOperationException>();
+    }
 
     [Fact]
     public void AuditKey_WhenShorterThan32Bytes_Throws()
@@ -149,6 +216,8 @@ public class AuditServiceTests : IDisposable
 
         act.Should().Throw<InvalidOperationException>();
     }
+
+    private static IConfiguration EmptyConfiguration() => new ConfigurationBuilder().Build();
 
     private AuditService CreateService() => new(_context, new AuditKey(Key));
 

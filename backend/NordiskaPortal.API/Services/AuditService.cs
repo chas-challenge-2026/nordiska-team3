@@ -20,6 +20,23 @@ public class AuditService : IAuditService
         _key = key;
     }
 
+    public async Task EnsureKeyAsync()
+    {
+        if (_key.IsAvailable)
+        {
+            return;
+        }
+
+        if (await _context.AuditEntries.AnyAsync())
+        {
+            throw new InvalidOperationException(
+                "The audit key is missing but audit entries exist. " +
+                "Restore /secrets/audit.key (or Audit:Key). Refusing to generate a new key.");
+        }
+
+        _key.GenerateNewKey();
+    }
+
     public async Task AppendAsync(Guid? userId, string action, string entityType, Guid entityId, object details)
     {
         if (_context.ChangeTracker.Entries<AuditEntry>().Any(e => e.State == EntityState.Added))
