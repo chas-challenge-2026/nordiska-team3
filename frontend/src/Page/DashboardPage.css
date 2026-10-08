@@ -258,17 +258,96 @@
   visibility: hidden;
 }
 
-.dashboard-transaction-modal__message {
+.dashboard-transaction-modal__amount-area {
+  position: relative;
+  min-height: 96px;
+}
+
+.dashboard-transaction-modal__available {
+  min-height: 16px;
+  margin: 4px 0 0;
   color: var(--color-text-secondary);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 16px;
-  min-height: 16px;
+}
+
+.dashboard-transaction-modal__available--empty {
+  visibility: hidden;
+}
+
+.dashboard-transaction-modal__message {
+  position: absolute;
+  left: 0;
+  right: auto;
+  bottom: 0;
+  z-index: 2;
+  box-sizing: border-box;
+  min-height: 0;
   margin: 0;
+}
+
+.dashboard-transaction-modal__message-bubble {
+  position: relative;
+  display: block;
+  width: fit-content;
+  max-width: min(280px, 100%);
+  padding: 9px 12px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  border-radius: 16px 4px 16px 16px;
+  background: var(--dashboard-card-bg, var(--color-text-inverted));
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 14px;
+}
+
+.dashboard-transaction-modal__message-bubble::after {
+  content: "";
+  position: absolute;
+  left: 28px;
+  top: -6px;
+  width: 12px;
+  height: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  background: inherit;
+  transform: rotate(45deg);
 }
 
 .dashboard-transaction-modal__message--empty {
   visibility: hidden;
+}
+
+.dashboard-transaction-modal__message--error {
+  color: var(--color-danger);
+}
+
+.dashboard-transaction-modal__message--success {
+  color: var(--color-success);
+}
+
+.dashboard-transaction-modal__message--error .dashboard-transaction-modal__message-bubble {
+  border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.dashboard-transaction-modal__message--success .dashboard-transaction-modal__message-bubble {
+  border-color: color-mix(in srgb, var(--color-success) 35%, transparent);
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.dashboard-transaction-modal__message--error .dashboard-transaction-modal__message-bubble::after {
+  border-top-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+  border-left-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+}
+
+.dashboard-transaction-modal__message--success .dashboard-transaction-modal__message-bubble::after {
+  border-top-color: color-mix(in srgb, var(--color-success) 35%, transparent);
+  border-left-color: color-mix(in srgb, var(--color-success) 35%, transparent);
 }
 
 .dashboard-transaction-modal__actions {
@@ -320,9 +399,19 @@
   color: var(--color-text-primary);
 }
 
-[data-theme="dark"] .dashboard-transaction-modal__message {
-  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+[data-theme="dark"] .dashboard-transaction-modal__message-bubble {
+  background: var(--dashboard-card-bg, var(--color-surface-soft));
   color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .dashboard-transaction-modal__message--error .dashboard-transaction-modal__message-bubble {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+[data-theme="dark"] .dashboard-transaction-modal__message--success .dashboard-transaction-modal__message-bubble {
+  background: var(--color-success-soft);
+  color: var(--color-success);
 }
 
 [data-theme="dark"] .dashboard-transaction-modal__actions .button--primary {
@@ -352,13 +441,45 @@
   flex-direction: column;
 }
 
+.create-account-modal__name-field {
+  position: relative;
+}
+
 .create-account-modal__message {
-  min-height: 32px;
-  margin: 6px 0 0;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 3;
+  width: fit-content;
+  max-width: min(280px, 100%);
+  min-height: 0;
+  margin: 0;
+  padding: 9px 12px;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 35%, transparent);
+  border-radius: 16px 4px 16px 16px;
+  background: var(--color-danger-soft);
+  box-shadow: var(--shadow-sm);
   color: var(--color-danger);
   font-size: 11px;
   font-weight: 700;
-  line-height: 16px;
+  line-height: 14px;
+}
+
+.create-account-modal__message::after {
+  content: "";
+  position: absolute;
+  left: 28px;
+  top: -6px;
+  width: 12px;
+  height: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--color-danger) 35%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--color-danger) 35%, transparent);
+  background: inherit;
+  transform: rotate(45deg);
+}
+
+.create-account-modal__message--empty {
+  display: none;
 }
 
 .create-account-modal__field {
@@ -914,6 +1035,9 @@
 
 .account-modal__transfer-card .dashboard-available-balance {
   margin-top: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
   font-size: 11px;
   line-height: 9px;
   min-height: 9px;

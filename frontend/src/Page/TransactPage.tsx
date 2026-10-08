@@ -111,6 +111,9 @@ function TransactPage() {
     const [error, setError] = useState('')
     const [receipt, setReceipt] = useState<OrderReceiptData | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [animatedBalances, setAnimatedBalances] = useState<Record<string, number>>({})
+    const balanceAnimationStartBalances = useRef<Record<string, number>>({})
+    const [balanceAnimationAccountIds, setBalanceAnimationAccountIds] = useState<string[]>([])
 
     const transferToAccounts = accounts.filter((acc) => acc.id !== accountId)
     const selectedAccount = accounts.find((acc) => acc.id === accountId) ?? accounts[0] ?? null
@@ -189,6 +192,96 @@ function TransactPage() {
             document.removeEventListener('pointerdown', handlePointerDown)
         }
     }, [error, receipt, isLookingUpRecipient, recipientLookupError, externalRecipient, isRecipientLookupMessageDismissed])
+
+    function startBalanceAnimations(startBalances: Record<string, number>) {
+        const accountIds = Object.keys(startBalances)
+
+        if (accountIds.length === 0) return
+
+        balanceAnimationStartBalances.current = {
+            ...balanceAnimationStartBalances.current,
+            ...startBalances,
+        }
+        setAnimatedBalances((currentBalances) => ({
+            ...currentBalances,
+            ...startBalances,
+        }))
+        setBalanceAnimationAccountIds(accountIds)
+    }
+
+    function getDisplayedBalance(account: TransactAccount) {
+        return animatedBalances[account.id] ?? account.balance
+    }
+
+    useEffect(() => {
+        if (balanceAnimationAccountIds.length === 0) return
+
+        const animationAccounts = balanceAnimationAccountIds
+            .map((accountId) => {
+                const account = accounts.find((currentAccount) => currentAccount.id === accountId)
+                const startBalance = balanceAnimationStartBalances.current[accountId]
+
+                if (!account || startBalance === undefined) return null
+
+                return {
+                    accountId,
+                    startBalance,
+                    endBalance: account.balance,
+                    difference: account.balance - startBalance,
+                }
+            })
+            .filter((account): account is {
+                accountId: string
+                startBalance: number
+                endBalance: number
+                difference: number
+            } => account !== null)
+
+        if (animationAccounts.length === 0) return
+
+        let animationFrameId = 0
+        const duration = 350
+        let startTime: number | null = null
+
+        function animate(currentTime: number) {
+            startTime ??= currentTime
+
+            const elapsedTime = currentTime - startTime
+            const progress = Math.min(elapsedTime / duration, 1)
+            const easedProgress = 1 - Math.pow(1 - progress, 3)
+
+            setAnimatedBalances((currentBalances) => {
+                const nextBalances = { ...currentBalances }
+
+                for (const account of animationAccounts) {
+                    nextBalances[account.accountId] =
+                        account.startBalance + account.difference * easedProgress
+                }
+
+                return nextBalances
+            })
+
+            if (progress < 1) {
+                animationFrameId = requestAnimationFrame(animate)
+            } else {
+                setAnimatedBalances((currentBalances) => {
+                    const nextBalances = { ...currentBalances }
+
+                    for (const account of animationAccounts) {
+                        delete nextBalances[account.accountId]
+                        delete balanceAnimationStartBalances.current[account.accountId]
+                    }
+
+                    return nextBalances
+                })
+                setBalanceAnimationAccountIds([])
+            }
+        }
+
+        animationFrameId = requestAnimationFrame(animate)
+
+        return () => cancelAnimationFrame(animationFrameId)
+    }, [accounts, balanceAnimationAccountIds])
 
     function handleModeChange(newMode: Mode) {
         if (newMode === 'transfer' && (toAccountId === accountId || !transferToAccounts.some((account) => account.id === toAccountId))) {
@@ -303,6 +396,13 @@ function TransactPage() {
             try {
                 const result = await transfer(selectedAccount.id, toAccountNumber, numericAmount)
 
+                startBalanceAnimations({
+                    [selectedAccount.id]: selectedAccount.balance,
+                    ...(result.toBalance && selectedToAccount
+                        ? { [selectedToAccount.id]: selectedToAccount.balance }
+                        : {}),
+                })
+
                 updateBalance(selectedAccount.id, result.fromBalance)
 
                 if (result.toBalance && selectedToAccount) {
@@ -360,6 +460,10 @@ function TransactPage() {
                     : await withdraw(selectedAccount.id, numericAmount)
 
             const updatedBalance = parseBackendBalance(result.balance)
+
+            startBalanceAnimations({
+                [selectedAccount.id]: selectedAccount.balance,
+            })
 
             setAccounts((currentAccounts) =>
                 currentAccounts.map((account) =>
@@ -456,7 +560,7 @@ function TransactPage() {
                                         <span>{selectedAccount.name.toUpperCase()}</span>
                                     </div>
                                     <p className={`account-preview-value account-preview-value--${selectedAccount.variant ?? 'default'}`}>
-                                        {formatKr(selectedAccount.balance)}
+                                        {formatKr(Math.round(getDisplayedBalance(selectedAccount)))}
                                     </p>
                                 </div>
                             </div>
@@ -470,7 +574,7 @@ function TransactPage() {
                                             <span>{selectedToAccount.name.toUpperCase()}</span>
                                         </div>
                                         <p className={`account-preview-value account-preview-value--${selectedToAccount.variant ?? 'default'}`}>
-                                            {formatKr(selectedToAccount.balance)}
+                                            {formatKr(Math.round(getDisplayedBalance(selectedToAccount)))}
                                         </p>
                                     </div>
                                 </div>

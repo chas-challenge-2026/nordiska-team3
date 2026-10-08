@@ -5,6 +5,7 @@ export interface HistoryTransaction {
     title: string
     accountName: string
     date: string
+    rawDate: string
     month: string
     amount: number
     type: TransactionType
