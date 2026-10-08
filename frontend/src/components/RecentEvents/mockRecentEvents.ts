@@ -4,7 +4,8 @@ export type RecentEvent = {
     accountName: string
     date: string
     amount: number
-    type: 'deposit' | 'withdrawal' | 'interest'
+    type: 'deposit' | 'withdrawal' | 'transfer' | 'interest'
+    counterparty?: string | null
 }
 
 export const mockRecentEvents: RecentEvent[] = [

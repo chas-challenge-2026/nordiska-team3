@@ -1,4 +1,4 @@
-export type DashboardAccountTransactionType = 'deposit' | 'withdrawal' | 'interest'
+export type DashboardAccountTransactionType = 'deposit' | 'withdrawal' | 'transfer' | 'interest'
 
 export type DashboardAccountTransaction = {
     id: string
@@ -7,6 +7,7 @@ export type DashboardAccountTransaction = {
     date: string
     amount: number
     type: DashboardAccountTransactionType
+    counterparty?: string | null
 }
 
 export const mockDashboardAccountTransactions: DashboardAccountTransaction[] = [

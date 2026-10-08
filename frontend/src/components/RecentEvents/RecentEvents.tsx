@@ -34,7 +34,8 @@ export function RecentEvents({ events = [], title = 'Senaste händelser' }: Rece
               <div className="recent-events__content">
                 <h3>{event.title}</h3>
                 <p>
-                  {event.accountName} - {event.date}
+                  {event.accountName}
+                  {event.counterparty && ` - ${event.counterparty}`} - {event.date}
                 </p>
               </div>
 
@@ -45,9 +46,9 @@ export function RecentEvents({ events = [], title = 'Senaste händelser' }: Rece
                   {formatAmount(event.amount)}
                 </strong>
                 <span
-                  className={`recent-events__badge recent-events__badge--${event.type}`}
+                  className={`recent-events__badge recent-events__badge--${getEventBadgeType(event)}`}
                 >
-                  {getEventLabel(event.type)}
+                  {getEventLabel(getEventBadgeType(event))}
                 </span>
               </div>
             </article>
@@ -75,5 +76,17 @@ function getEventLabel(type: RecentEvent['type']) {
     return 'Uttag'
   }
 
+  if (type === 'transfer') {
+    return 'Överföring'
+  }
+
   return 'Ränta'
+}
+
+function getEventBadgeType(event: RecentEvent): RecentEvent['type'] {
+  if (event.type === 'transfer') {
+    return event.amount < 0 ? 'withdrawal' : 'deposit'
+  }
+
+  return event.type
 }
