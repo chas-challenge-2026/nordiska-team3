@@ -6,6 +6,7 @@ using NordiskaPortal.API.DTOs.ErrorResponse;
 using NordiskaPortal.API.Extensions;
 using NordiskaPortal.API.Filters;
 using NordiskaPortal.API.HealthChecks;
+using NordiskaPortal.API.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,6 +51,8 @@ var app = builder.Build();
 app.UseForwardedHeaders();
 
 app.UseSecurityHeaders();
+
+app.UseMiddleware<CorrelationIdMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
