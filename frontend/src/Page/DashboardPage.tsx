@@ -745,29 +745,46 @@ function DashboardPage() {
                                     </select>
                                 </label>
 
-                                <Input
-                                    label="Belopp"
-                                    type="amount"
-                                    placeholder="0"
-                                    value={dashboardTransactionAmount}
-                                    onChange={(e) => {
-                                        setDashboardTransactionAmount(e.target.value)
-                                        setDashboardTransactionMessage('')
-                                        setDashboardReceipt(null)
-                                    }}
-                                />
-                                <p
-                                    className={`dashboard-transaction-modal__message ${
-                                        dashboardTransactionType === 'deposit' && !dashboardTransactionMessage && !dashboardReceipt
-                                            ? 'dashboard-transaction-modal__message--empty'
-                                            : ''
-                                    }`}
-                                    role={dashboardTransactionMessage ? 'alert' : dashboardReceipt ? 'status' : undefined}
-                                >
-                                    {dashboardTransactionMessage ||
-                                        (dashboardReceipt && <OrderReceipt receipt={dashboardReceipt} />) ||
-                                        `Tillgängligt: ${dashboardTransactionAccount.value}`}
-                                </p>
+                                <div className="dashboard-transaction-modal__amount-area">
+                                    <Input
+                                        label="Belopp"
+                                        type="amount"
+                                        placeholder="0"
+                                        value={dashboardTransactionAmount}
+                                        onChange={(e) => {
+                                            setDashboardTransactionAmount(e.target.value)
+                                            setDashboardTransactionMessage('')
+                                            setDashboardReceipt(null)
+                                        }}
+                                    />
+                                    <p
+                                        className={`dashboard-transaction-modal__available ${
+                                            dashboardTransactionType === 'deposit'
+                                                ? 'dashboard-transaction-modal__available--empty'
+                                                : ''
+                                        }`}
+                                    >
+                                        Tillgängligt: {dashboardTransactionAccount.value}
+                                    </p>
+                                    <p
+                                        className={`dashboard-transaction-modal__message ${
+                                            !dashboardTransactionMessage && !dashboardReceipt
+                                                ? 'dashboard-transaction-modal__message--empty'
+                                                : ''
+                                        } ${
+                                            dashboardTransactionMessage
+                                                ? 'dashboard-transaction-modal__message--error'
+                                                : dashboardReceipt
+                                                    ? 'dashboard-transaction-modal__message--success'
+                                                    : ''
+                                        }`}
+                                        role={dashboardTransactionMessage ? 'alert' : dashboardReceipt ? 'status' : undefined}
+                                    >
+                                        <span className="dashboard-transaction-modal__message-bubble">
+                                            {dashboardTransactionMessage || (dashboardReceipt && <OrderReceipt receipt={dashboardReceipt} />)}
+                                        </span>
+                                    </p>
+                                </div>
 
                                 <div className="dashboard-transaction-modal__actions">
                                     <Button type="button" variant="secondary" onClick={closeDashboardTransactionModal}>
