@@ -2,6 +2,7 @@ find_package(OpenSSL REQUIRED COMPONENTS Crypto)
 add_executable(pdf_signer 
             src/main.c
             src/sha256.c
+            src/signature.c
 )
 
 set_target_properties(pdf_signer PROPERTIES
