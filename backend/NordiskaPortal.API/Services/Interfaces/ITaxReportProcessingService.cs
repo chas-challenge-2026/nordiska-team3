@@ -7,5 +7,6 @@ namespace NordiskaPortal.API.Services.Interfaces
         Task<TaxReport> QueueReportAsync(Guid userId, int reportYear); //Split in two so to never block the request when creating report.
         Task ProcessReportAsync(Guid reportId);
         Task<TaxReport?> GetStatusAsync(Guid userId, Guid reportId);
+        Task<IReadOnlyList<TaxReport>> GetReportsForUserAsync(Guid userId);
     }
 }

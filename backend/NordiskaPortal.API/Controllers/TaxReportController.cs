@@ -30,6 +30,28 @@ namespace NordiskaPortal.API.Controllers
             return Ok(new { report.Id, report.Status });
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetTaxReports()
+        {
+            var reports = await _taxReportProcessingService.GetReportsForUserAsync(CurrentUserId);
+
+            return Ok(new
+            {
+                Reports = reports.Select(r => new
+                {
+                    r.Id,
+                    r.ReportYear,
+                    r.Status,
+                    r.CreatedAt,
+                    r.CompletedAt,
+                    r.ErrorMessage,
+                    Signed = r.SignaturePath is not null,
+                    // The PDF lives on the container disk, so a READY report can still lack its file.
+                    PdfAvailable = r.Status == "READY" && r.PdfPath is not null && System.IO.File.Exists(r.PdfPath)
+                })
+            });
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetTaxReportStatus(Guid id)
         {
@@ -65,7 +87,5 @@ namespace NordiskaPortal.API.Controllers
         }
 
         private Guid CurrentUserId => Guid.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub)!);
-
-
     }
 }

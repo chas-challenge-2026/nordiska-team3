@@ -108,6 +108,15 @@ namespace NordiskaPortal.API.Services
                 .FirstOrDefaultAsync(r => r.Id == reportId && r.UserId == userId);
         }
 
+        public async Task<IReadOnlyList<TaxReport>> GetReportsForUserAsync(Guid userId)
+        {
+            return await _context.TaxReports
+                .Where(r => r.UserId == userId)
+                .OrderByDescending(r => r.ReportYear)
+                .ThenByDescending(r => r.CreatedAt)
+                .ToListAsync();
+        }
+
         // Runs the native PDF generator on the input JSON. The signer is not wired in yet,
         // so a successful report is READY but unsigned (SignaturePath stays null).
         private async Task GeneratePdfAsync(TaxReport report, string jsonPath, string pdfPath)

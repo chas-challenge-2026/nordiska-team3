@@ -151,6 +151,21 @@ public class TaxReportProcessingServiceTests : IDisposable
         report.ErrorMessage.Should().Be("The report could not be generated.");
     }
 
+    [Fact]
+    public async Task GetReportsForUserAsync_ReturnsOnlyTheCustomersReportsNewestYearFirst()
+    {
+        var customerId = Guid.NewGuid();
+        _context.TaxReports.AddRange(
+            new TaxReport { UserId = customerId, ReportYear = 2024 },
+            new TaxReport { UserId = Guid.NewGuid(), ReportYear = 2025 },
+            new TaxReport { UserId = customerId, ReportYear = 2026 });
+        await _context.SaveChangesAsync();
+
+        var reports = await CreateService().GetReportsForUserAsync(customerId);
+
+        reports.Select(r => r.ReportYear).Should().Equal(2026, 2024);
+    }
+
     private TaxReportProcessingService CreateService(string? generatorPath = null)
     {
         var configuration = new ConfigurationBuilder()
