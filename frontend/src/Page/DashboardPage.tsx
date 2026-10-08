@@ -1,5 +1,5 @@
 import { type DashboardAccountTransaction } from '../components/DashboardActions/mockDashboardAccountTransactions'
-import { useState } from 'react'
+import { type PointerEvent, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { UserProfile } from '../components/UserProfile'
 import { useModalFromLink } from '../hooks/useModalFromLink'
@@ -150,6 +150,7 @@ function DashboardPage() {
     const handleLogout = useLogout()
     const { toggleTheme } = useTheme()
     const queryClient = useQueryClient()
+    const createAccountNameFieldRef = useRef<HTMLDivElement | null>(null)
 
     const { data: accountTransactionGroups, isLoading: isLoadingAccounts, isError: accountsError } = useAccountsWithTransactions()
 
@@ -221,6 +222,18 @@ function DashboardPage() {
             }
         })
         .slice(0, 5)
+
+    function handleCreateAccountModalPointerDown(event: PointerEvent<HTMLDivElement>) {
+        if (!createAccountError) return
+
+        const target = event.target
+
+        if (target instanceof Node && createAccountNameFieldRef.current?.contains(target)) {
+            return
+        }
+
+        setCreateAccountError('')
+    }
 
     function handleAccountClick(accountId: string) {
         setSelectedAccountId(accountId)
@@ -488,8 +501,6 @@ function DashboardPage() {
                         />
                     )}
 
-                    <NextEvent event={nextEvent} />
-
                     <button
                         type="button"
                         className="create-account-btn"
@@ -498,6 +509,8 @@ function DashboardPage() {
                         <Plus size={16} />
                         Skapa nytt sparkonto
                     </button>
+
+                    <NextEvent event={nextEvent} />
 
                     <Modal
                         isOpen={isCreateModalOpen || createAccountLink.isRequested}
@@ -508,21 +521,28 @@ function DashboardPage() {
                         }}
                         title="Skapa nytt sparkonto"
                     >
-                        <div className="create-account-modal">
-                            <Input
-                                label="Kontonamn"
-                                type="text"
-                                placeholder="T.ex. Resekassa"
-                                value={newAccountName}
-                                onChange={(e) => {
-                                    setNewAccountName(e.target.value)
-                                    setCreateAccountError('')
-                                }}
-                            />
+                        <div className="create-account-modal" onPointerDown={handleCreateAccountModalPointerDown}>
+                            <div className="create-account-modal__name-field" ref={createAccountNameFieldRef}>
+                                <Input
+                                    label="Kontonamn"
+                                    type="text"
+                                    placeholder="T.ex. Resekassa"
+                                    value={newAccountName}
+                                    onChange={(e) => {
+                                        setNewAccountName(e.target.value)
+                                        setCreateAccountError('')
+                                    }}
+                                />
 
-                            <p className="create-account-modal__message" role={createAccountError ? 'alert' : undefined}>
-                                {createAccountError}
-                            </p>
+                                <p
+                                    className={`create-account-modal__message ${
+                                        createAccountError ? '' : 'create-account-modal__message--empty'
+                                    }`}
+                                    role={createAccountError ? 'alert' : undefined}
+                                >
+                                    {createAccountError}
+                                </p>
+                            </div>
 
                             <div className="create-account-modal__field">
                                 <p>Ikon</p>
