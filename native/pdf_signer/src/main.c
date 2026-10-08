@@ -23,6 +23,7 @@
 */ 
 #include "nordiska/error_codes.h"
 #include "pdf_signer/sha256.h"
+#include "pdf_signer/signature.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -50,60 +51,73 @@ static int invalid_input(const char* message)
     return NORDISKA_EXIT_INVALID_INPUT;
 }
 
-int main(int argc, char* argv[]) //argv used later to call real data, I suppose.
+int main(int argc, char* argv[])
 {
-    
-     const int expectedArgumentCount = 5;
+    const int expectedArgumentCount = 5; // program name + sign/verify + input PDF + key PEM + signature file
 
     if (argc != expectedArgumentCount)
     {
         return invalid_input(
-            "expected an operation and three file arguments"
+            "expected an operation (sign/verify) and three file arguments"
         );
     }
 
     const char* operation = argv[1];
 
-    if (strcmp(operation, "sign") == 0 ||
-        strcmp(operation, "verify") == 0)
+    if (strcmp(operation, "sign") != 0 &&
+        strcmp(operation, "verify") != 0)
     {
-        unsigned char pdfDigest[NORDISKA_SHA256_SIZE];
+        return invalid_input(
+            "operation must be 'sign' or 'verify'"
+        );
+    }
+    unsigned char pdfDigest[NORDISKA_SHA256_SIZE];
 
-        int hashResult =
-            nordiska_calculate_pdf_sha256(argv[2], pdfDigest);
+    NordiskaExitCode hashResult =
+        nordiska_calculate_pdf_sha256(argv[2], pdfDigest);
 
-        if (hashResult != NORDISKA_EXIT_SUCCESS)
-        {
-            return hashResult;
+    if (hashResult != NORDISKA_EXIT_SUCCESS)
+    {
+        return hashResult;
+    }
+
+    if (strcmp(operation, "sign") == 0)
+    {
+        NordiskaExitCode signResult =
+            nordiska_sign_sha256_digest(
+                pdfDigest,
+                argv[3],
+                argv[4]
+            );
+
+            if (signResult != NORDISKA_EXIT_SUCCESS)
+            {
+                return signResult;
+            }
+
+            printf(
+                "SUCCESS: pdf_signer sign command accepted\n"
+            );
+
+            return NORDISKA_EXIT_SUCCESS;
         }
-        char pdfHashHex[NORDISKA_SHA256_HEX_SIZE];
-        nordiska_sha256_to_hex(pdfDigest, pdfHashHex);
-    }
 
+     NordiskaExitCode verifyResult =
+            nordiska_verify_sha256_digest(
+                pdfDigest,
+                argv[3],
+                argv[4]
+            );
 
-    if (strcmp(operation, "sign") == 0) // Checks if the operation is 'sign' returns 0(SUCCESS)
-    {
-        printf("Operation: sign\n");
-        printf("Input PDF: %s\n", argv[2]);
-        printf("Private Key: %s\n", argv[3]);
-        printf("Output Signature: %s\n", argv[4]);
+        if (verifyResult != NORDISKA_EXIT_SUCCESS)
+        {
+            return verifyResult;
+        }
 
-        return NORDISKA_EXIT_SUCCESS;
-    }
-
-    if (strcmp(operation, "verify") == 0) // checks if the operation is 'verify' returns 0(SUCCESSb)
-    {
-        printf("Operation: verify\n");
-        printf("Input PDF: %s\n", argv[2]);
-        printf("Public Key: %s\n", argv[3]);
-        printf("Signature: %s\n", argv[4]);
+        printf(
+            "SUCCESS: pdf_signer verify command accepted\n"
+        );
 
         return NORDISKA_EXIT_SUCCESS;
-    }
 
-    return invalid_input(
-        "operation must be sign or verify"
-    );
-
-    
 }
