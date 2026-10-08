@@ -1,7 +1,21 @@
+using System.Text.Json.Serialization;
+
 namespace NordiskaPortal.API.DTOs.Accounts;
 
 // Konto i listan från GET /api/accounts. string balance för att undvika flyttalsavrundning utifrån native-kontrakt.
-public sealed record AccountDto(Guid Id, string AccountNumber, string AccountType, string Name, string Status, string Balance);
+// Räntefälten fylls bara i av GET /api/accounts (InterestService). Saknas de utelämnas de helt i svaret
+// (frontend läser dem som undefined, inte som null).
+public sealed record AccountDto(
+    Guid Id,
+    string AccountNumber,
+    string AccountType,
+    string Name,
+    string Status,
+    string Balance,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? InterestRate = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? InterestType = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? NextInterestPayoutDate = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? AccruedInterest = null);
 
 // Svar från Get /Api/Accounts
 public sealed record AccountsResponseDto(IReadOnlyList<AccountDto> Accounts);

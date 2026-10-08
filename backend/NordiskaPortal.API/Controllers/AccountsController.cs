@@ -17,10 +17,12 @@ namespace NordiskaPortal.API.Controllers;
 public class  AccountsController : ControllerBase
 {
     private readonly IAccountService _accountService;
+    private readonly IInterestService _interestService;
 
-    public AccountsController(IAccountService accountService)
+    public AccountsController(IAccountService accountService, IInterestService interestService)
     {
         _accountService = accountService;
+        _interestService = interestService;
     }
 
     // POST /api/accounts
@@ -39,7 +41,7 @@ public class  AccountsController : ControllerBase
     public async Task<IActionResult> GetAccounts()
     {
         var accounts = await _accountService.GetAccountsForUserAsync(CurrentUserId);
-        return Ok(accounts);
+        return Ok(await _interestService.AddInterestAsync(accounts));
     }
 
     [HttpGet("{accountId}/balance")]
