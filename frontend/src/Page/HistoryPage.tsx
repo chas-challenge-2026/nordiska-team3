@@ -14,6 +14,7 @@ import { useTheme } from '../context/useTheme'
 
 type HistoryFilter = 'all' | 'deposit' | 'withdrawal' | 'transfer' | 'interest'
 type AccountFilter = 'all' | string
+type PeriodFilter = 'last30days' | 'thisYear' | 'all'
 
 const historyFilters: { value: HistoryFilter; label: string }[] = [
     { value: 'all', label: 'Alla' },
@@ -21,6 +22,12 @@ const historyFilters: { value: HistoryFilter; label: string }[] = [
     { value: 'withdrawal', label: 'Uttag' },
     { value: 'transfer', label: 'Överföringar' },
     { value: 'interest', label: 'Ränta' },
+]
+
+const periodFilters: { value: PeriodFilter; label: string }[] = [
+    { value: 'last30days', label: 'Senaste 30 dagarna' },
+    { value: 'thisYear', label: 'I år' },
+    { value: 'all', label: 'Allt' },
 ]
 
 function formatTransactionAmount(amount: number) {
@@ -163,6 +170,7 @@ function mapBackendTransactionToHistoryTransaction(
         accountName: account.name,
         counterparty: transaction.counterparty,
         date: `${formatTransactionDate(date)} · ${formatTransactionTime(date)}`,
+        rawDate: date,
         month: formatTransactionMonth(date),
         status: mapBackendTransactionStatus(transaction.status),
         amount,
@@ -175,6 +183,7 @@ function HistoryPage() {
     const { toggleTheme } = useTheme()
     const [searchParams, setSearchParams] = useSearchParams()
     const [activeFilter, setActiveFilter] = useState<HistoryFilter>('all')
+    const [activePeriodFilter, setActivePeriodFilter] = useState<PeriodFilter>('all')
     const [currentPage, setCurrentPage] = useState(1)
     const pageSize = 20
     const accountParam = searchParams.get('konto')?.trim()
@@ -228,8 +237,19 @@ function HistoryPage() {
 
     const visibleTransactions = transactions.filter((transaction) => {
         const matchesType = activeFilter === 'all' || transaction.type === activeFilter
+        const transactionDate = new Date(transaction.rawDate)
+        const now = new Date()
+        const thirtyDaysAgo = new Date(now)
 
-        return matchesType
+        thirtyDaysAgo.setDate(now.getDate() - 30)
+
+        // Periodfiltret gäller bara den redan hämtade sidan, eftersom backend paginerar per konto.
+        const matchesPeriod =
+            activePeriodFilter === 'all' ||
+            (activePeriodFilter === 'last30days' && transactionDate >= thirtyDaysAgo) ||
+            (activePeriodFilter === 'thisYear' && transactionDate.getFullYear() === now.getFullYear())
+
+        return matchesType && matchesPeriod
     })
 
     function handleAccountChange(accountName: AccountFilter) {
@@ -247,6 +267,11 @@ function HistoryPage() {
 
     function handleTypeChange(filter: HistoryFilter) {
         setActiveFilter(filter)
+        setCurrentPage(1)
+    }
+
+    function handlePeriodChange(filter: PeriodFilter) {
+        setActivePeriodFilter(filter)
         setCurrentPage(1)
     }
 
@@ -303,7 +328,7 @@ function HistoryPage() {
                     <div className="history-controls">
                         <div className="history-controls-desktop">
                             <label
-                                className={`history-select-filter ${
+                                className={`history-select-filter history-select-filter--account ${
                                     activeAccount !== 'all' ? 'history-select-filter--active' : ''
                                 }`}
                             >
@@ -323,7 +348,7 @@ function HistoryPage() {
                             </label>
 
                             <label
-                                className={`history-select-filter ${
+                                className={`history-select-filter history-select-filter--type ${
                                     activeFilter !== 'all' ? 'history-select-filter--active' : ''
                                 }`}
                             >
@@ -341,13 +366,32 @@ function HistoryPage() {
                                                 {filter.label}
                                             </option>
                                         ))}
+                                </select>
+                            </label>
+
+                            <label
+                                className={`history-select-filter history-select-filter--period ${
+                                    activePeriodFilter !== 'all' ? 'history-select-filter--active' : ''
+                                }`}
+                            >
+                                <span>Period</span>
+                                <select
+                                    aria-label="Välj period"
+                                    value={activePeriodFilter}
+                                    onChange={(event) => handlePeriodChange(event.target.value as PeriodFilter)}
+                                >
+                                    {periodFilters.map((filter) => (
+                                        <option value={filter.value} key={filter.value}>
+                                            {filter.label}
+                                        </option>
+                                    ))}
                                 </select>
                             </label>
                         </div>
 
                         <div className="history-controls-mobile">
                             <label
-                                className={`history-select-filter ${
+                                className={`history-select-filter history-select-filter--account ${
                                     activeAccount !== 'all' ? 'history-select-filter--active' : ''
                                 }`}
                             >
@@ -367,7 +411,7 @@ function HistoryPage() {
                             </label>
 
                             <label
-                                className={`history-select-filter ${
+                                className={`history-select-filter history-select-filter--type ${
                                     activeFilter !== 'all' ? 'history-select-filter--active' : ''
                                 }`}
                             >
@@ -385,6 +429,25 @@ function HistoryPage() {
                                                 {filter.label}
                                             </option>
                                         ))}
+                                </select>
+                            </label>
+
+                            <label
+                                className={`history-select-filter history-select-filter--period ${
+                                    activePeriodFilter !== 'all' ? 'history-select-filter--active' : ''
+                                }`}
+                            >
+                                <span>Period</span>
+                                <select
+                                    aria-label="Välj period"
+                                    value={activePeriodFilter}
+                                    onChange={(event) => handlePeriodChange(event.target.value as PeriodFilter)}
+                                >
+                                    {periodFilters.map((filter) => (
+                                        <option value={filter.value} key={filter.value}>
+                                            {filter.label}
+                                        </option>
+                                    ))}
                                 </select>
                             </label>
                         </div>
