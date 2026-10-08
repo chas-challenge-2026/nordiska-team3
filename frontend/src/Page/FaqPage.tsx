@@ -4,6 +4,7 @@ import { AppNav } from '../components/AppNav'
 import { DecorativeCircle } from '../components/DecorativeCircle'
 import { UserProfile } from '../components/UserProfile'
 import { CustomerServiceFooter } from '../components/CustomerServiceFooter'
+import { FaqAnswer } from '../components/FaqAnswer'
 import { useTheme } from '../context/useTheme'
 import { useLogout } from '../hooks/useLogout'
 import { useFaqEntries, useFaqSearch } from '../hooks/useFaq'
@@ -123,7 +124,7 @@ function FaqPage() {
                                         aria-labelledby={`faq-question-${item.id}`}
                                         hidden={openQuestionId !== item.id}
                                     >
-                                        <p>{item.answer}</p>
+                                        <FaqAnswer answer={item.answer} />
                                     </div>
                                 </article>
                             ))}
@@ -138,7 +139,7 @@ function FaqPage() {
                             <article className="faq-accordion">
                                 <h2 className="faq-item faq-item--static">{bestMatch.question}</h2>
                                 <div className="faq-answer">
-                                    <p>{bestMatch.answer}</p>
+                                    <FaqAnswer answer={bestMatch.answer ?? ''} />
                                 </div>
                             </article>
                         </div>

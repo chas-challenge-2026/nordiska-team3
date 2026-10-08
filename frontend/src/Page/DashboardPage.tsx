@@ -2,6 +2,7 @@ import { type DashboardAccountTransaction } from '../components/DashboardActions
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { UserProfile } from '../components/UserProfile'
+import { useModalFromLink } from '../hooks/useModalFromLink'
 import './DashboardPage.css'
 import { AppNav } from '../components/AppNav'
 import {
@@ -162,6 +163,8 @@ function DashboardPage() {
 
     const [createAccountError, setCreateAccountError] = useState('')
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+    // FAQ-svaret "Skapa nytt sparkonto" länkar hit och öppnar modalen direkt
+    const createAccountLink = useModalFromLink('createAccount')
     const [newAccountName, setNewAccountName] = useState('')
     const [newAccountIconId, setNewAccountIconId] = useState<CreateAccountIconId>('piggyBank')
     const [newAccountVariant, setNewAccountVariant] = useState<CreateAccountVariant>('default')
@@ -303,6 +306,7 @@ function DashboardPage() {
             setNewAccountVariant('default')
             setCreateAccountError('')
             setIsCreateModalOpen(false)
+            createAccountLink.clearRequest()
         } catch (error) {
             setCreateAccountError(error instanceof Error ? error.message : 'Kunde inte skapa konto.')
         }
@@ -496,9 +500,10 @@ function DashboardPage() {
                     </button>
 
                     <Modal
-                        isOpen={isCreateModalOpen}
+                        isOpen={isCreateModalOpen || createAccountLink.isRequested}
                         onClose={() => {
                             setIsCreateModalOpen(false)
+                            createAccountLink.clearRequest()
                             setCreateAccountError('')
                         }}
                         title="Skapa nytt sparkonto"

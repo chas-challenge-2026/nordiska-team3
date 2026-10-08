@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import { getStoredUser } from '../services/authService'
+import { useModalFromLink } from '../hooks/useModalFromLink'
 import { ProfileSettingsModal } from './ProfileSettingsModal'
 import './UserProfile.css'
 
 export function UserProfile() {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  // FAQ-svaret "Profil och inställningar" öppnar modalen via en länk
+  const profileSettingsLink = useModalFromLink('profileSettings')
 
   const currentUser = getStoredUser() ?? {
     name: 'Emma Lindström',
@@ -27,8 +30,11 @@ export function UserProfile() {
       </button>
 
       <ProfileSettingsModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isModalOpen || profileSettingsLink.isRequested}
+        onClose={() => {
+          setIsModalOpen(false)
+          profileSettingsLink.clearRequest()
+        }}
         user={currentUser}
       />
     </>
