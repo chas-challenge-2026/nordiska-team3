@@ -96,6 +96,10 @@ function mapBackendTransactionType(transactionType: string): DashboardAccountTra
         return 'withdrawal'
     }
 
+    if (transactionType === 'TRANSFER_OUT' || transactionType === 'TRANSFER_IN') {
+        return 'transfer'
+    }
+
     return 'interest'
 }
 
@@ -113,16 +117,26 @@ function mapBackendTransactionToDashboardTransaction(
 ): DashboardAccountTransaction {
     const type = mapBackendTransactionType(transaction.transactionType)
     const rawAmount = parseBackendBalance(transaction.amount)
-    const amount = type === 'withdrawal' ? -Math.abs(rawAmount) : rawAmount
+    const amount =
+        type === 'withdrawal' || transaction.transactionType === 'TRANSFER_OUT'
+            ? -Math.abs(rawAmount)
+            : Math.abs(rawAmount)
     const date = transaction.completedAt ?? transaction.createdAt
 
     return {
         id: transaction.id,
         accountId,
-        title: type === 'deposit' ? 'Insättning' : type === 'withdrawal' ? 'Uttag' : 'Ränta',
+        title: type === 'deposit'
+            ? 'Insättning'
+            : type === 'withdrawal'
+                ? 'Uttag'
+                : type === 'transfer'
+                    ? 'Överföring'
+                    : 'Ränta',
         date: formatDashboardTransactionDate(date),
         amount,
         type,
+        counterparty: transaction.counterparty,
     }
 }
 
@@ -182,6 +196,7 @@ function DashboardPage() {
         date: transaction.date,
         amount: transaction.amount,
         type: transaction.type,
+        counterparty: transaction.counterparty,
     }))
     const selectedAccountRecentEvents = selectedAccountEvents.slice(0, 5)
     const selectedAccountHistoryUrl = selectedBackendAccountName
@@ -199,6 +214,7 @@ function DashboardPage() {
                 date: transaction.date,
                 amount: transaction.amount,
                 type: transaction.type,
+                counterparty: transaction.counterparty,
             }
         })
         .slice(0, 5)

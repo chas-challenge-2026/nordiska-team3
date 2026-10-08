@@ -1,17 +1,24 @@
 import { z } from 'zod'
-import { type FormEvent, useEffect, useState } from 'react'
+import { type FormEvent, useEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { UserProfile } from '../components/UserProfile'
 import { useLogout } from '../hooks/useLogout'
 import './TransactPage.css'
 import { AppNav } from '../components/AppNav'
 import { DecorativeCircle } from '../components/DecorativeCircle'
-import { type TransactAccount } from './mockTransactAccounts'
-import { deposit, getAccounts, withdraw, type BackendAccount } from '../services/accountService'
+import { type TransactAccount } from '../types/transactAccount'
+import {
+    deposit,
+    getAccounts,
+    lookupAccount,
+    transfer,
+    withdraw,
+    type BackendAccount,
+    type RecipientLookup,
+} from '../services/accountService'
 import { ChevronDown } from 'lucide-react'
 import { useTheme } from '../context/useTheme'
 import { CustomerServiceFooter } from '../components/CustomerServiceFooter'
-import { customerServiceContact } from '../content/customerServiceContact'
 import { OrderReceipt, type OrderReceiptData } from '../components/OrderReceipt/OrderReceipt'
 import {
     getAccountIcon,
@@ -23,12 +30,39 @@ import { amountSchema, transactSchema } from '../schemas/transactionSchema'
 const transferSchema = z
     .object({
         accountId: z.string().trim().min(1, 'Välj ett konto att flytta från.'),
-        toAccountId: z.string().trim().min(1, 'Välj ett konto att flytta till.'),
+        toAccountId: z.string().trim(),
+        externalAccountNumber: z.string().trim(),
+        recipientType: z.enum(['own', 'external']),
         amount: amountSchema,
     })
-    .refine((data) => data.accountId !== data.toAccountId, {
-        message: 'Från- och till-konto måste vara olika.',
-        path: ['toAccountId'],
+    .superRefine((data, context) => {
+        if (data.recipientType === 'own') {
+            if (!data.toAccountId) {
+                context.addIssue({
+                    code: 'custom',
+                    message: 'Välj ett konto att flytta till.',
+                    path: ['toAccountId'],
+                })
+            }
+
+            if (data.accountId === data.toAccountId) {
+                context.addIssue({
+                    code: 'custom',
+                    message: 'Från- och till-konto måste vara olika.',
+                    path: ['toAccountId'],
+                })
+            }
+
+            return
+        }
+
+        if (!data.externalAccountNumber) {
+            context.addIssue({
+                code: 'custom',
+                message: 'Ange mottagarens kontonummer.',
+                path: ['externalAccountNumber'],
+            })
+        }
     })
 
 type Mode = 'deposit' | 'withdraw' | 'transfer'
@@ -47,6 +81,7 @@ function mapBackendAccountToTransactAccount(
 ): TransactAccount {
     return {
         id: account.id,
+        accountNumber: account.accountNumber,
         name: account.name,
         balance: parseBackendBalance(account.balance),
         icon: getAccountIcon(presentation.iconId),
@@ -58,11 +93,18 @@ function TransactPage() {
     const handleLogout = useLogout()
     const { toggleTheme } = useTheme()
     const queryClient = useQueryClient()
+    const formRef = useRef<HTMLFormElement | null>(null)
 
     const [mode, setMode] = useState<Mode>('deposit')
     const [accounts, setAccounts] = useState<TransactAccount[]>([])
     const [accountId, setAccountId] = useState('')
     const [toAccountId, setToAccountId] = useState('')
+    const [transferRecipientType, setTransferRecipientType] = useState<'own' | 'external'>('own')
+    const [externalAccountNumber, setExternalAccountNumber] = useState('')
+    const [externalRecipient, setExternalRecipient] = useState<RecipientLookup | null>(null)
+    const [isLookingUpRecipient, setIsLookingUpRecipient] = useState(false)
+    const [recipientLookupError, setRecipientLookupError] = useState('')
+    const [isRecipientLookupMessageDismissed, setIsRecipientLookupMessageDismissed] = useState(false)
     const [isLoadingAccounts, setIsLoadingAccounts] = useState(true)
     const [accountsError, setAccountsError] = useState('')
     const [amount, setAmount] = useState('')
@@ -73,6 +115,13 @@ function TransactPage() {
     const transferToAccounts = accounts.filter((acc) => acc.id !== accountId)
     const selectedAccount = accounts.find((acc) => acc.id === accountId) ?? accounts[0] ?? null
     const selectedToAccount = transferToAccounts.find((acc) => acc.id === toAccountId) ?? null
+
+    function resetExternalRecipient() {
+        setExternalRecipient(null)
+        setRecipientLookupError('')
+        setIsRecipientLookupMessageDismissed(false)
+        setIsLookingUpRecipient(false)
+    }
 
     useEffect(() => {
         let isMounted = true
@@ -111,6 +160,36 @@ function TransactPage() {
         }
     }, [])
 
+    useEffect(() => {
+        const hasVisibleMessage =
+            Boolean(error) ||
+            Boolean(receipt) ||
+            isLookingUpRecipient ||
+            Boolean(recipientLookupError && !isRecipientLookupMessageDismissed) ||
+            Boolean(externalRecipient && !isRecipientLookupMessageDismissed)
+
+        if (!hasVisibleMessage) return
+
+        function handlePointerDown(event: PointerEvent) {
+            const target = event.target
+
+            if (target instanceof Node && formRef.current?.contains(target)) {
+                return
+            }
+
+            setError('')
+            setReceipt(null)
+            setRecipientLookupError('')
+            setIsRecipientLookupMessageDismissed(true)
+        }
+
+        document.addEventListener('pointerdown', handlePointerDown)
+
+        return () => {
+            document.removeEventListener('pointerdown', handlePointerDown)
+        }
+    }, [error, receipt, isLookingUpRecipient, recipientLookupError, externalRecipient, isRecipientLookupMessageDismissed])
+
     function handleModeChange(newMode: Mode) {
         if (newMode === 'transfer' && (toAccountId === accountId || !transferToAccounts.some((account) => account.id === toAccountId))) {
             setToAccountId(transferToAccounts[0]?.id ?? '')
@@ -119,15 +198,44 @@ function TransactPage() {
         setMode(newMode)
         setError('')
         setReceipt(null)
+        resetExternalRecipient()
     }
 
     function handleFromAccountChange(nextAccountId: string) {
         const nextToAccounts = accounts.filter((account) => account.id !== nextAccountId)
 
         setAccountId(nextAccountId)
+        setError('')
+        setReceipt(null)
+        resetExternalRecipient()
 
         if (toAccountId === nextAccountId || !nextToAccounts.some((account) => account.id === toAccountId)) {
             setToAccountId(nextToAccounts[0]?.id ?? '')
+        }
+    }
+
+    async function handleExternalAccountLookup() {
+        const trimmedAccountNumber = externalAccountNumber.trim()
+
+        if (!trimmedAccountNumber) {
+            resetExternalRecipient()
+            return
+        }
+
+        try {
+            setIsLookingUpRecipient(true)
+            setRecipientLookupError('')
+            setIsRecipientLookupMessageDismissed(false)
+
+            const recipient = await lookupAccount(trimmedAccountNumber)
+            setExternalRecipient(recipient)
+            setExternalAccountNumber(recipient.accountNumber)
+        } catch {
+            setExternalRecipient(null)
+            setRecipientLookupError('Kontot kunde inte hittas.')
+            setIsRecipientLookupMessageDismissed(false)
+        } finally {
+            setIsLookingUpRecipient(false)
         }
     }
 
@@ -139,6 +247,8 @@ function TransactPage() {
             const validation = transferSchema.safeParse({
                 accountId,
                 toAccountId,
+                externalAccountNumber,
+                recipientType: transferRecipientType,
                 amount,
             })
 
@@ -147,8 +257,18 @@ function TransactPage() {
                 return
             }
 
-            if (!selectedAccount || !selectedToAccount) {
+            if (!selectedAccount) {
                 setError('Inget konto är valt.')
+                return
+            }
+
+            if (transferRecipientType === 'own' && !selectedToAccount) {
+                setError('Välj ett konto att flytta till.')
+                return
+            }
+
+            if (transferRecipientType === 'external' && !externalRecipient) {
+                setError('Kontrollera mottagarens kontonummer innan du flyttar pengar.')
                 return
             }
 
@@ -159,12 +279,19 @@ function TransactPage() {
                 return
             }
 
+            const toAccountNumber =
+                transferRecipientType === 'own'
+                    ? selectedToAccount!.accountNumber
+                    : validation.data.externalAccountNumber
+
+            const toAccountName =
+                transferRecipientType === 'own'
+                    ? selectedToAccount!.name
+                    : externalRecipient!.ownerName
+
             setError('')
             setIsSubmitting(true)
 
-            // Backend saknar en endpoint för överföring, så den görs som uttag + insättning.
-            // Misslyckas insättningen sätts pengarna tillbaka på från-kontot.
-            // Knappen är låst (isSubmitting) under alla steg, även återställningen.
             function updateBalance(accountId: string, balance: string) {
                 setAccounts((currentAccounts) =>
                     currentAccounts.map((account) =>
@@ -173,45 +300,27 @@ function TransactPage() {
                 )
             }
 
-            let withdrawResult: Awaited<ReturnType<typeof withdraw>>
-
             try {
-                withdrawResult = await withdraw(selectedAccount.id, numericAmount)
-            } catch {
-                setError('Överföringen kunde inte genomföras. Inga pengar har flyttats.')
-                setIsSubmitting(false)
-                return
-            }
+                const result = await transfer(selectedAccount.id, toAccountNumber, numericAmount)
 
-            try {
-                const depositResult = await deposit(selectedToAccount.id, numericAmount)
+                updateBalance(selectedAccount.id, result.fromBalance)
 
-                updateBalance(selectedAccount.id, withdrawResult.balance)
-                updateBalance(selectedToAccount.id, depositResult.balance)
+                if (result.toBalance && selectedToAccount) {
+                    updateBalance(selectedToAccount.id, result.toBalance)
+                }
+
                 setReceipt({
                     type: 'transfer',
                     amount: numericAmount,
                     accountName: selectedAccount.name,
-                    toAccountName: selectedToAccount.name,
-                    balance: parseBackendBalance(withdrawResult.balance),
+                    toAccountName,
+                    balance: parseBackendBalance(result.fromBalance),
                 })
                 setAmount('')
+                setExternalAccountNumber('')
                 await queryClient.invalidateQueries({ queryKey: ['accountsWithTransactions'] })
-            } catch {
-                try {
-                    const restoreResult = await deposit(selectedAccount.id, numericAmount)
-
-                    updateBalance(selectedAccount.id, restoreResult.balance)
-                    setError(
-                        `Överföringen kunde inte genomföras. ${formatKr(numericAmount)} är tillbaka på ${selectedAccount.name}.`
-                    )
-                } catch {
-                    // Pengarna är uttagna men kunde inte sättas tillbaka: saldot ska visa det
-                    updateBalance(selectedAccount.id, withdrawResult.balance)
-                    setError(
-                        `${formatKr(numericAmount)} kunde inte sättas tillbaka. Ring kundservice: ${customerServiceContact.phone}.`
-                    )
-                }
+            } catch (error) {
+                setError(error instanceof Error ? error.message : 'Överföringen misslyckades.')
             } finally {
                 setIsSubmitting(false)
             }
@@ -352,7 +461,7 @@ function TransactPage() {
                                 </div>
                             </div>
 
-                            {mode === 'transfer' && selectedToAccount && (
+                            {mode === 'transfer' && transferRecipientType === 'own' && selectedToAccount && (
                                 <div className="account-preview-group">
                                     <p className="account-preview-label">Till konto</p>
                                     <div className={`account-preview-card account-preview-card--${selectedToAccount.variant ?? 'default'}`}>
@@ -373,7 +482,7 @@ function TransactPage() {
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="transact-form-card">
+                    <form ref={formRef} onSubmit={handleSubmit} className="transact-form-card">
                         <div className="transact-field">
                             <label className="transact-label">{mode === 'transfer' ? 'Från konto' : 'Konto'}</label>
                             <div className="select-wrapper">
@@ -393,23 +502,78 @@ function TransactPage() {
                         </div>
 
                         {mode === 'transfer' && (
-                            <div className="transact-field">
-                                <label className="transact-label">Till konto</label>
-                                <div className="select-wrapper">
-                                    <select
-                                        className="transact-pill-input"
-                                        value={selectedToAccount?.id ?? ''}
-                                        onChange={(e) => setToAccountId(e.target.value)}
-                                    >
-                                    {transferToAccounts.map((acc) => (
-                                        <option key={acc.id} value={acc.id}>
-                                            {acc.name} — {formatKr(acc.balance)}
-                                        </option>
-                                    ))}
-                                    </select>
-                                    <ChevronDown size={16} className="select-chevron" />
+                            <>
+                                <div className="transact-field">
+                                    <label className="transact-label">Mottagare</label>
+                                    <div className="pill-toggle-row transfer-recipient-toggle-row">
+                                        <button
+                                            type="button"
+                                            className={`pill-toggle ${transferRecipientType === 'own' ? 'pill-toggle--active' : ''}`}
+                                            onClick={() => {
+                                                setTransferRecipientType('own')
+                                                setError('')
+                                                setReceipt(null)
+                                            }}
+                                        >
+                                            Eget konto
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={`pill-toggle ${transferRecipientType === 'external' ? 'pill-toggle--active' : ''}`}
+                                            onClick={() => {
+                                                setTransferRecipientType('external')
+                                                setError('')
+                                                setReceipt(null)
+                                            }}
+                                        >
+                                            Annat konto
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
+
+                                {transferRecipientType === 'own' ? (
+                                    <div className="transact-field">
+                                        <label className="transact-label">Till konto</label>
+                                        <div className="select-wrapper">
+                                            <select
+                                                className="transact-pill-input"
+                                                value={selectedToAccount?.id ?? ''}
+                                                onChange={(e) => {
+                                                    setToAccountId(e.target.value)
+                                                    setError('')
+                                                    setReceipt(null)
+                                                }}
+                                            >
+                                                {transferToAccounts.map((acc) => (
+                                                    <option key={acc.id} value={acc.id}>
+                                                        {acc.name} — {formatKr(acc.balance)}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <ChevronDown size={16} className="select-chevron" />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="transact-field">
+                                        <label className="transact-label">Mottagarens kontonummer</label>
+                                        <input
+                                            className="transact-pill-input"
+                                            type="text"
+                                            placeholder="NKM-xxxxx"
+                                            value={externalAccountNumber}
+                                            onChange={(e) => {
+                                                setExternalAccountNumber(e.target.value)
+                                                setExternalRecipient(null)
+                                                setRecipientLookupError('')
+                                                setIsRecipientLookupMessageDismissed(false)
+                                                setError('')
+                                                setReceipt(null)
+                                            }}
+                                            onBlur={handleExternalAccountLookup}
+                                        />
+                                    </div>
+                                )}
+                            </>
                         )}
 
                         <div className="transact-field">
@@ -419,7 +583,11 @@ function TransactPage() {
                                 type="text"
                                 placeholder="0"
                                 value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
+                                onChange={(e) => {
+                                    setAmount(e.target.value)
+                                    setError('')
+                                    setReceipt(null)
+                                }}
                             />
                             <p
                                 className={`transact-available-balance ${
@@ -430,18 +598,33 @@ function TransactPage() {
                             </p>
                         </div>
 
-                        <p
-                            className={`transact-message ${
-                                error
+                        <div
+                            className={`transact-message transact-message-bubble ${
+                                mode === 'transfer' ? 'transact-message--transfer' : ''
+                            } ${
+                                error || (recipientLookupError && !isRecipientLookupMessageDismissed)
                                     ? 'transact-message--error'
-                                    : receipt
+                                    : receipt || isLookingUpRecipient || (externalRecipient && !isRecipientLookupMessageDismissed)
                                     ? 'transact-message--success'
                                     : 'transact-message--empty'
                             }`}
-                            role={error ? 'alert' : receipt ? 'status' : undefined}
+                            role={
+                                error || (recipientLookupError && !isRecipientLookupMessageDismissed)
+                                    ? 'alert'
+                                    : receipt || isLookingUpRecipient || (externalRecipient && !isRecipientLookupMessageDismissed)
+                                        ? 'status'
+                                        : undefined
+                            }
                         >
-                            {error || (receipt && <OrderReceipt receipt={receipt} />)}
-                        </p>
+                            {error ||
+                                (!isRecipientLookupMessageDismissed && recipientLookupError) ||
+                                (receipt && <OrderReceipt receipt={receipt} />) ||
+                                (isLookingUpRecipient
+                                    ? 'Kontrollerar mottagare...'
+                                    : externalRecipient && !isRecipientLookupMessageDismissed
+                                        ? `Mottagare: ${externalRecipient.ownerName}`
+                                        : null)}
+                        </div>
 
                         <button type="submit" className="transact-submit-btn" disabled={isSubmitting}>
                             {isSubmitting
