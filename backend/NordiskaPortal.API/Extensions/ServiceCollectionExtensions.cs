@@ -172,7 +172,10 @@ public static class ServiceCollectionExtensions
             configuration
                 .MinimumLevel.Information()
                 .Enrich.FromLogContext()
-                .WriteTo.Console();
+                // Shown for logs written outside a request. A request's own ID wins, since FromLogContext runs first.
+                .Enrich.WithProperty("CorrelationId", "-")
+                .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] [{CorrelationId}] {Message:lj}{NewLine}{Exception}");
+                   
         });
 
         return builder;

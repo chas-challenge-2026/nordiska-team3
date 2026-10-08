@@ -21,8 +21,9 @@ namespace NordiskaPortal.API
 
             httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
+            // TraceIdentifier holds the correlation ID set by CorrelationIdMiddleware.
             await httpContext.Response.WriteAsJsonAsync(
-            new ErrorResponseDto("An unexpected error occurred. Please try again later."),
+            new ErrorResponseDto("An unexpected error occurred. Please try again later.", httpContext.TraceIdentifier),
             cancellationToken);
 
             return true;
