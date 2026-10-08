@@ -321,7 +321,7 @@
 }
 
 [data-theme="dark"] .dashboard-transaction-modal__message {
-  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  background: transparent;
   color: var(--color-text-secondary);
 }
 
@@ -352,13 +352,45 @@
   flex-direction: column;
 }
 
+.create-account-modal__name-field {
+  position: relative;
+}
+
 .create-account-modal__message {
-  min-height: 32px;
-  margin: 6px 0 0;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 3;
+  width: fit-content;
+  max-width: min(280px, 100%);
+  min-height: 0;
+  margin: 0;
+  padding: 9px 12px;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 35%, transparent);
+  border-radius: 16px 4px 16px 16px;
+  background: var(--color-danger-soft);
+  box-shadow: var(--shadow-sm);
   color: var(--color-danger);
   font-size: 11px;
   font-weight: 700;
-  line-height: 16px;
+  line-height: 14px;
+}
+
+.create-account-modal__message::after {
+  content: "";
+  position: absolute;
+  left: 28px;
+  top: -6px;
+  width: 12px;
+  height: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--color-danger) 35%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--color-danger) 35%, transparent);
+  background: inherit;
+  transform: rotate(45deg);
+}
+
+.create-account-modal__message--empty {
+  display: none;
 }
 
 .create-account-modal__field {
@@ -914,6 +946,9 @@
 
 .account-modal__transfer-card .dashboard-available-balance {
   margin-top: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
   font-size: 11px;
   line-height: 9px;
   min-height: 9px;
