@@ -621,7 +621,7 @@ function DashboardPage() {
                                 </div>
 
                                 <div className="account-modal__section account-modal__transfer">
-                                    <h3>Flytta pengar</h3>
+                                    <h3>Sätt in eller ta ut</h3>
 
                                     <div className="pill-toggle-row account-modal__mode-row">
                                         <button
