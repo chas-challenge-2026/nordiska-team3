@@ -40,6 +40,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IFaqService, FaqService>();
         services.AddSingleton<IPersonalNumberProtector, PersonalNumberProtector>();
         services.AddSingleton<INativeProcessRunner, NativeProcessRunner>();
+        services.AddScoped<IAuditService, AuditService>();
+        services.AddSingleton(sp => AuditKey.Load(sp.GetRequiredService<IConfiguration>()));
 
         // Validation
         services.AddValidatorsFromAssemblyContaining<Program>(); // Letar alla klasser som ärver AbstractValidator<T>
@@ -190,6 +192,17 @@ public static class ServiceCollectionExtensions
         db.Database.Migrate();
 
         return app;
+    }
+
+    // Creates the audit key on the first start and verifies the audit chain. A broken chain stops the app.
+    public static async Task VerifyAuditChainAsync(this WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+
+        await AuditStartup.RunAsync(
+            scope.ServiceProvider.GetRequiredService<IAuditService>(),
+            app.Configuration.GetValue<bool>("Audit:AllowBrokenChain"),
+            scope.ServiceProvider.GetRequiredService<ILogger<AuditService>>());
     }
 
     // Lägger in en testanvändare om den saknas, efter att migrationerna körts.

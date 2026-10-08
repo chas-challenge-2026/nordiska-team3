@@ -67,6 +67,8 @@ app.ApplyMigrations();
 
 await app.ProtectExistingPersonalNumbersAsync();
 
+await app.VerifyAuditChainAsync();
+
 if (app.Environment.IsDevelopment())
 {
     await app.SeedTestDataAsync();

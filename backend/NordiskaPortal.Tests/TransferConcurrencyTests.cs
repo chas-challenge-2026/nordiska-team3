@@ -13,6 +13,7 @@ namespace NordiskaPortal.Tests.Postgres;
 // in AccountService.TransferAsync cannot be proven with the InMemory provider.
 public class TransferConcurrencyTests : IAsyncLifetime
 {
+    private static readonly AuditKey TestAuditKey = new(new byte[32]);
     private readonly string _connectionString = Environment.GetEnvironmentVariable(PostgresFactAttribute.EnvVar) ?? "";
     private readonly List<Guid> _userIds = new();
 
@@ -51,6 +52,7 @@ public class TransferConcurrencyTests : IAsyncLifetime
         results.Should().OnlyContain(r => r.IsSuccess);
         (await GetBalanceAsync(accountA.Id)).Should().Be(1000m);
         (await GetBalanceAsync(accountB.Id)).Should().Be(1000m);
+        (await AuditChainIsIntactAsync()).Should().BeTrue();
     }
 
     [PostgresFact]
@@ -77,6 +79,10 @@ public class TransferConcurrencyTests : IAsyncLifetime
         var received = await db.Transactions.CountAsync(t => t.AccountId == accountB.Id && t.TransactionType == "TRANSFER_IN");
         sent.Should().Be(3);
         received.Should().Be(3);
+
+        // One audit entry per transfer that went through, and none for the denied ones.
+        (await db.AuditEntries.CountAsync(a => a.UserId == userA.Id && a.Action == "TRANSFER")).Should().Be(3);
+        (await AuditChainIsIntactAsync()).Should().BeTrue();
     }
 
     private ApplicationDbContext CreateContext()
@@ -100,7 +106,18 @@ public class TransferConcurrencyTests : IAsyncLifetime
             new Repository<LedgerEntry>(db),
             new Repository<Notification>(db),
             db,
+            new AuditService(db, TestAuditKey),
             NullLogger<AccountService>.Instance);
+    }
+
+    // Every transfer appends to the audit chain, so parallel transfers must neither fork nor break it.
+    private async Task<bool> AuditChainIsIntactAsync()
+    {
+        await using var db = CreateContext();
+
+        var result = await new AuditService(db, TestAuditKey).VerifyChainAsync();
+
+        return result.IsValid;
     }
 
     private async Task<(User User, Account Account)> CreateCustomerWithAccountAsync(decimal startBalance)

@@ -17,6 +17,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Transaction> Transactions { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<TaxReport> TaxReports { get; set; }
+    public DbSet<AuditEntry> AuditEntries { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -151,5 +152,15 @@ public class ApplicationDbContext : DbContext
             .WithMany(u => u.TaxReports)
             .HasForeignKey(t => t.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // AuditEntry: Id follows the order of the hash chain. Details stays plain text (not jsonb),
+        // because the hash covers its exact characters.
+        modelBuilder.Entity<AuditEntry>(entity =>
+        {
+            entity.Property(a => a.Action).HasMaxLength(64);
+            entity.Property(a => a.EntityType).HasMaxLength(64);
+            entity.Property(a => a.PreviousHash).HasMaxLength(64);
+            entity.Property(a => a.Hash).HasMaxLength(64);
+        });
     }
 }
