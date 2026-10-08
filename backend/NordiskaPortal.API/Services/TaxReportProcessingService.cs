@@ -20,13 +20,16 @@ namespace NordiskaPortal.API.Services
         private readonly IConfiguration _configuration;
         private readonly ILogger<TaxReportProcessingService> _logger;
         private readonly TaxReportQueue _queue;
+        private readonly IAuditService _auditService;
 
         public TaxReportProcessingService(
             ApplicationDbContext context,
             ITaxReportDataService taxReportDataService,
             INativeProcessRunner processRunner,
             IConfiguration configuration,
-            ILogger<TaxReportProcessingService> logger, TaxReportQueue queue)
+            ILogger<TaxReportProcessingService> logger,
+            TaxReportQueue queue,
+            IAuditService auditService)
         {
             _context = context;
             _taxReportDataService = taxReportDataService;
@@ -34,7 +37,9 @@ namespace NordiskaPortal.API.Services
             _configuration = configuration;
             _logger = logger;
             _queue = queue;
+            _auditService = auditService;
         }
+
 
         public async Task<TaxReport> QueueReportAsync(Guid userId, int reportYear)
         {
@@ -45,8 +50,13 @@ namespace NordiskaPortal.API.Services
                 Status = "QUEUED",
             };
 
+            // The audit entry is saved in the same database transaction as the report.
+            await using var dbTransaction = await _context.Database.BeginTransactionAsync();
+
             _context.TaxReports.Add(report);
+            await _auditService.AppendAsync(userId, AuditActions.TaxReportRequested, nameof(TaxReport), report.Id, new { reportYear });
             await _context.SaveChangesAsync();
+            await dbTransaction.CommitAsync();
 
             _logger.LogInformation("TaxReport {TaxreportId} queued for user {UserId}, year {ReportYear}", report.Id, userId, reportYear);
 
@@ -86,7 +96,12 @@ namespace NordiskaPortal.API.Services
                 _logger.LogInformation("TaxReport {TaxReportId} input written to {Path}", report.Id, finalPath);
 
                 await GeneratePdfAsync(report, finalPath, Path.Combine(outputDirectory, $"{report.Id}.pdf"));
+
+                // The READY status and its audit entry are saved in the same database transaction.
+                await using var dbTransaction = await _context.Database.BeginTransactionAsync();
+                await _auditService.AppendAsync(report.UserId, AuditActions.TaxReportGenerated, nameof(TaxReport), report.Id, new { reportYear = report.ReportYear });
                 await _context.SaveChangesAsync();
+                await dbTransaction.CommitAsync();
             }
 
             catch (Exception ex)

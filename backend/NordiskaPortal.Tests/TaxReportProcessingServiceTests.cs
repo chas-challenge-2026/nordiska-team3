@@ -9,6 +9,7 @@ using NordiskaPortal.API.Models;
 using NordiskaPortal.API.Services;
 using NordiskaPortal.API.Services.Interfaces;
 using Xunit;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace NordiskaPortal.Tests.Services;
 
@@ -26,8 +27,10 @@ public class TaxReportProcessingServiceTests : IDisposable
         _generatorPath = Path.Combine(_workDirectory, "pdf_generator");
         File.WriteAllText(_generatorPath, "stub");
 
+        // The service saves the report and its audit entry in a transaction, which the in-memory database ignores.
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))
             .Options;
         _context = new ApplicationDbContext(options);
 
@@ -59,6 +62,48 @@ public class TaxReportProcessingServiceTests : IDisposable
         report.CompletedAt.Should().NotBeNull();
         report.SignaturePath.Should().BeNull();
         report.ErrorMessage.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task QueueReportAsync_SavesTheReportAndAnAuditEntryForTheCustomer()
+    {
+        var customerId = Guid.NewGuid();
+
+        var report = await CreateService().QueueReportAsync(customerId, 2026);
+
+        (await _context.TaxReports.FindAsync(report.Id)).Should().NotBeNull();
+        var entry = await _context.AuditEntries.SingleAsync();
+        entry.Action.Should().Be("TAX_REPORT_REQUESTED");
+        entry.UserId.Should().Be(customerId);
+        entry.EntityType.Should().Be("TaxReport");
+        entry.EntityId.Should().Be(report.Id);
+        entry.Details.Should().Be("{\"reportYear\":2026}");
+    }
+
+    [Fact]
+    public async Task ProcessReportAsync_WhenTheGeneratorSucceeds_WritesAGeneratedAuditEntry()
+    {
+        var report = await AddReportAsync();
+        SetupRunner(args => File.WriteAllBytes(args[1], new byte[] { 1 }), exitCode: 0);
+
+        await CreateService().ProcessReportAsync(report.Id);
+
+        var entry = await _context.AuditEntries.SingleAsync();
+        entry.Action.Should().Be("TAX_REPORT_GENERATED");
+        entry.UserId.Should().Be(report.UserId);
+        entry.EntityId.Should().Be(report.Id);
+    }
+
+    [Fact]
+    public async Task ProcessReportAsync_WhenTheGeneratorFails_WritesNoAuditEntry()
+    {
+        var report = await AddReportAsync();
+        SetupRunner(_ => { }, exitCode: 3);
+
+        var act = () => CreateService().ProcessReportAsync(report.Id);
+
+        await act.Should().ThrowAsync<TaxReportGenerationException>();
+        _context.AuditEntries.Should().BeEmpty();
     }
 
     [Fact]
@@ -182,8 +227,9 @@ public class TaxReportProcessingServiceTests : IDisposable
             _dataServiceMock.Object,
             _runnerMock.Object,
             configuration,
-            NullLogger<TaxReportProcessingService>.Instance,
-            new TaxReportQueue());
+             NullLogger<TaxReportProcessingService>.Instance,
+            new TaxReportQueue(),
+            new AuditService(_context, new AuditKey(new byte[32])));
     }
 
     private async Task<TaxReport> AddReportAsync()

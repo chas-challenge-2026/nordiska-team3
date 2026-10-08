@@ -7,6 +7,7 @@ using NordiskaPortal.API.Models;
 using NordiskaPortal.API.Repositories.Interfaces;
 using NordiskaPortal.API.Services;
 using Xunit;
+using NordiskaPortal.API.Services.Interfaces;
 
 namespace NordiskaPortal.Tests.Services;
 
@@ -19,6 +20,7 @@ public class AccountServiceTests
     private readonly Mock<IRepository<Notification>> _notificationRepoMock = new();
     private readonly Mock<ILogger<AccountService>> _loggerMock = new();
     private readonly ApplicationDbContext _dbContext;
+    private readonly Mock<IAuditService> _auditMock = new();
 
     public AccountServiceTests()
     {
@@ -36,6 +38,7 @@ public class AccountServiceTests
             _ledgerEntryRepoMock.Object,
             _notificationRepoMock.Object,
             _dbContext,
+            _auditMock.Object,
             _loggerMock.Object
         );
 

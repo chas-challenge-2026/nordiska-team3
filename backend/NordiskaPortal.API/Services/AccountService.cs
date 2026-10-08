@@ -15,7 +15,8 @@ public class AccountService : IAccountService
     private readonly ITransactionRepository _transactionRepository;
     private readonly IRepository<LedgerEntry> _ledgerEntryRepository;
     private readonly IRepository<Notification> _notificationRepository;
-    private readonly ApplicationDbContext _context; // Enbart för row-lock transaktionerna i "WithdrawAsync" och "TransferAsync"
+    private readonly ApplicationDbContext _context; // Used for the database transactions and row locks in DepositAsync, WithdrawAsync and TransferAsync
+    private readonly IAuditService _auditService;
     private readonly ILogger<AccountService> _logger;
 
     public AccountService(
@@ -25,6 +26,7 @@ public class AccountService : IAccountService
         IRepository<LedgerEntry> ledgerEntryRepository,
         IRepository<Notification> notificationRepository,
         ApplicationDbContext context,
+        IAuditService auditService,
         ILogger<AccountService> logger)
     {
         _accountRepository = accountRepository;
@@ -33,6 +35,7 @@ public class AccountService : IAccountService
         _ledgerEntryRepository = ledgerEntryRepository;
         _notificationRepository = notificationRepository;
         _context = context;
+        _auditService = auditService;
         _logger = logger;
     }
 
@@ -137,10 +140,19 @@ public class AccountService : IAccountService
             Status = "PENDING"
         };
 
+        // The audit entry is saved in the same database transaction as the deposit.
+        await using var dbTransaction = await _context.Database.BeginTransactionAsync();
+
+        // Same lock order as withdrawals and transfers: the account row first, the audit chain last.
+        await _context.Database.ExecuteSqlInterpolatedAsync(
+            $"SELECT 1 FROM \"Accounts\" WHERE \"Id\" = {accountId} FOR UPDATE");
+
         await _notificationRepository.AddAsync(notification);
         await _transactionRepository.AddAsync(transaction);
         await _ledgerEntryRepository.AddAsync(ledgerEntry);
+        await _auditService.AppendAsync(userId, AuditActions.Deposit, nameof(Transaction), transaction.Id, new { accountId, amount = amount.ToString("F2", CultureInfo.InvariantCulture) });
         await _accountRepository.SaveChangesAsync();
+        await dbTransaction.CommitAsync();        
 
         var newBalance = await _accountRepository.GetBalanceAsync(accountId);
 
@@ -200,6 +212,7 @@ public class AccountService : IAccountService
         await _notificationRepository.AddAsync(notification);
         await _transactionRepository.AddAsync(transaction);
         await _ledgerEntryRepository.AddAsync(ledgerEntry);
+        await _auditService.AppendAsync(userId, AuditActions.Withdrawal, nameof(Transaction), transaction.Id, new { accountId, amount = amount.ToString("F2", CultureInfo.InvariantCulture) });
         await _accountRepository.SaveChangesAsync();
 
         await dbTransaction.CommitAsync();
@@ -331,8 +344,13 @@ public class AccountService : IAccountService
         await _transactionRepository.AddAsync(inTransaction);
         await _ledgerEntryRepository.AddAsync(outLedgerEntry);
         await _ledgerEntryRepository.AddAsync(inLedgerEntry);
+        await _auditService.AppendAsync(userId, AuditActions.Transfer, "Transfer", transferId, new
+        {
+            fromAccountId = fromAccount.Id,
+            toAccountId = toAccount.Id,
+            amount = amount.ToString("F2", CultureInfo.InvariantCulture)
+        });
         await _accountRepository.SaveChangesAsync();
-
         await dbTransaction.CommitAsync();
 
         var fromBalance = await _accountRepository.GetBalanceAsync(fromAccount.Id);
