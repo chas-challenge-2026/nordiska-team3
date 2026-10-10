@@ -18,6 +18,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<TaxReport> TaxReports { get; set; }
     public DbSet<AuditEntry> AuditEntries { get; set; } = null!;
+    public DbSet<InterestRateObservation> InterestRateObservations { get; set; } = null!;
+    public DbSet<AccountInterestPolicy> AccountInterestPolicies { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -161,6 +163,27 @@ public class ApplicationDbContext : DbContext
             entity.Property(a => a.EntityType).HasMaxLength(64);
             entity.Property(a => a.PreviousHash).HasMaxLength(64);
             entity.Property(a => a.Hash).HasMaxLength(64);
+        });
+
+        // Policy rate values fetched from Riksbanken, one row per series and day.
+        modelBuilder.Entity<InterestRateObservation>(entity =>
+        {
+            entity.HasKey(o => new { o.SeriesId, o.Date });
+            entity.Property(o => o.SeriesId).HasMaxLength(64);
+            entity.Property(o => o.Value).HasPrecision(9, 4);
+        });
+
+        // Spread per account type, in percentage points compared with the policy rate.
+        // CHECKING has -100, which always ends up at 0 % because a rate is never below 0.
+        modelBuilder.Entity<AccountInterestPolicy>(entity =>
+        {
+            entity.HasKey(p => new { p.AccountType, p.EffectiveFrom });
+            entity.Property(p => p.AccountType).HasMaxLength(32);
+            entity.Property(p => p.SpreadPercentagePoints).HasPrecision(9, 4);
+
+            entity.HasData(
+                new AccountInterestPolicy { AccountType = "SAVINGS", EffectiveFrom = new DateOnly(2026, 1, 1), SpreadPercentagePoints = -0.5m },
+                new AccountInterestPolicy { AccountType = "CHECKING", EffectiveFrom = new DateOnly(2026, 1, 1), SpreadPercentagePoints = -100m });
         });
     }
 }

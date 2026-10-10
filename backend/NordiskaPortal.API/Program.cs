@@ -18,6 +18,7 @@ builder.Services.AddRateLimiting(builder.Configuration);
 builder.Services.AddSwaggerDocs();
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddApplicationServices();
+builder.Services.AddInterestServices(builder.Configuration);
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<ValidationFilter>();
