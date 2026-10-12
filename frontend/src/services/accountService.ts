@@ -9,11 +9,14 @@ export type BackendAccount = {
     name: string
     status: string
     balance: string
-    // Skickas inte av backend än, se utils/accountInterest.ts
+    // Räntefälten saknas om backend inte kunde räkna fram räntan, t.ex. när styrräntan inte är hämtad
+    // Ex: "3.50"
     interestRate?: string
     interestType?: 'VARIABLE' | 'FIXED'
-    // Skickas inte av backend än, se utils/nextEvent.ts
+    // Ex: "2026-12-31"
     nextInterestPayoutDate?: string
+    // Ränta som tjänats in hittills i år men inte betalats ut. Ex: "123.45"
+    accruedInterest?: string
 }
 
 export type AccountsResponse = {
