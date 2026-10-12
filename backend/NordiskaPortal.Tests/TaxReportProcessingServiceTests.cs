@@ -20,6 +20,7 @@ public class TaxReportProcessingServiceTests : IDisposable
     private readonly ApplicationDbContext _context;
     private readonly Mock<ITaxReportDataService> _dataServiceMock = new();
     private readonly Mock<INativeProcessRunner> _runnerMock = new();
+    private readonly Mock<IPdfSigningService> _signingMock = new();
 
     public TaxReportProcessingServiceTests()
     {
@@ -37,6 +38,12 @@ public class TaxReportProcessingServiceTests : IDisposable
         _dataServiceMock
             .Setup(s => s.GetTaxReportDataAsync(It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<Guid>()))
             .ReturnsAsync((Guid userId, int year, Guid reportId) => CreateInput(userId, year, reportId));
+
+
+        _signingMock
+            .Setup(s => s.SignAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((string pdfPath, CancellationToken _) =>
+                new PdfSignature(Path.ChangeExtension(pdfPath, ".sig"), new string('a', 64)));
     }
 
     public void Dispose()
@@ -49,7 +56,7 @@ public class TaxReportProcessingServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task ProcessReportAsync_WhenTheGeneratorSucceeds_MarksTheReportReadyAndUnsigned()
+    public async Task ProcessReportAsync_WhenTheGeneratorSucceeds_MarksTheReportReadyAndSigned()
     {
         var report = await AddReportAsync();
         SetupRunner(args => File.WriteAllBytes(args[1], new byte[] { 1, 2, 3 }), exitCode: 0);
@@ -60,8 +67,47 @@ public class TaxReportProcessingServiceTests : IDisposable
         report.NativeExitCode.Should().Be(0);
         report.PdfPath.Should().EndWith($"{report.Id}.pdf");
         report.CompletedAt.Should().NotBeNull();
-        report.SignaturePath.Should().BeNull();
+        report.SignaturePath.Should().EndWith($"{report.Id}.sig");
+        report.Sha256.Should().Be(new string('a', 64));
         report.ErrorMessage.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task ProcessReportAsync_SignsTheGeneratedPdf()
+    {
+        var report = await AddReportAsync();
+        SetupRunner(args => File.WriteAllBytes(args[1], new byte[] { 1, 2, 3 }), exitCode: 0);
+
+        await CreateService().ProcessReportAsync(report.Id);
+
+        _signingMock.Verify(s => s.SignAsync(
+            It.Is<string>(path => path.EndsWith($"{report.Id}.pdf")),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ProcessReportAsync_WhenSigningFails_MarksTheReportFailedWithoutAPdf()
+    {
+        var report = await AddReportAsync();
+        string? pdfPath = null;
+        SetupRunner(args =>
+        {
+            pdfPath = args[1];
+            File.WriteAllBytes(args[1], new byte[] { 1, 2, 3 });
+        }, exitCode: 0);
+        _signingMock
+            .Setup(s => s.SignAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new TaxReportGenerationException("PDF signing failed (code 4)."));
+
+        var act = () => CreateService().ProcessReportAsync(report.Id);
+
+        await act.Should().ThrowAsync<TaxReportGenerationException>();
+        report.Status.Should().Be("FAILED");
+        report.ErrorMessage.Should().Be("PDF signing failed (code 4).");
+        report.PdfPath.Should().BeNull();
+        report.SignaturePath.Should().BeNull();
+        File.Exists(pdfPath).Should().BeFalse("an unsigned PDF must not be left on disk");
+        _context.AuditEntries.Should().BeEmpty();
     }
 
     [Fact]
@@ -92,6 +138,7 @@ public class TaxReportProcessingServiceTests : IDisposable
         entry.Action.Should().Be("TAX_REPORT_GENERATED");
         entry.UserId.Should().Be(report.UserId);
         entry.EntityId.Should().Be(report.Id);
+        entry.Details.Should().Contain(new string('a', 64));
     }
 
     [Fact]
@@ -227,9 +274,11 @@ public class TaxReportProcessingServiceTests : IDisposable
             _dataServiceMock.Object,
             _runnerMock.Object,
             configuration,
-             NullLogger<TaxReportProcessingService>.Instance,
+            NullLogger<TaxReportProcessingService>.Instance,
             new TaxReportQueue(),
-            new AuditService(_context, new AuditKey(new byte[32])));
+            new AuditService(_context, new AuditKey(new byte[32])),
+            _signingMock.Object);
+
     }
 
     private async Task<TaxReport> AddReportAsync()
