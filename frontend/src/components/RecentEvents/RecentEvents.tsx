@@ -1,6 +1,15 @@
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react'
 import './RecentEvents.css'
-import { type RecentEvent } from './mockRecentEvents'
+
+export type RecentEvent = {
+  id: string
+  title: string
+  accountName: string
+  date: string
+  amount: number
+  type: 'deposit' | 'withdrawal' | 'transfer' | 'interest'
+  counterparty?: string | null
+}
 
 type RecentEventsProps = {
   events?: RecentEvent[]
@@ -59,6 +68,7 @@ export function RecentEvents({ events = [], title = 'Senaste händelser' }: Rece
   )
 }
 
+/** Visar beloppet med plus eller minus. */
 function formatAmount(amount: number) {
   const sign = amount > 0 ? '+' : ''
   return `${sign}${amount.toLocaleString('sv-SE', {
@@ -67,6 +77,7 @@ function formatAmount(amount: number) {
   })} kr`
 }
 
+/** Hämtar texten till händelsens badge. */
 function getEventLabel(type: RecentEvent['type']) {
   if (type === 'deposit') {
     return 'Insättning'
@@ -83,6 +94,7 @@ function getEventLabel(type: RecentEvent['type']) {
   return 'Ränta'
 }
 
+/** Väljer badge efter om pengarna går in eller ut. */
 function getEventBadgeType(event: RecentEvent): RecentEvent['type'] {
   if (event.type === 'transfer') {
     return event.amount < 0 ? 'withdrawal' : 'deposit'

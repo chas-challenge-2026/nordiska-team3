@@ -17,11 +17,12 @@ export const interestTypeExplanations: Record<InterestType, string> = {
     FIXED: 'Fast ränta är densamma under hela bindningstiden.',
 }
 
+/** Gör om backendens siffervärden till number. */
 function parseAmount(value: string) {
     return Number(value.replace(/\s/g, '').replace(',', '.'))
 }
 
-// Null när backend inte skickar ränta för kontot. Då visas ingen ränta hellre än en gissad.
+/** Hämtar kontots ränta om backend skickar den. */
 export function getAccountInterest(account: BackendAccount): AccountInterest | null {
     if (account.interestRate === undefined || !account.interestType) {
         return null
@@ -32,7 +33,7 @@ export function getAccountInterest(account: BackendAccount): AccountInterest | n
     return Number.isNaN(rate) ? null : { rate, type: account.interestType }
 }
 
-// Ex: "123,45 kr". Null när backend inte skickar upplupen ränta.
+/** Visar upplupen ränta om den finns. */
 export function formatAccruedInterest(account: BackendAccount) {
     if (account.accruedInterest === undefined) {
         return null
@@ -47,7 +48,7 @@ export function formatAccruedInterest(account: BackendAccount) {
     return `${amount.toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kr`
 }
 
-// Ex: "3,50 % · rörlig"
+/** Visar räntan som text, till exempel "3,50 % · rörlig". */
 export function formatAccountInterest({ rate, type }: AccountInterest) {
     const formattedRate = rate.toLocaleString('sv-SE', {
         minimumFractionDigits: 2,

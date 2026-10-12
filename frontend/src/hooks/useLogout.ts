@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { logout } from '../services/authService'
 
+/** Loggar ut och skickar användaren till login. */
 export function useLogout() {
     const navigate = useNavigate()
 

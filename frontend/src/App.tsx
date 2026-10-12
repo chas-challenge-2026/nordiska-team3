@@ -9,8 +9,7 @@ import TaxPage from './Page/TaxPage'
 import FaqPage from './Page/FaqPage'
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
-  // Kollar om användaren har en sparad token.
-  // Just nu räcker det för mock-login, senare kan detta kopplas mot GET /api/auth/me.
+  // Kollar om användaren har en sparad token innan skyddade sidor visas.
   if (!isAuthenticated()) {
     return <Navigate to="/login" replace />
   }

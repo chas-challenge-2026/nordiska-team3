@@ -1,4 +1,4 @@
-import { getStoredAccessToken } from './authService'
+import { apiFetch } from './apiClient'
 
 const API_URL = import.meta.env.VITE_API_URL
 
@@ -23,18 +23,6 @@ export type AccountsResponse = {
     accounts: BackendAccount[]
 }
 
-function getAuthHeaders(): Record<string, string> {
-    const token = getStoredAccessToken()
-
-    if (!token) {
-        return {}
-    }
-
-    return {
-        Authorization: `Bearer ${token}`,
-    }
-}
-
 async function getErrorMessage(response: Response, fallbackMessage: string): Promise<string> {
     try {
         const data: unknown = await response.json()
@@ -55,10 +43,8 @@ async function getErrorMessage(response: Response, fallbackMessage: string): Pro
 }
 
 export async function getAccounts(): Promise<BackendAccount[]> {
-    const response = await fetch(`${API_URL}/api/accounts`, {
+    const response = await apiFetch(`${API_URL}/api/accounts`, {
         method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include',
     })
 
     if (!response.ok) {
@@ -70,13 +56,11 @@ export async function getAccounts(): Promise<BackendAccount[]> {
 }
 
 export async function createAccount(accountType: string): Promise<BackendAccount> {
-    const response = await fetch(`${API_URL}/api/accounts`, {
+    const response = await apiFetch(`${API_URL}/api/accounts`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            ...getAuthHeaders(),
         },
-        credentials: 'include',
         body: JSON.stringify({ accountType }),
     })
 
@@ -88,13 +72,11 @@ export async function createAccount(accountType: string): Promise<BackendAccount
 }
 
 export async function renameAccount(accountId: string, name: string): Promise<BackendAccount> {
-    const response = await fetch(`${API_URL}/api/accounts/${accountId}/name`, {
+    const response = await apiFetch(`${API_URL}/api/accounts/${accountId}/name`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
-            ...getAuthHeaders(),
         },
-        credentials: 'include',
         body: JSON.stringify({ name }),
     })
 
@@ -122,13 +104,11 @@ export type RecipientLookup = {
 }
 
 export async function deposit(accountId: string, amount: number): Promise<TransactionResult> {
-    const response = await fetch(`${API_URL}/api/accounts/${accountId}/deposit`, {
+    const response = await apiFetch(`${API_URL}/api/accounts/${accountId}/deposit`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            ...getAuthHeaders(),
         },
-        credentials: 'include',
         body: JSON.stringify({ amount }),
     })
 
@@ -140,13 +120,11 @@ export async function deposit(accountId: string, amount: number): Promise<Transa
 }
 
 export async function withdraw(accountId: string, amount: number): Promise<TransactionResult> {
-    const response = await fetch(`${API_URL}/api/accounts/${accountId}/withdraw`, {
+    const response = await apiFetch(`${API_URL}/api/accounts/${accountId}/withdraw`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            ...getAuthHeaders(),
         },
-        credentials: 'include',
         body: JSON.stringify({ amount }),
     })
 
@@ -162,13 +140,11 @@ export async function transfer(
     toAccountNumber: string,
     amount: number
 ): Promise<TransferResult> {
-    const response = await fetch(`${API_URL}/api/accounts/${accountId}/transfer`, {
+    const response = await apiFetch(`${API_URL}/api/accounts/${accountId}/transfer`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            ...getAuthHeaders(),
         },
-        credentials: 'include',
         body: JSON.stringify({ toAccountNumber, amount }),
     })
 
@@ -180,12 +156,10 @@ export async function transfer(
 }
 
 export async function lookupAccount(accountNumber: string): Promise<RecipientLookup> {
-    const response = await fetch(
+    const response = await apiFetch(
         `${API_URL}/api/accounts/lookup?accountNumber=${encodeURIComponent(accountNumber)}`,
         {
             method: 'GET',
-            headers: getAuthHeaders(),
-            credentials: 'include',
         }
     )
 
@@ -223,10 +197,8 @@ export async function getTransactionsForAccount(
     page = 1,
     pageSize = 20
 ): Promise<TransactionHistoryResponse> {
-    const response = await fetch(`${API_URL}/api/accounts/${accountId}/transactions?page=${page}&pageSize=${pageSize}`, {
+    const response = await apiFetch(`${API_URL}/api/accounts/${accountId}/transactions?page=${page}&pageSize=${pageSize}`, {
         method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include',
     })
 
     if (!response.ok) {
@@ -269,10 +241,8 @@ export async function getTransactions(
         searchParams.set('to', filters.to)
     }
 
-    const response = await fetch(`${API_URL}/api/transactions?${searchParams.toString()}`, {
+    const response = await apiFetch(`${API_URL}/api/transactions?${searchParams.toString()}`, {
         method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include',
     })
 
     if (!response.ok) {

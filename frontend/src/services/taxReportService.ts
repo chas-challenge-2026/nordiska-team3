@@ -1,4 +1,4 @@
-import { getStoredAccessToken } from './authService'
+import { apiFetch } from './apiClient'
 
 const API_URL = import.meta.env.VITE_API_URL
 
@@ -18,16 +18,9 @@ export type TaxReport = {
     pdfAvailable: boolean
 }
 
-function getAuthHeaders(): Record<string, string> {
-    const token = getStoredAccessToken()
-
-    return token ? { Authorization: `Bearer ${token}` } : {}
-}
-
 // Backend sorterar nyaste år först, och inom samma år nyaste rapport först
 export async function getTaxReports(): Promise<TaxReport[]> {
-    const response = await fetch(`${API_URL}/api/taxreports`, {
-        headers: getAuthHeaders(),
+    const response = await apiFetch(`${API_URL}/api/taxreports`, {
         // Statusen ändras medan rapporten genereras, så svaret får aldrig komma från webbläsarens cache
         cache: 'no-store',
     })
@@ -42,10 +35,9 @@ export async function getTaxReports(): Promise<TaxReport[]> {
 }
 
 export async function createTaxReport(reportYear: number): Promise<void> {
-    const response = await fetch(`${API_URL}/api/taxreports`, {
+    const response = await apiFetch(`${API_URL}/api/taxreports`, {
         method: 'POST',
         headers: {
-            ...getAuthHeaders(),
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({ reportYear }),
@@ -62,9 +54,7 @@ export async function createTaxReport(reportYear: number): Promise<void> {
 
 // Endpointen kräver token, så PDF:en hämtas med fetch och sparas via en tillfällig länk
 export async function downloadTaxReport(report: TaxReport): Promise<void> {
-    const response = await fetch(`${API_URL}/api/taxreports/${report.id}/download`, {
-        headers: getAuthHeaders(),
-    })
+    const response = await apiFetch(`${API_URL}/api/taxreports/${report.id}/download`)
 
     if (!response.ok) {
         throw new Error('Rapporten kunde inte laddas ner.')

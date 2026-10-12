@@ -6,6 +6,7 @@ function isInProgress(report: TaxReport) {
     return report.status === 'QUEUED' || report.status === 'PROCESSING'
 }
 
+/** Hämtar skatterapporter och uppdaterar medan en rapport skapas. */
 export function useTaxReports() {
     return useQuery({
         queryKey: ['taxReports'],
@@ -16,6 +17,7 @@ export function useTaxReports() {
     })
 }
 
+/** Skapar en skatterapport och uppdaterar listan. */
 export function useCreateTaxReport() {
     const queryClient = useQueryClient()
 

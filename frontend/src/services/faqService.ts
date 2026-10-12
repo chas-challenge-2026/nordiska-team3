@@ -1,4 +1,4 @@
-import { getStoredAccessToken } from './authService'
+import { apiFetch } from './apiClient'
 
 const API_URL = import.meta.env.VITE_API_URL
 
@@ -21,16 +21,8 @@ export type FaqSearchResult = {
     message: string | null
 }
 
-function getAuthHeaders(): Record<string, string> {
-    const token = getStoredAccessToken()
-
-    return token ? { Authorization: `Bearer ${token}` } : {}
-}
-
 export async function getFaqEntries(): Promise<FaqEntry[]> {
-    const response = await fetch(`${API_URL}/api/faq`, {
-        headers: getAuthHeaders(),
-    })
+    const response = await apiFetch(`${API_URL}/api/faq`)
 
     if (!response.ok) {
         throw new Error('Kunde inte hämta vanliga frågor.')
@@ -40,9 +32,7 @@ export async function getFaqEntries(): Promise<FaqEntry[]> {
 }
 
 export async function searchFaq(query: string): Promise<FaqSearchResult> {
-    const response = await fetch(`${API_URL}/api/faq/search?q=${encodeURIComponent(query)}`, {
-        headers: getAuthHeaders(),
-    })
+    const response = await apiFetch(`${API_URL}/api/faq/search?q=${encodeURIComponent(query)}`)
 
     if (!response.ok) {
         throw new Error('Sökningen misslyckades.')
