@@ -11,10 +11,11 @@ using NordiskaPortal.API.Services.Interfaces;
 namespace NordiskaPortal.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/auth")]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private const string RefreshCookiePath = "/api/auth";
 
     public AuthController(IAuthService authService)
     {
@@ -63,7 +64,7 @@ public class AuthController : ControllerBase
 
         if (result is null)
         {
-            Response.Cookies.Delete("refreshToken", new CookieOptions { Path = "/api/Auth" });
+            Response.Cookies.Delete("refreshToken", new CookieOptions { Path = RefreshCookiePath });
             return Unauthorized(new ErrorResponseDto("Invalid or expired refresh token."));
         }
 
@@ -91,7 +92,7 @@ public class AuthController : ControllerBase
     {
         await _authService.LogoutAsync(CurrentUserId);
 
-        Response.Cookies.Delete("refreshToken", new CookieOptions { Path = "/api/Auth" });
+        Response.Cookies.Delete("refreshToken", new CookieOptions { Path = RefreshCookiePath });
 
         return NoContent();
     }
@@ -103,7 +104,7 @@ public class AuthController : ControllerBase
             HttpOnly = true,
             Secure = Request.IsHttps,
             SameSite = SameSiteMode.Strict,
-            Path = "/api/Auth",
+            Path = RefreshCookiePath,
             Expires = expiry
         });
     }
