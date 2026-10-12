@@ -38,16 +38,6 @@ function formatKr(amount: string) {
     return `${value.toLocaleString('sv-SE', { maximumFractionDigits: 2 })} kr`
 }
 
-// Tillfälligt: backend skickar inte nextInterestPayoutDate än, så vi antar
-// att räntan betalas ut vid årsskiftet (31 december) för konton med ränta.
-function getInterestPayoutDate(account: AccountWithTransactions['account'], today: Date) {
-    if (account.nextInterestPayoutDate) {
-        return parseDay(account.nextInterestPayoutDate)
-    }
-
-    return new Date(today.getFullYear(), 11, 31)
-}
-
 function getPendingTransactionEvent(groups: AccountWithTransactions[]): NextEvent | null {
     const pending = groups
         .flatMap(({ account, history }) =>
@@ -85,8 +75,8 @@ function getPendingTransactionEvent(groups: AccountWithTransactions[]): NextEven
 
 function getInterestPayoutEvent(groups: AccountWithTransactions[], today: Date): NextEvent | null {
     const payouts = groups
-        .filter(({ account }) => (getAccountInterest(account)?.rate ?? 0) > 0)
-        .map(({ account }) => ({ account, date: getInterestPayoutDate(account, today) }))
+        .filter(({ account }) => account.nextInterestPayoutDate && (getAccountInterest(account)?.rate ?? 0) > 0)
+        .map(({ account }) => ({ account, date: parseDay(account.nextInterestPayoutDate!) }))
         .filter(({ date }) => date >= today)
         .sort((a, b) => a.date.getTime() - b.date.getTime())
 

@@ -7,13 +7,6 @@ type AccountInterest = {
     type: InterestType
 }
 
-// Tillfälliga värden tills backend skickar interestRate/interestType på kontot.
-// Sparkontots ränta är samma som i FAQ:n.
-const fallbackInterestByAccountType: Record<string, AccountInterest> = {
-    SAVINGS: { rate: 3.5, type: 'VARIABLE' },
-    CHECKING: { rate: 0, type: 'VARIABLE' },
-}
-
 const interestTypeLabels: Record<InterestType, string> = {
     VARIABLE: 'rörlig',
     FIXED: 'fast',
@@ -24,16 +17,34 @@ export const interestTypeExplanations: Record<InterestType, string> = {
     FIXED: 'Fast ränta är densamma under hela bindningstiden.',
 }
 
-export function getAccountInterest(account: BackendAccount): AccountInterest | null {
-    if (account.interestRate !== undefined && account.interestType) {
-        const rate = Number(account.interestRate.replace(',', '.'))
+function parseAmount(value: string) {
+    return Number(value.replace(/\s/g, '').replace(',', '.'))
+}
 
-        if (!Number.isNaN(rate)) {
-            return { rate, type: account.interestType }
-        }
+// Null när backend inte skickar ränta för kontot. Då visas ingen ränta hellre än en gissad.
+export function getAccountInterest(account: BackendAccount): AccountInterest | null {
+    if (account.interestRate === undefined || !account.interestType) {
+        return null
     }
 
-    return fallbackInterestByAccountType[account.accountType] ?? null
+    const rate = parseAmount(account.interestRate)
+
+    return Number.isNaN(rate) ? null : { rate, type: account.interestType }
+}
+
+// Ex: "123,45 kr". Null när backend inte skickar upplupen ränta.
+export function formatAccruedInterest(account: BackendAccount) {
+    if (account.accruedInterest === undefined) {
+        return null
+    }
+
+    const amount = parseAmount(account.accruedInterest)
+
+    if (Number.isNaN(amount)) {
+        return null
+    }
+
+    return `${amount.toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kr`
 }
 
 // Ex: "3,50 % · rörlig"

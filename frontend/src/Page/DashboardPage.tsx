@@ -40,7 +40,7 @@ import {
     type AccountPresentation,
     type AccountVariant,
 } from '../utils/accountPresentation'
-import { formatAccountInterest, getAccountInterest } from '../utils/accountInterest'
+import { formatAccountInterest, formatAccruedInterest, getAccountInterest } from '../utils/accountInterest'
 import { getNextEvent } from '../utils/nextEvent'
 import { getTransactionsNewestFirst } from '../utils/transactionOrder'
 import { OrderReceipt, type OrderReceiptData } from '../components/OrderReceipt/OrderReceipt'
@@ -83,6 +83,8 @@ function mapBackendAccountToDashboardAccount(account: BackendAccount, index: num
         value: formatBackendBalance(account.balance),
         interest: interest ? formatAccountInterest(interest) : undefined,
         interestType: interest?.type,
+        // Konton utan ränta (t.ex. lönekonto på 0 %) visar ingen upplupen ränta
+        accruedInterest: interest && interest.rate > 0 ? (formatAccruedInterest(account) ?? undefined) : undefined,
         accountNumber: account.accountNumber,
         variant: presentation.variant,
     }
@@ -614,12 +616,18 @@ function DashboardPage() {
                                         {selectedAccount.value}
                                     </p>
 
-                                    {(selectedAccount.interest || selectedAccount.accountNumber) && (
+                                    {(selectedAccount.interest || selectedAccount.accruedInterest || selectedAccount.accountNumber) && (
                                         <dl className="account-modal__details">
                                             {selectedAccount.interest && (
                                                 <div>
                                                     <dt>Ränta</dt>
                                                     <dd>{selectedAccount.interest}</dd>
+                                                </div>
+                                            )}
+                                            {selectedAccount.accruedInterest && (
+                                                <div>
+                                                    <dt>Upplupen ränta i år</dt>
+                                                    <dd>{selectedAccount.accruedInterest}</dd>
                                                 </div>
                                             )}
                                             {selectedAccount.accountNumber && (

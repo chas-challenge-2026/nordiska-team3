@@ -10,6 +10,8 @@ export interface Account {
     value: string
     interest?: string
     interestType?: InterestType
+    // Ex: "123,45 kr"
+    accruedInterest?: string
     accountNumber?: string
     variant?: 'default' | 'accent' | 'success' | 'danger' | 'purple' | 'pink'
 }
