@@ -68,7 +68,7 @@ export function RecentEvents({ events = [], title = 'Senaste händelser' }: Rece
   )
 }
 
-/** Formats event amounts with explicit plus signs for incoming money. */
+/** Visar beloppet med plus eller minus. */
 function formatAmount(amount: number) {
   const sign = amount > 0 ? '+' : ''
   return `${sign}${amount.toLocaleString('sv-SE', {
@@ -77,7 +77,7 @@ function formatAmount(amount: number) {
   })} kr`
 }
 
-/** Returns the Swedish label shown inside each event badge. */
+/** Hämtar texten till händelsens badge. */
 function getEventLabel(type: RecentEvent['type']) {
   if (type === 'deposit') {
     return 'Insättning'
@@ -94,7 +94,7 @@ function getEventLabel(type: RecentEvent['type']) {
   return 'Ränta'
 }
 
-/** Shows transfers as deposit/withdrawal badges based on money direction. */
+/** Väljer badge efter om pengarna går in eller ut. */
 function getEventBadgeType(event: RecentEvent): RecentEvent['type'] {
   if (event.type === 'transfer') {
     return event.amount < 0 ? 'withdrawal' : 'deposit'

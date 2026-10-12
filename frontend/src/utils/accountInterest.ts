@@ -17,12 +17,12 @@ export const interestTypeExplanations: Record<InterestType, string> = {
     FIXED: 'Fast ränta är densamma under hela bindningstiden.',
 }
 
-/** Parses backend money/rate strings that may use either comma or dot decimals. */
+/** Gör om backendens siffervärden till number. */
 function parseAmount(value: string) {
     return Number(value.replace(/\s/g, '').replace(',', '.'))
 }
 
-/** Returns account interest only when backend supplies both rate and rate type. */
+/** Hämtar kontots ränta om backend skickar den. */
 export function getAccountInterest(account: BackendAccount): AccountInterest | null {
     if (account.interestRate === undefined || !account.interestType) {
         return null
@@ -33,7 +33,7 @@ export function getAccountInterest(account: BackendAccount): AccountInterest | n
     return Number.isNaN(rate) ? null : { rate, type: account.interestType }
 }
 
-/** Formats accrued interest from backend, or returns null when it is unavailable. */
+/** Visar upplupen ränta om den finns. */
 export function formatAccruedInterest(account: BackendAccount) {
     if (account.accruedInterest === undefined) {
         return null
@@ -48,7 +48,7 @@ export function formatAccruedInterest(account: BackendAccount) {
     return `${amount.toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kr`
 }
 
-/** Formats account interest for compact account cards, e.g. "3,50 % · rörlig". */
+/** Visar räntan som text, till exempel "3,50 % · rörlig". */
 export function formatAccountInterest({ rate, type }: AccountInterest) {
     const formattedRate = rate.toLocaleString('sv-SE', {
         minimumFractionDigits: 2,

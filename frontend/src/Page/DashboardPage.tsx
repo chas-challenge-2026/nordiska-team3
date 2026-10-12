@@ -50,22 +50,22 @@ import { transactionAmountSchema } from '../schemas/transactionSchema'
 type CreateAccountIconId = AccountIconId
 type CreateAccountVariant = AccountVariant
 
-/** Parses a Swedish currency string from the UI into a number for validation. */
+/** Gör om en kr-text till number. */
 function parseKr(value: string) {
     return Number(value.replace(/\s/g, '').replace('kr', '').replace(',', '.'))
 }
 
-/** Formats whole-krona values with Swedish thousands separators. */
+/** Visar ett belopp i kronor. */
 function formatKr(amount: number) {
     return `${amount.toLocaleString('sv-SE')} kr`
 }
 
-/** Converts backend decimal strings into numbers without assuming a browser locale. */
+/** Gör om backendens saldo till number. */
 function parseBackendBalance(balance: string) {
     return Number(balance.replace(/\s/g, '').replace(',', '.'))
 }
 
-/** Formats a backend balance for account cards, falling back to zero when malformed. */
+/** Visar backendens saldo i kontokortet. */
 function formatBackendBalance(balance: string) {
     const numericBalance = parseBackendBalance(balance)
 
@@ -76,7 +76,7 @@ function formatBackendBalance(balance: string) {
     return formatKr(numericBalance)
 }
 
-/** Maps account DTOs into the presentation model consumed by BalanceOverview. */
+/** Gör om ett backend-konto till ett dashboard-konto. */
 function mapBackendAccountToDashboardAccount(account: BackendAccount, index: number): Account {
     const presentation = getAccountPresentation(account.id, index)
     const interest = getAccountInterest(account)
@@ -95,7 +95,7 @@ function mapBackendAccountToDashboardAccount(account: BackendAccount, index: num
     }
 }
 
-/** Normalizes backend transaction kinds into the dashboard badge/action taxonomy. */
+/** Gör om backendens transaktionstyp till frontendens typ. */
 function mapBackendTransactionType(transactionType: string): DashboardAccountTransaction['type'] {
     if (transactionType === 'DEPOSIT') {
         return 'deposit'
@@ -112,7 +112,7 @@ function mapBackendTransactionType(transactionType: string): DashboardAccountTra
     return 'interest'
 }
 
-/** Formats backend timestamps for compact transaction rows. */
+/** Visar transaktionsdatum i kort format. */
 function formatDashboardTransactionDate(date: string) {
     return new Intl.DateTimeFormat('sv-SE', {
         day: 'numeric',
@@ -121,7 +121,7 @@ function formatDashboardTransactionDate(date: string) {
     }).format(new Date(date))
 }
 
-/** Maps backend transaction DTOs into dashboard recent-event rows. */
+/** Gör om en backend-transaktion till en dashboard-rad. */
 function mapBackendTransactionToDashboardTransaction(
     transaction: BackendTransaction,
     accountId: string

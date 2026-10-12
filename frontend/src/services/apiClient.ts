@@ -48,9 +48,8 @@ async function getFreshAccessToken() {
 }
 
 /**
- * Fetch wrapper for authenticated API calls.
- * On a 401 it refreshes the access token once, retries the original request,
- * and sends the user to login if refresh is unavailable or expired.
+ * Gör API-anrop med token.
+ * Om token har gått ut testas refresh en gång.
  */
 export async function apiFetch(input: RequestInfo | URL, init: RequestInit = {}) {
     const requestInit: RequestInit = {

@@ -11,8 +11,7 @@ export type AccountWithTransactions = {
 }
 
 /**
- * Fetches accounts and their transaction pages in one shared service call.
- * This keeps dashboard-style screens from duplicating per-account transaction fetches.
+ * Hämtar konton och deras transaktioner tillsammans.
  */
 export async function getAccountsWithTransactions(page = 1, pageSize = 20): Promise<AccountWithTransactions[]> {
     const accounts = await getAccounts()

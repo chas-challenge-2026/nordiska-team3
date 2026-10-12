@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { logout } from '../services/authService'
 
-/** Logs the user out both locally and in backend, then returns to the login route. */
+/** Loggar ut och skickar användaren till login. */
 export function useLogout() {
     const navigate = useNavigate()
 

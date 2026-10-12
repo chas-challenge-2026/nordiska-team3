@@ -10,19 +10,19 @@ export type LoginResponse = {
     accessToken: string
 }
 
-/** Stores the current session data returned by login or refresh. */
+/** Sparar token och användare efter login eller refresh. */
 export function storeLoginResponse(data: LoginResponse) {
     localStorage.setItem('accessToken', data.accessToken)
     localStorage.setItem('user', JSON.stringify(data.user))
 }
 
-/** Removes all frontend-held authentication state. */
+/** Rensar sparad inloggning. */
 export function clearStoredAuth() {
     localStorage.removeItem('accessToken')
     localStorage.removeItem('user')
 }
 
-/** Logs in with PIN credentials and stores the returned access token for authenticated calls. */
+/** Loggar in med personnummer och PIN. */
 export async function login(
     personalNumber: string,
     pin: string
@@ -45,7 +45,7 @@ export async function login(
     return data
 }
 
-/** Attempts backend logout and always clears local authentication state. */
+/** Loggar ut och rensar alltid lokal inloggning. */
 export async function logout() {
     // Spara token innan vi rensar localStorage, så backend kan identifiera användaren.
     const accessToken = getStoredAccessToken()
@@ -67,7 +67,7 @@ export async function logout() {
     clearStoredAuth()
 }
 
-/** Reads the locally stored user, returning null for missing or malformed data. */
+/** Hämtar sparad användare om den finns. */
 export function getStoredUser(): LoginResponse['user'] | null {
     const storedUser = localStorage.getItem('user')
     if (!storedUser || storedUser === 'undefined') return null
@@ -78,12 +78,12 @@ export function getStoredUser(): LoginResponse['user'] | null {
     }
 }
 
-/** Returns the access token used by services for Authorization headers. */
+/** Hämtar sparad access-token. */
 export function getStoredAccessToken(): string | null {
     return localStorage.getItem('accessToken')
 }
 
-/** Checks whether the frontend currently has an access token. */
+/** Kollar om användaren verkar vara inloggad. */
 export function isAuthenticated(): boolean {
     return Boolean(getStoredAccessToken())
 }
