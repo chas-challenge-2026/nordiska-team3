@@ -173,6 +173,37 @@ public class PdfSigningServiceTests : IDisposable
         (await File.ReadAllTextAsync(PublicKeyPath)).Should().Be(publicBefore);
     }
 
+    [Fact]
+    public async Task SignAsync_WhenThePublicKeyDoesNotMatchThePrivateKey_ThrowsWithoutRunningTheSigner()
+    {
+        SetupRunner();
+        var service = CreateService();
+        await service.SignAsync(_pdfPath);
+        var callsBefore = _calls.Count;
+        using var otherKey = RSA.Create(2048);
+        await File.WriteAllTextAsync(PublicKeyPath, otherKey.ExportSubjectPublicKeyInfoPem());
+
+        var act = () => service.SignAsync(_pdfPath);
+
+        var exception = await act.Should().ThrowAsync<TaxReportGenerationException>();
+        exception.Which.Message.Should().Be("The PDF signer keys are not valid.");
+        _calls.Should().HaveCount(callsBefore);
+    }
+
+    [Fact]
+    public async Task SignAsync_WhenAKeyFileIsNotAValidKey_Throws()
+    {
+        SetupRunner();
+        var service = CreateService();
+        await service.SignAsync(_pdfPath);
+        await File.WriteAllTextAsync(PrivateKeyPath, "not a key");
+
+        var act = () => service.SignAsync(_pdfPath);
+
+        var exception = await act.Should().ThrowAsync<TaxReportGenerationException>();
+        exception.Which.Message.Should().Be("The PDF signer keys are not valid.");
+    }
+
     private PdfSigningService CreateService(string? signerPath = null)
     {
         var configuration = new ConfigurationBuilder()

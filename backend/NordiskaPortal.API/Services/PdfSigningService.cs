@@ -94,11 +94,44 @@ public sealed class PdfSigningService : IPdfSigningService
             {
                 using var rsa = RSA.Create();
                 rsa.ImportFromPem(File.ReadAllText(privateKeyPath));
-                WriteKeyFile(publicKeyPath, rsa.ExportSubjectPublicKeyInfoPem(), isSecret: false);
+                WriteKeyFile(publicKeyPath, rsa.ExportSubjectPublicKeyInfoPem(), isSecret: false);               
+            }
+            else
+            {
+                EnsureKeysMatch(privateKeyPath, publicKeyPath);
             }
         }
 
         return (privateKeyPath, publicKeyPath);
+    }
+
+    // A signature made with one key can never be checked with the public key of another, so a stale or
+    // mismatched pair is reported clearly here instead of showing up as failed signature checks.
+    private void EnsureKeysMatch(string privateKeyPath, string publicKeyPath)
+    {
+        try
+        {
+            using var privateKey = RSA.Create();
+            privateKey.ImportFromPem(File.ReadAllText(privateKeyPath));
+            using var publicKey = RSA.Create();
+            publicKey.ImportFromPem(File.ReadAllText(publicKeyPath));
+
+            if (privateKey.ExportSubjectPublicKeyInfo().AsSpan().SequenceEqual(publicKey.ExportSubjectPublicKeyInfo()))
+            {
+                return;
+            }
+        }
+        catch (Exception ex) when (ex is CryptographicException or ArgumentException)
+        {
+            _logger.LogError(ex, "Could not read the tax report signing keys at {PrivateKeyPath} and {PublicKeyPath}.", privateKeyPath, publicKeyPath);
+            throw new TaxReportGenerationException("The PDF signer keys are not valid.");
+        }
+
+        _logger.LogError(
+            "The tax report signing keys do not match: {PublicKeyPath} is not the public key of {PrivateKeyPath}. " +
+            "Delete the public key file to derive it again, or restore the matching pair.",
+            publicKeyPath, privateKeyPath);
+        throw new TaxReportGenerationException("The PDF signer keys are not valid.");
     }
 
     private static void WriteKeyFile(string path, string pem, bool isSecret)
