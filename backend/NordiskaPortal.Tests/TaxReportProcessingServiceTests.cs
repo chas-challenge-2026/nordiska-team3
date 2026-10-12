@@ -89,7 +89,12 @@ public class TaxReportProcessingServiceTests : IDisposable
     public async Task ProcessReportAsync_WhenSigningFails_MarksTheReportFailedWithoutAPdf()
     {
         var report = await AddReportAsync();
-        SetupRunner(args => File.WriteAllBytes(args[1], new byte[] { 1, 2, 3 }), exitCode: 0);
+        string? pdfPath = null;
+        SetupRunner(args =>
+        {
+            pdfPath = args[1];
+            File.WriteAllBytes(args[1], new byte[] { 1, 2, 3 });
+        }, exitCode: 0);
         _signingMock
             .Setup(s => s.SignAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new TaxReportGenerationException("PDF signing failed (code 4)."));
@@ -101,6 +106,7 @@ public class TaxReportProcessingServiceTests : IDisposable
         report.ErrorMessage.Should().Be("PDF signing failed (code 4).");
         report.PdfPath.Should().BeNull();
         report.SignaturePath.Should().BeNull();
+        File.Exists(pdfPath).Should().BeFalse("an unsigned PDF must not be left on disk");
         _context.AuditEntries.Should().BeEmpty();
     }
 

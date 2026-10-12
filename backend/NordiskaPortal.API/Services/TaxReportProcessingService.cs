@@ -184,7 +184,17 @@ namespace NordiskaPortal.API.Services
                 throw new TaxReportGenerationException("The PDF generator did not produce a file.");
             }
 
-            var signature = await _signingService.SignAsync(pdfFullPath);
+            PdfSignature signature;
+            try
+            {
+                signature = await _signingService.SignAsync(pdfFullPath);
+            }
+            catch
+            {
+                // An unsigned PDF must not be left on disk: it holds customer data and is never published.
+                System.IO.File.Delete(pdfFullPath);
+                throw;
+            }
 
             report.PdfPath = pdfFullPath;
             report.SignaturePath = signature.SignaturePath;
