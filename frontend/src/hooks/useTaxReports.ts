@@ -6,6 +6,7 @@ function isInProgress(report: TaxReport) {
     return report.status === 'QUEUED' || report.status === 'PROCESSING'
 }
 
+/** Fetches tax reports and polls while any report is still being generated. */
 export function useTaxReports() {
     return useQuery({
         queryKey: ['taxReports'],
@@ -16,6 +17,7 @@ export function useTaxReports() {
     })
 }
 
+/** Creates a tax report and refreshes the report list when backend accepts it. */
 export function useCreateTaxReport() {
     const queryClient = useQueryClient()
 

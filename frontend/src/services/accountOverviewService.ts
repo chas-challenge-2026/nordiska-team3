@@ -1,7 +1,3 @@
-// Backend saknar just nu en endpoint för alla transaktioner per användare.
-// Därför hämtar frontend transaktioner per konto här, samlat på ett ställe,
-// så DashboardPage och HistoryPage slipper duplicera samma fetch-logik.
-
 import {
     getAccounts,
     getTransactionsForAccount,
@@ -14,6 +10,10 @@ export type AccountWithTransactions = {
     history: TransactionHistoryResponse
 }
 
+/**
+ * Fetches accounts and their transaction pages in one shared service call.
+ * This keeps dashboard-style screens from duplicating per-account transaction fetches.
+ */
 export async function getAccountsWithTransactions(page = 1, pageSize = 20): Promise<AccountWithTransactions[]> {
     const accounts = await getAccounts()
 

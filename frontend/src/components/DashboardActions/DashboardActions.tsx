@@ -1,7 +1,40 @@
 import type { ReactNode } from 'react'
 import { Clock3, FileText, Minus, Plus } from 'lucide-react'
 import './DashboardActions.css'
-import { mockDashboardActions, type DashboardAction } from './mockDashboardActions'
+
+export type DashboardAction = {
+  id: string
+  label: string
+  variant: 'primary' | 'secondary'
+  action: 'deposit' | 'withdraw' | 'history' | 'tax'
+}
+
+const defaultDashboardActions: DashboardAction[] = [
+  {
+    id: 'deposit',
+    label: 'Sätt in',
+    variant: 'secondary',
+    action: 'deposit',
+  },
+  {
+    id: 'withdraw',
+    label: 'Ta ut',
+    variant: 'primary',
+    action: 'withdraw',
+  },
+  {
+    id: 'history',
+    label: 'Historik',
+    variant: 'secondary',
+    action: 'history',
+  },
+  {
+    id: 'tax',
+    label: 'Skatt',
+    variant: 'secondary',
+    action: 'tax',
+  },
+]
 
 type DashboardActionsProps = {
   actions?: DashboardAction[]
@@ -16,7 +49,7 @@ const actionIcons: Record<DashboardAction['action'], ReactNode> = {
 }
 
 export function DashboardActions({
-  actions = mockDashboardActions,
+  actions = defaultDashboardActions,
   onActionClick,
 }: DashboardActionsProps) {
   return (

@@ -10,7 +10,19 @@ export type LoginResponse = {
     accessToken: string
 }
 
-// Riktigt API-anrop mot backend: POST /api/auth/login-pin
+/** Stores the current session data returned by login or refresh. */
+export function storeLoginResponse(data: LoginResponse) {
+    localStorage.setItem('accessToken', data.accessToken)
+    localStorage.setItem('user', JSON.stringify(data.user))
+}
+
+/** Removes all frontend-held authentication state. */
+export function clearStoredAuth() {
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('user')
+}
+
+/** Logs in with PIN credentials and stores the returned access token for authenticated calls. */
 export async function login(
     personalNumber: string,
     pin: string
@@ -28,13 +40,12 @@ export async function login(
     }
 
     const data: LoginResponse = await response.json()
-
-    localStorage.setItem('accessToken', data.accessToken)
-    localStorage.setItem('user', JSON.stringify(data.user))
+    storeLoginResponse(data)
 
     return data
 }
 
+/** Attempts backend logout and always clears local authentication state. */
 export async function logout() {
     // Spara token innan vi rensar localStorage, så backend kan identifiera användaren.
     const accessToken = getStoredAccessToken()
@@ -53,11 +64,10 @@ export async function logout() {
     }
 
     // Rensa frontendens sparade inloggningsdata.
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('user')
+    clearStoredAuth()
 }
 
-// Hämtar användaren som sparades vid login.
+/** Reads the locally stored user, returning null for missing or malformed data. */
 export function getStoredUser(): LoginResponse['user'] | null {
     const storedUser = localStorage.getItem('user')
     if (!storedUser || storedUser === 'undefined') return null
@@ -68,12 +78,12 @@ export function getStoredUser(): LoginResponse['user'] | null {
     }
 }
 
-// Hämtar sparad accessToken från localStorage.
+/** Returns the access token used by services for Authorization headers. */
 export function getStoredAccessToken(): string | null {
     return localStorage.getItem('accessToken')
 }
 
-// Kollar om det finns en sparad token.
+/** Checks whether the frontend currently has an access token. */
 export function isAuthenticated(): boolean {
     return Boolean(getStoredAccessToken())
 }

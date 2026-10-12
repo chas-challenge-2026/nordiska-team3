@@ -1,4 +1,3 @@
-import { type DashboardAccountTransaction } from '../components/DashboardActions/mockDashboardAccountTransactions'
 import { type PointerEvent, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { UserProfile } from '../components/UserProfile'
@@ -23,7 +22,8 @@ import { RecentEvents } from '../components/RecentEvents/RecentEvents'
 import { NextEvent } from '../components/NextEvent/NextEvent'
 import { CustomerServiceFooter } from '../components/CustomerServiceFooter'
 import type { Account } from '../components/DashboardActions/BalanceOverview'
-import type { DashboardAction } from '../components/DashboardActions/mockDashboardActions'
+import type { DashboardAction } from '../components/DashboardActions/DashboardActions'
+import type { DashboardAccountTransaction } from '../types/dashboardTransaction'
 import { useLogout } from '../hooks/useLogout'
 import { useTheme } from '../context/useTheme'
 import { Modal } from '../components/Modal'
@@ -50,18 +50,22 @@ import { transactionAmountSchema } from '../schemas/transactionSchema'
 type CreateAccountIconId = AccountIconId
 type CreateAccountVariant = AccountVariant
 
+/** Parses a Swedish currency string from the UI into a number for validation. */
 function parseKr(value: string) {
     return Number(value.replace(/\s/g, '').replace('kr', '').replace(',', '.'))
 }
 
+/** Formats whole-krona values with Swedish thousands separators. */
 function formatKr(amount: number) {
     return `${amount.toLocaleString('sv-SE')} kr`
 }
 
+/** Converts backend decimal strings into numbers without assuming a browser locale. */
 function parseBackendBalance(balance: string) {
     return Number(balance.replace(/\s/g, '').replace(',', '.'))
 }
 
+/** Formats a backend balance for account cards, falling back to zero when malformed. */
 function formatBackendBalance(balance: string) {
     const numericBalance = parseBackendBalance(balance)
 
@@ -72,6 +76,7 @@ function formatBackendBalance(balance: string) {
     return formatKr(numericBalance)
 }
 
+/** Maps account DTOs into the presentation model consumed by BalanceOverview. */
 function mapBackendAccountToDashboardAccount(account: BackendAccount, index: number): Account {
     const presentation = getAccountPresentation(account.id, index)
     const interest = getAccountInterest(account)
@@ -90,6 +95,7 @@ function mapBackendAccountToDashboardAccount(account: BackendAccount, index: num
     }
 }
 
+/** Normalizes backend transaction kinds into the dashboard badge/action taxonomy. */
 function mapBackendTransactionType(transactionType: string): DashboardAccountTransaction['type'] {
     if (transactionType === 'DEPOSIT') {
         return 'deposit'
@@ -106,6 +112,7 @@ function mapBackendTransactionType(transactionType: string): DashboardAccountTra
     return 'interest'
 }
 
+/** Formats backend timestamps for compact transaction rows. */
 function formatDashboardTransactionDate(date: string) {
     return new Intl.DateTimeFormat('sv-SE', {
         day: 'numeric',
@@ -114,6 +121,7 @@ function formatDashboardTransactionDate(date: string) {
     }).format(new Date(date))
 }
 
+/** Maps backend transaction DTOs into dashboard recent-event rows. */
 function mapBackendTransactionToDashboardTransaction(
     transaction: BackendTransaction,
     accountId: string

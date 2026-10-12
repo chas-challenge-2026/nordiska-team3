@@ -1,6 +1,15 @@
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react'
 import './RecentEvents.css'
-import { type RecentEvent } from './mockRecentEvents'
+
+export type RecentEvent = {
+  id: string
+  title: string
+  accountName: string
+  date: string
+  amount: number
+  type: 'deposit' | 'withdrawal' | 'transfer' | 'interest'
+  counterparty?: string | null
+}
 
 type RecentEventsProps = {
   events?: RecentEvent[]
@@ -59,6 +68,7 @@ export function RecentEvents({ events = [], title = 'Senaste händelser' }: Rece
   )
 }
 
+/** Formats event amounts with explicit plus signs for incoming money. */
 function formatAmount(amount: number) {
   const sign = amount > 0 ? '+' : ''
   return `${sign}${amount.toLocaleString('sv-SE', {
@@ -67,6 +77,7 @@ function formatAmount(amount: number) {
   })} kr`
 }
 
+/** Returns the Swedish label shown inside each event badge. */
 function getEventLabel(type: RecentEvent['type']) {
   if (type === 'deposit') {
     return 'Insättning'
@@ -83,6 +94,7 @@ function getEventLabel(type: RecentEvent['type']) {
   return 'Ränta'
 }
 
+/** Shows transfers as deposit/withdrawal badges based on money direction. */
 function getEventBadgeType(event: RecentEvent): RecentEvent['type'] {
   if (event.type === 'transfer') {
     return event.amount < 0 ? 'withdrawal' : 'deposit'
