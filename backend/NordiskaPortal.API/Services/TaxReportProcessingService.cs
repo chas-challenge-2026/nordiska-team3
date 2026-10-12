@@ -21,6 +21,7 @@ namespace NordiskaPortal.API.Services
         private readonly ILogger<TaxReportProcessingService> _logger;
         private readonly TaxReportQueue _queue;
         private readonly IAuditService _auditService;
+        private readonly IPdfSigningService _signingService;
 
         public TaxReportProcessingService(
             ApplicationDbContext context,
@@ -29,7 +30,8 @@ namespace NordiskaPortal.API.Services
             IConfiguration configuration,
             ILogger<TaxReportProcessingService> logger,
             TaxReportQueue queue,
-            IAuditService auditService)
+            IAuditService auditService,
+            IPdfSigningService signingService)
         {
             _context = context;
             _taxReportDataService = taxReportDataService;
@@ -38,6 +40,7 @@ namespace NordiskaPortal.API.Services
             _logger = logger;
             _queue = queue;
             _auditService = auditService;
+            _signingService = signingService;
         }
 
 
@@ -99,7 +102,8 @@ namespace NordiskaPortal.API.Services
 
                 // The READY status and its audit entry are saved in the same database transaction.
                 await using var dbTransaction = await _context.Database.BeginTransactionAsync();
-                await _auditService.AppendAsync(report.UserId, AuditActions.TaxReportGenerated, nameof(TaxReport), report.Id, new { reportYear = report.ReportYear });
+                await _auditService.AppendAsync(report.UserId, AuditActions.TaxReportGenerated, nameof(TaxReport), report.Id,
+                    new { reportYear = report.ReportYear, pdfSha256 = report.Sha256 });
                 await _context.SaveChangesAsync();
                 await dbTransaction.CommitAsync();
             }
@@ -132,8 +136,8 @@ namespace NordiskaPortal.API.Services
                 .ToListAsync();
         }
 
-        // Runs the native PDF generator on the input JSON. The signer is not wired in yet,
-        // so a successful report is READY but unsigned (SignaturePath stays null).
+        // Runs the native PDF generator on the input JSON, then signs the PDF. A report only becomes READY
+        // after the signature has been checked, so a READY report is always signed.
         private async Task GeneratePdfAsync(TaxReport report, string jsonPath, string pdfPath)
         {
             var generatorPath = Path.GetFullPath(_configuration["TaxReport:PdfGeneratorPath"]!);
@@ -180,11 +184,15 @@ namespace NordiskaPortal.API.Services
                 throw new TaxReportGenerationException("The PDF generator did not produce a file.");
             }
 
+            var signature = await _signingService.SignAsync(pdfFullPath);
+
             report.PdfPath = pdfFullPath;
+            report.SignaturePath = signature.SignaturePath;
+            report.Sha256 = signature.Sha256;
             report.Status = "READY";
             report.CompletedAt = DateTime.UtcNow;
 
-            _logger.LogInformation("TaxReport {TaxReportId} PDF written to {Path}", report.Id, pdfFullPath);
+            _logger.LogInformation("TaxReport {TaxReportId} PDF written and signed at {Path}", report.Id, pdfFullPath);
         }
 
         private static string Truncate(string text) =>
