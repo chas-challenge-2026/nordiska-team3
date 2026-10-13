@@ -14,9 +14,6 @@ public class UserRepository : Repository<User>, IUserRepository // Ärver CRUD fr
     public async Task<User?> GetByPersonalNumberHashAsync(string personalNumberHash) => // Söks via PIN-login, POST /api/auth/login-pin
         await _dbSet.SingleOrDefaultAsync(u => u.PersonalNumberHash == personalNumberHash); // Null om det inte matchar (hashen är unik)
 
-    public async Task<User?> GetByRefreshTokenAsync(string refreshToken) => // Söks via POST /api/auth/refresh
-        await _dbSet.SingleOrDefaultAsync(u => u.RefreshToken == refreshToken); // Null om ingen matchar (t.ex. redan roterad/utloggad)
-
     public async Task<int> RegisterFailedPinAttemptAsync(Guid userId)
     {
         await _dbSet.Where(u => u.Id == userId)

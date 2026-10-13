@@ -99,7 +99,7 @@ public class AuthController : ControllerBase
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
-        await _authService.LogoutAsync(CurrentUserId);
+        await _authService.LogoutAsync(CurrentUserId, Request.Cookies["refreshToken"]);
 
         Response.Cookies.Delete("refreshToken", new CookieOptions { Path = RefreshCookiePath });
 

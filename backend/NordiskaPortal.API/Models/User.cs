@@ -12,8 +12,6 @@ public class User
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-    public string? RefreshToken { get; set; }
-    public DateTime? RefreshTokenExpiryTime { get; set; }
     public DateTime? LockedUntil { get; set; }
     public int FailedPinAttempts { get; set; }
 
