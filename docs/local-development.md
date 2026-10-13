@@ -51,8 +51,8 @@ Databaslösenordet och nycklarna genereras första gången appen startar och sparas
 - Försvinner `api_secrets` medan databasen finns kvar går personnummer inte att läsa utan nyckeln, så API:et vägrar starta.
 - Försvinner `audit.key` medan databasen har audit-poster vägrar API:et starta, eftersom en ny nyckel inte kan verifiera de gamla posterna.
 - En ny `jwt.key` loggar bara ut alla inloggade.
-- Signeringsnyckeln for skatterapporter (`tax_report_signing_key.pem` och `tax_report_signing_key.pub.pem`) ligger ocksa i `api_secrets`. Forsvinner den skapar API:et ett nytt nyckelpar utan att varna kunden, och da gar redan utfardade skatterapporter inte att verifiera mot den nya publika nyckeln.
-- Ta backup av `api_secrets` utanfor repot och checka aldrig in den. Backupen innehaller hemliga nycklar.
+- Signeringsnyckeln för skatterapporter (`tax_report_signing_key.pem` och `tax_report_signing_key.pub.pem`) ligger också i `api_secrets`. Försvinner den medan det finns signerade rapporter skapar API:et inte ett nytt par.
+- Rapporterna blir FAILED med texten "The PDF signer keys are not available." tills nyckeln är återstalld från backup. Finns inga signerade rapporter skapas ett nytt par när nästa rapport signeras.
 
 ## 4. Alla inställningar
 
