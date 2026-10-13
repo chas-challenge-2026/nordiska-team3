@@ -13,13 +13,19 @@ public sealed class PdfSigningService : IPdfSigningService
     private readonly INativeProcessRunner _processRunner;
     private readonly IConfiguration _configuration;
     private readonly ILogger<PdfSigningService> _logger;
+    private readonly ISignedReportCheck _signedReports;
     private readonly object _keyLock = new();
 
-    public PdfSigningService(INativeProcessRunner processRunner, IConfiguration configuration, ILogger<PdfSigningService> logger)
+    public PdfSigningService(
+        INativeProcessRunner processRunner,
+        IConfiguration configuration,
+        ILogger<PdfSigningService> logger,
+        ISignedReportCheck signedReports)
     {
         _processRunner = processRunner;
         _configuration = configuration;
         _logger = logger;
+        _signedReports = signedReports;
     }
 
     public async Task<PdfSignature> SignAsync(string pdfPath, CancellationToken cancellationToken = default)
@@ -31,6 +37,7 @@ public sealed class PdfSigningService : IPdfSigningService
             throw new TaxReportGenerationException("The PDF signer is not available.");
         }
 
+        await EnsureMissingKeyMayBeReplacedAsync(cancellationToken);
         var (privateKeyPath, publicKeyPath) = EnsureKeyPair();
         var pdfFullPath = Path.GetFullPath(pdfPath);
         var signaturePath = Path.ChangeExtension(pdfFullPath, ".sig");
@@ -57,6 +64,7 @@ public sealed class PdfSigningService : IPdfSigningService
 
     public async Task<string> GetPublicKeyPemAsync(CancellationToken cancellationToken = default)
     {
+        await EnsureMissingKeyMayBeReplacedAsync(cancellationToken);
         var (_, publicKeyPath) = EnsureKeyPair();
         return await File.ReadAllTextAsync(publicKeyPath, cancellationToken);
     }
@@ -77,6 +85,22 @@ public sealed class PdfSigningService : IPdfSigningService
                 "PDF signer {Step} failed with exit code {ExitCode}: {StandardError}",
                 step, result.ExitCode, Truncate(result.StandardError));
             throw new TaxReportGenerationException($"PDF {step} failed (code {result.ExitCode}).");
+        }
+    }
+
+    // A new key pair is only created while no report has been signed. If the private key is missing but signed
+    // reports exist, a new key would make all their signatures fail the check, so we stop and ask for a restore.
+    private async Task EnsureMissingKeyMayBeReplacedAsync(CancellationToken cancellationToken)
+    {
+        var privateKeyPath = Path.GetFullPath(_configuration["TaxReport:PrivateKeyPath"]!);
+        if (File.Exists(privateKeyPath)) return;
+
+        if (await _signedReports.AnySignedReportAsync(cancellationToken))
+        {
+            _logger.LogError(
+                "The tax report signing key {Path} is missing, but signed reports exist. A new key would make their signatures fail the check. Restore the key from a backup.",
+                privateKeyPath);
+            throw new TaxReportGenerationException("The PDF signer keys are not available.");
         }
     }
 

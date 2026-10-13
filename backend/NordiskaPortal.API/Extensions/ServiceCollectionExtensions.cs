@@ -43,6 +43,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<INativeProcessRunner, NativeProcessRunner>();
         services.AddScoped<IAuditService, AuditService>();
         services.AddSingleton(sp => AuditKey.Load(sp.GetRequiredService<IConfiguration>()));
+        services.AddSingleton<ISignedReportCheck, SignedReportCheck>();
         services.AddSingleton<IPdfSigningService, PdfSigningService>();
 
         // Validation

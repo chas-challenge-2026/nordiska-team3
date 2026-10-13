@@ -257,7 +257,7 @@ public class PdfSigningServiceTests : IDisposable
             })
             .Build();
 
-        return new PdfSigningService(_runnerMock.Object, configuration, NullLogger<PdfSigningService>.Instance);
+        return new PdfSigningService(_runnerMock.Object, configuration, NullLogger<PdfSigningService>.Instance, new Mock<ISignedReportCheck>().Object);
     }
 
     // Acts as the native signer: writes a signature file on "sign" and returns the chosen exit codes.
