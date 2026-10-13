@@ -20,6 +20,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<AuditEntry> AuditEntries { get; set; } = null!;
     public DbSet<InterestRateObservation> InterestRateObservations { get; set; } = null!;
     public DbSet<AccountInterestPolicy> AccountInterestPolicies { get; set; } = null!;
+    public DbSet<InterestPayout> InterestPayouts { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -184,6 +185,14 @@ public class ApplicationDbContext : DbContext
             entity.HasData(
                 new AccountInterestPolicy { AccountType = "SAVINGS", EffectiveFrom = new DateOnly(2026, 1, 1), SpreadPercentagePoints = -0.5m },
                 new AccountInterestPolicy { AccountType = "CHECKING", EffectiveFrom = new DateOnly(2026, 1, 1), SpreadPercentagePoints = -100m });
+        });
+
+        // One row per account and year, the interest for that year has been handled.
+        modelBuilder.Entity<InterestPayout>(entity =>
+        {
+            entity.HasIndex(p => new { p.AccountId, p.Year }).IsUnique();
+            entity.Property(p => p.Amount).HasPrecision(18, 2);
+            entity.HasOne<Account>().WithMany().HasForeignKey(p => p.AccountId);
         });
     }
 }
