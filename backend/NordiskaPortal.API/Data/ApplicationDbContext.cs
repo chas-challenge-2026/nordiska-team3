@@ -21,6 +21,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<InterestRateObservation> InterestRateObservations { get; set; } = null!;
     public DbSet<AccountInterestPolicy> AccountInterestPolicies { get; set; } = null!;
     public DbSet<InterestPayout> InterestPayouts { get; set; } = null!;
+    public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -193,6 +194,13 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(p => new { p.AccountId, p.Year }).IsUnique();
             entity.Property(p => p.Amount).HasPrecision(18, 2);
             entity.HasOne<Account>().WithMany().HasForeignKey(p => p.AccountId);
+        });
+
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.Property(t => t.TokenHash).IsRequired().HasMaxLength(64);
+            entity.HasIndex(t => t.TokenHash).IsUnique();
+            entity.HasOne<User>().WithMany().HasForeignKey(t => t.UserId).OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

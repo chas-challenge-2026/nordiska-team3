@@ -148,7 +148,7 @@ public class AuthServicePinLockoutTests
 
         await using (var context = new ApplicationDbContext(options))
         {
-            var service = new AuthService(new UserRepository(context), _tokens.Object, _protector.Object,
+                        var service = new AuthService(new UserRepository(context), new RefreshTokenRepository(context), _tokens.Object, _protector.Object,
                 NullLogger<AuthService>.Instance, new FixedTimeProvider(Now), new ConfigurationBuilder().Build());
 
             var result = await service.LoginWithPinAsync(Login(Pin));
@@ -191,7 +191,7 @@ public class AuthServicePinLockoutTests
             })
             .Build();
 
-        return new AuthService(_users.Object, _tokens.Object, _protector.Object,
+        return new AuthService(_users.Object, new FakeRefreshTokenRepository(), _tokens.Object, _protector.Object,
             NullLogger<AuthService>.Instance, new FixedTimeProvider(Now), configuration);
     }
 
