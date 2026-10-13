@@ -24,10 +24,10 @@ public class AuthControllerTests
     {
         _authServiceMock
             .Setup(s => s.LoginWithPinAsync(It.IsAny<LoginPinRequestDto>()))
-            .ReturnsAsync(new AuthResult(
+            .ReturnsAsync(LoginResult.Success(new AuthResult(
                 new LoginResponseDto("access", new UserDto(Guid.NewGuid(), "Test Testsson", "test@example.com", "19900101-1234")),
                 "refresh-token",
-                DateTime.UtcNow.AddDays(7)));
+                DateTime.UtcNow.AddDays(7))));
         var controller = CreateController();
 
         await controller.LoginPin(new LoginPinRequestDto("19900101-1234", "1234"));
@@ -45,10 +45,10 @@ public class AuthControllerTests
     {
         _authServiceMock
             .Setup(s => s.LoginWithPinAsync(It.IsAny<LoginPinRequestDto>()))
-            .ReturnsAsync(new AuthResult(
+            .ReturnsAsync(LoginResult.Success(new AuthResult(
                 new LoginResponseDto("access", new UserDto(Guid.NewGuid(), "Test Testsson", "test@example.com", "19900101-1234")),
                 "refresh-token",
-                DateTime.UtcNow.AddDays(7)));
+                DateTime.UtcNow.AddDays(7))));
         var controller = CreateController();
         var routeTemplate = typeof(AuthController).GetCustomAttribute<RouteAttribute>()!.Template;
 
@@ -81,6 +81,35 @@ public class AuthControllerTests
         result.Should().BeOfType<NoContentResult>();
         _authServiceMock.Verify(s => s.LogoutAsync(userId), Times.Once);
         SetCookieHeader(controller).Should().Contain("path=/api/auth");
+    }
+
+    [Fact]
+    public async Task LoginPin_WhenTheAccountIsLocked_Returns423WithRetryAfter()
+    {
+        _authServiceMock
+            .Setup(s => s.LoginWithPinAsync(It.IsAny<LoginPinRequestDto>()))
+            .ReturnsAsync(LoginResult.LockedOut(TimeSpan.FromSeconds(299.2)));
+        var controller = CreateController();
+
+        var result = await controller.LoginPin(new LoginPinRequestDto("19900101-1234", "1234"));
+
+        result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(StatusCodes.Status423Locked);
+        controller.Response.Headers.RetryAfter.ToString().Should().Be("300");
+        controller.Response.Headers.SetCookie.ToString().Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task LoginPin_WhenTheCredentialsAreWrong_Returns401()
+    {
+        _authServiceMock
+            .Setup(s => s.LoginWithPinAsync(It.IsAny<LoginPinRequestDto>()))
+            .ReturnsAsync(LoginResult.InvalidCredentials());
+        var controller = CreateController();
+
+        var result = await controller.LoginPin(new LoginPinRequestDto("19900101-1234", "0000"));
+
+        result.Should().BeOfType<UnauthorizedObjectResult>();
+        controller.Response.Headers.RetryAfter.ToString().Should().BeEmpty();
     }
 
     private AuthController CreateController(Guid? userId = null)

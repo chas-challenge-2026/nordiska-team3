@@ -11,33 +11,65 @@ public class AuthService : IAuthService
     private readonly ITokenService _tokenService;
     private readonly ILogger<AuthService> _logger;
     private readonly IPersonalNumberProtector _personalNumberProtector;
+    private readonly TimeProvider _timeProvider;
+    private readonly int _maxFailedPinAttempts;
+    private readonly TimeSpan _pinLockoutDuration;
 
     public AuthService(IUserRepository userRepository, ITokenService tokenService,
-        IPersonalNumberProtector personalNumberProtector, ILogger<AuthService> logger)
+        IPersonalNumberProtector personalNumberProtector, ILogger<AuthService> logger,
+        TimeProvider timeProvider, IConfiguration configuration)
     {
         _userRepository = userRepository;
         _tokenService = tokenService;
         _personalNumberProtector = personalNumberProtector;
         _logger = logger;
+        _timeProvider = timeProvider;
+        _maxFailedPinAttempts = configuration.GetValue("PinLockout:MaxFailedAttempts", 5);
+        _pinLockoutDuration = TimeSpan.FromMinutes(configuration.GetValue("PinLockout:Minutes", 5));
     }
 
-    public async Task<AuthResult?> LoginWithPinAsync(LoginPinRequestDto request)
+    public async Task<LoginResult> LoginWithPinAsync(LoginPinRequestDto request)
     {
         var personalNumberHash = _personalNumberProtector.ComputeHash(request.PersonalNumber);
         var user = await _userRepository.GetByPersonalNumberHashAsync(personalNumberHash);
 
-        if (user is null || !BCrypt.Net.BCrypt.Verify(request.Pin, user.PinHash))
+        if (user is null)
         {
             _logger.LogWarning("Failed PIN login attempt.");
-            return null;
+            return LoginResult.InvalidCredentials();
         }
+
+        var now = _timeProvider.GetUtcNow().UtcDateTime;
+
+        if (user.LockedUntil is { } lockedUntil && lockedUntil > now)
+        {
+            _logger.LogWarning("PIN login refused for user {UserId}: the account is locked.", user.Id);
+            return LoginResult.LockedOut(lockedUntil - now);
+        }
+
+        if (!BCrypt.Net.BCrypt.Verify(request.Pin, user.PinHash))
+        {
+            var attempts = await _userRepository.RegisterFailedPinAttemptAsync(user.Id);
+
+            if (attempts >= _maxFailedPinAttempts)
+            {
+                await _userRepository.LockPinLoginAsync(user.Id, now.Add(_pinLockoutDuration));
+                _logger.LogWarning("User {UserId} locked after {Attempts} failed PIN attempts.", user.Id, attempts);
+                return LoginResult.LockedOut(_pinLockoutDuration);
+            }
+
+            _logger.LogWarning("Failed PIN login attempt.");
+            return LoginResult.InvalidCredentials();
+        }
+
+        user.FailedPinAttempts = 0;
+        user.LockedUntil = null;
 
         var result = await IssueTokensAsync(user);
 
         _logger.LogInformation("User {UserId} logged in successfully.", user.Id);
 
-        return result;
-
+        return LoginResult.Success(result);
     }
 
     public async Task<AuthResult?> RefreshAsync(string refreshToken)

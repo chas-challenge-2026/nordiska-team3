@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Globalization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -43,11 +44,19 @@ public class AuthController : ControllerBase
     {
         var result = await _authService.LoginWithPinAsync(request);
 
-        if (result is null) return Unauthorized(new ErrorResponseDto("Invalid personal number or PIN."));
+        if (result.IsLockedOut)
+        {
+            var seconds = (int)Math.Ceiling(result.RetryAfter!.Value.TotalSeconds);
+            Response.Headers.RetryAfter = seconds.ToString(CultureInfo.InvariantCulture);
+            return StatusCode(StatusCodes.Status423Locked,
+                new ErrorResponseDto("Too many failed PIN attempts. Try again later."));
+        }
 
-        SetRefreshTokenCookie(result.RefreshToken, result.RefreshTokenExpiry);
+        if (!result.IsSuccess) return Unauthorized(new ErrorResponseDto("Invalid personal number or PIN."));
 
-        return Ok(result.Response);
+        SetRefreshTokenCookie(result.AuthResult!.RefreshToken, result.AuthResult.RefreshTokenExpiry);
+
+        return Ok(result.AuthResult.Response);
     }
 
     // POST /api/auth/refresh
