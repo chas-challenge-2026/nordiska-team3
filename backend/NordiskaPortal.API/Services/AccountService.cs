@@ -49,6 +49,7 @@ public class AccountService : IAccountService
     {
         var user = await _userRepository.GetByIdAsync(userId);
         if (user is null) return null;
+        accountType = accountType.ToUpperInvariant();
 
         var account = new Account
         {

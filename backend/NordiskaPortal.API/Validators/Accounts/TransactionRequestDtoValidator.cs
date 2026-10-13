@@ -10,6 +10,7 @@ public class TransactionRequestDtoValidator : AbstractValidator<TransactionReque
         RuleFor(x => x.Amount)
             .GreaterThan(0)
             .WithMessage("Beloppet måste vara större än 0.")
-            .HasAtMostTwoDecimals();
+            .HasAtMostTwoDecimals()
+            .IsWithinMaxAmount();
     }
 }
