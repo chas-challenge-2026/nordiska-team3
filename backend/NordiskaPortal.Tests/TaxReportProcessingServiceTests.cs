@@ -21,6 +21,7 @@ public class TaxReportProcessingServiceTests : IDisposable
     private readonly Mock<ITaxReportDataService> _dataServiceMock = new();
     private readonly Mock<INativeProcessRunner> _runnerMock = new();
     private readonly Mock<IPdfSigningService> _signingMock = new();
+    private readonly TaxReportQueue _queue = new();
 
     public TaxReportProcessingServiceTests()
     {
@@ -258,6 +259,94 @@ public class TaxReportProcessingServiceTests : IDisposable
         reports.Select(r => r.ReportYear).Should().Equal(2026, 2024);
     }
 
+    [Fact]
+    public async Task RecoverUnfinishedReportsAsync_QueuesWaitingReportsAndRestartsInterruptedOnes()
+    {
+        var now = DateTime.UtcNow;
+        var waiting = await AddReportWithStatusAsync("QUEUED", now.AddMinutes(-10));
+        var interrupted = await AddReportWithStatusAsync("PROCESSING", now.AddMinutes(-5));
+        var ready = await AddReportWithStatusAsync("READY", now.AddMinutes(-20));
+        var failed = await AddReportWithStatusAsync("FAILED", now.AddMinutes(-15));
+
+        var count = await CreateService().RecoverUnfinishedReportsAsync();
+
+        count.Should().Be(2);
+        interrupted.Status.Should().Be("QUEUED");
+        ready.Status.Should().Be("READY");
+        failed.Status.Should().Be("FAILED");
+        (await DequeueAsync(2)).Should().Equal(waiting.Id, interrupted.Id);
+        await AssertQueueIsEmptyAsync();
+    }
+
+    [Fact]
+    public async Task RecoverUnfinishedReportsAsync_WhenNothingIsUnfinished_QueuesNothing()
+    {
+        await AddReportWithStatusAsync("READY", DateTime.UtcNow);
+
+        var count = await CreateService().RecoverUnfinishedReportsAsync();
+
+        count.Should().Be(0);
+        await AssertQueueIsEmptyAsync();
+    }
+
+    [Fact]
+    public async Task RecoverUnfinishedReportsAsync_ThenProcessing_FinishesAnInterruptedReport()
+    {
+        var report = await AddReportWithStatusAsync("PROCESSING", DateTime.UtcNow.AddMinutes(-5));
+        SetupRunner(args => File.WriteAllBytes(args[1], new byte[] { 1, 2, 3 }), exitCode: 0);
+        var service = CreateService();
+
+        await service.RecoverUnfinishedReportsAsync();
+        var queuedId = (await DequeueAsync(1)).Single();
+        await service.ProcessReportAsync(queuedId);
+
+        queuedId.Should().Be(report.Id);
+        report.Status.Should().Be("READY");
+        report.SignaturePath.Should().NotBeNull();
+    }
+
+    [Theory]
+    [InlineData("PROCESSING")]
+    [InlineData("READY")]
+    [InlineData("FAILED")]
+    public async Task ProcessReportAsync_ForAReportThatIsNotQueued_DoesNothing(string status)
+    {
+        var report = await AddReportWithStatusAsync(status, DateTime.UtcNow);
+
+        await CreateService().ProcessReportAsync(report.Id);
+
+        report.Status.Should().Be(status);
+        _dataServiceMock.Verify(s => s.GetTaxReportDataAsync(It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<Guid>()), Times.Never);
+        _runnerMock.Verify(r => r.RunAsync(
+            It.IsAny<string>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    private async Task<TaxReport> AddReportWithStatusAsync(string status, DateTime createdAt)
+    {
+        var report = new TaxReport { UserId = Guid.NewGuid(), ReportYear = 2026, Status = status, CreatedAt = createdAt };
+        _context.TaxReports.Add(report);
+        await _context.SaveChangesAsync();
+        return report;
+    }
+
+    private async Task<List<Guid>> DequeueAsync(int count)
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+        var ids = new List<Guid>();
+        for (var i = 0; i < count; i++)
+        {
+            ids.Add(await _queue.DequeueAsync(timeout.Token));
+        }
+        return ids;
+    }
+
+    private async Task AssertQueueIsEmptyAsync()
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
+        var act = () => _queue.DequeueAsync(timeout.Token);
+        await act.Should().ThrowAsync<OperationCanceledException>();
+    }
+
     private TaxReportProcessingService CreateService(string? generatorPath = null)
     {
         var configuration = new ConfigurationBuilder()
@@ -275,7 +364,7 @@ public class TaxReportProcessingServiceTests : IDisposable
             _runnerMock.Object,
             configuration,
             NullLogger<TaxReportProcessingService>.Instance,
-            new TaxReportQueue(),
+            _queue,
             new AuditService(_context, new AuditKey(new byte[32])),
             _signingMock.Object);
 

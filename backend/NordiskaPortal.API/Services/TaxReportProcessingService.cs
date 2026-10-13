@@ -68,10 +68,37 @@ namespace NordiskaPortal.API.Services
             return report;
         }
 
+        public async Task<int> RecoverUnfinishedReportsAsync()
+        {
+            var unfinished = await _context.TaxReports
+                .Where(r => r.Status == "QUEUED" || r.Status == "PROCESSING")
+                .OrderBy(r => r.CreatedAt)
+                .ToListAsync();
+
+            if (unfinished.Count == 0) return 0;
+
+            foreach (var report in unfinished.Where(r => r.Status == "PROCESSING"))
+            {
+                report.Status = "QUEUED";
+            }
+
+            await _context.SaveChangesAsync();
+
+            foreach (var report in unfinished)
+            {
+                _queue.Enqueue(report.Id);
+            }
+
+            _logger.LogInformation("Put {Count} unfinished tax reports back in the queue after a restart", unfinished.Count);
+
+            return unfinished.Count;
+        }
+
         public async Task ProcessReportAsync(Guid reportId)
         {
             var report = await _context.TaxReports.FindAsync(reportId);
             if (report is null) return;
+            if (report.Status != "QUEUED") return;
 
             report.Status = "PROCESSING";
             await _context.SaveChangesAsync();
