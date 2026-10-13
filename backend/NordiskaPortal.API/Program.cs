@@ -5,6 +5,7 @@ using NordiskaPortal.API.Data;
 using NordiskaPortal.API.DTOs.ErrorResponse;
 using NordiskaPortal.API.Extensions;
 using NordiskaPortal.API.Filters;
+using NordiskaPortal.API.Services.Interfaces;
 using NordiskaPortal.API.HealthChecks;
 using NordiskaPortal.API.Middleware;
 
@@ -90,6 +91,14 @@ app.UseAuthorization();
 app.UseRateLimiter();
 
 app.MapControllers();
+
+if (app.Environment.IsDevelopment())
+{
+    // Development only: pays the interest for a year right away, so it can be shown without waiting for next year.
+    app.MapPost("/api/dev/interest/payout/{year:int}", async (int year, IInterestPayoutService payouts, CancellationToken cancellationToken) =>
+        Results.Ok(await payouts.PayoutYearAsync(year, cancellationToken)))
+        .RequireAuthorization();
+}
 
 app.MapHealthChecks("/health");
 

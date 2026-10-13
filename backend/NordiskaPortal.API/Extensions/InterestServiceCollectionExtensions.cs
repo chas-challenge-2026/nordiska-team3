@@ -22,6 +22,8 @@ public static class InterestServiceCollectionExtensions
         services.AddScoped<InterestRateRefresher>();
         services.AddScoped<IInterestService, InterestService>();
         services.AddHostedService<InterestRateRefreshWorker>();
+        services.AddScoped<IInterestPayoutService, InterestPayoutService>();
+        services.AddHostedService<InterestPayoutWorker>();
 
         return services;
     }

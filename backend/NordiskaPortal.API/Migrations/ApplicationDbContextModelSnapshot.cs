@@ -326,6 +326,36 @@ namespace NordiskaPortal.API.Migrations
                         });
                 });
 
+            modelBuilder.Entity("NordiskaPortal.API.Models.InterestPayout", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("PaidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("TransactionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId", "Year")
+                        .IsUnique();
+
+                    b.ToTable("InterestPayouts");
+                });
+
             modelBuilder.Entity("NordiskaPortal.API.Models.InterestRateObservation", b =>
                 {
                     b.Property<string>("SeriesId")
@@ -682,6 +712,15 @@ namespace NordiskaPortal.API.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("NordiskaPortal.API.Models.InterestPayout", b =>
+                {
+                    b.HasOne("NordiskaPortal.API.Models.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("NordiskaPortal.API.Models.LedgerEntry", b =>
