@@ -55,6 +55,12 @@ public sealed class PdfSigningService : IPdfSigningService
         return new PdfSignature(signaturePath, ComputeSha256(pdfFullPath));
     }
 
+    public async Task<string> GetPublicKeyPemAsync(CancellationToken cancellationToken = default)
+    {
+        var (_, publicKeyPath) = EnsureKeyPair();
+        return await File.ReadAllTextAsync(publicKeyPath, cancellationToken);
+    }
+
     private async Task RunSignerAsync(string signerPath, string step, string[] arguments, TimeSpan timeout, CancellationToken cancellationToken)
     {
         var result = await _processRunner.RunAsync(signerPath, arguments, timeout, cancellationToken);
