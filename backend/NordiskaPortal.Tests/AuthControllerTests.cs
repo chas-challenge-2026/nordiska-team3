@@ -79,8 +79,20 @@ public class AuthControllerTests
         var result = await controller.Logout();
 
         result.Should().BeOfType<NoContentResult>();
-        _authServiceMock.Verify(s => s.LogoutAsync(userId), Times.Once);
+        _authServiceMock.Verify(s => s.LogoutAsync(userId, null), Times.Once);
         SetCookieHeader(controller).Should().Contain("path=/api/auth");
+    }
+
+    [Fact]
+    public async Task Logout_PassesTheRefreshCookieOnSoOnlyThatDeviceIsLoggedOut()
+    {
+        var userId = Guid.NewGuid();
+        var controller = CreateController(userId);
+        controller.Request.Headers.Cookie = "refreshToken=device-token";
+
+        await controller.Logout();
+
+        _authServiceMock.Verify(s => s.LogoutAsync(userId, "device-token"), Times.Once);
     }
 
     [Fact]

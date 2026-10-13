@@ -21,6 +21,7 @@ public static class ServiceCollectionExtensions
     {
         // Repositories
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IAccountRepository, AccountRepository>();
         services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<IRepository<LedgerEntry>, Repository<LedgerEntry>>();
