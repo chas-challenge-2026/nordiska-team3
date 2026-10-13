@@ -51,6 +51,8 @@ Databaslösenordet och nycklarna genereras första gången appen startar och sparas
 - Försvinner `api_secrets` medan databasen finns kvar går personnummer inte att läsa utan nyckeln, så API:et vägrar starta.
 - Försvinner `audit.key` medan databasen har audit-poster vägrar API:et starta, eftersom en ny nyckel inte kan verifiera de gamla posterna.
 - En ny `jwt.key` loggar bara ut alla inloggade.
+- Signeringsnyckeln for skatterapporter (`tax_report_signing_key.pem` och `tax_report_signing_key.pub.pem`) ligger ocksa i `api_secrets`. Forsvinner den skapar API:et ett nytt nyckelpar utan att varna kunden, och da gar redan utfardade skatterapporter inte att verifiera mot den nya publika nyckeln.
+- Ta backup av `api_secrets` utanfor repot och checka aldrig in den. Backupen innehaller hemliga nycklar.
 
 ## 4. Alla inställningar
 
