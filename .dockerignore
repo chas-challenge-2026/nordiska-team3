@@ -1,4 +1,3 @@
-@'
 # Version control and editor files
 .git
 .github
@@ -19,4 +18,3 @@ native/CMakeFiles
 # Local secrets
 **/.env
 **/.env.local
-'@ | Set-Content -Encoding ascii .dockerignore
