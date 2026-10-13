@@ -263,4 +263,24 @@ public class AccountServiceTests
         result!.TotalPages.Should().Be(3);
         result.Transactions.Select(t => t.AccountId).Should().Equal(accountA, accountB);
     }
+
+    [Theory]
+    [InlineData("savings", "SAVINGS", "Sparkonto")]
+    [InlineData("Checking", "CHECKING", "Transaktionskonto")]
+    [InlineData("SAVINGS", "SAVINGS", "Sparkonto")]
+    public async Task CreateAccountAsync_SavesTheAccountTypeInUpperCase(string requested, string expectedType, string expectedName)
+    {
+        var userId = Guid.NewGuid();
+        _userRepoMock.Setup(r => r.GetByIdAsync(userId)).ReturnsAsync(new User { Id = userId });
+        _accountRepoMock.Setup(r => r.ExistsByAccountNumberAsync(It.IsAny<string>())).ReturnsAsync(false);
+        Account? saved = null;
+        _accountRepoMock.Setup(r => r.AddAsync(It.IsAny<Account>())).Callback<Account>(a => saved = a);
+
+        var result = await CreateService().CreateAccountAsync(userId, requested);
+
+        saved.Should().NotBeNull();
+        saved!.AccountType.Should().Be(expectedType);
+        saved.Name.Should().Be(expectedName);
+        result!.AccountType.Should().Be(expectedType);
+    }
 }

@@ -10,7 +10,8 @@ public class TransferRequestDtoValidator : AbstractValidator<TransferRequestDto>
         RuleFor(x => x.Amount)
             .GreaterThan(0)
             .WithMessage("Beloppet måste vara större än 0.")
-            .HasAtMostTwoDecimals();
+            .HasAtMostTwoDecimals()
+            .IsWithinMaxAmount();
 
         RuleFor(x => x.ToAccountNumber)
             .NotEmpty()
