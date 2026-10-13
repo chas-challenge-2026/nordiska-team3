@@ -1,7 +1,11 @@
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Moq;
+using NordiskaPortal.API.Data;
+using NordiskaPortal.API.Repositories;
 using NordiskaPortal.API.DTOs.Auth;
 using NordiskaPortal.API.Models;
 using NordiskaPortal.API.Repositories.Interfaces;
@@ -114,6 +118,50 @@ public class AuthServicePinLockoutTests
 
         result.IsLockedOut.Should().BeTrue();
         result.RetryAfter.Should().Be(TimeSpan.FromMinutes(10));
+    }
+
+    [Fact]
+    public async Task SuccessfulLogin_PersistsTheResetInTheDatabase()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))
+            .Options;
+        var userId = Guid.NewGuid();
+
+        await using (var seed = new ApplicationDbContext(options))
+        {
+            seed.Users.Add(new User
+            {
+                Id = userId,
+                PersonalNumber = "enc",
+                PersonalNumberHash = "hash",
+                FirstName = "Test",
+                LastName = "Testsson",
+                Email = "test@example.com",
+                PinHash = BCrypt.Net.BCrypt.HashPassword(Pin, workFactor: 4),
+                FailedPinAttempts = 3,
+                LockedUntil = Now.UtcDateTime.AddSeconds(-1)
+            });
+            await seed.SaveChangesAsync();
+        }
+
+        await using (var context = new ApplicationDbContext(options))
+        {
+            var service = new AuthService(new UserRepository(context), _tokens.Object, _protector.Object,
+                NullLogger<AuthService>.Instance, new FixedTimeProvider(Now), new ConfigurationBuilder().Build());
+
+            var result = await service.LoginWithPinAsync(Login(Pin));
+
+            result.IsSuccess.Should().BeTrue();
+        }
+
+        await using (var verify = new ApplicationDbContext(options))
+        {
+            var stored = await verify.Users.SingleAsync(u => u.Id == userId);
+            stored.FailedPinAttempts.Should().Be(0);
+            stored.LockedUntil.Should().BeNull();
+        }
     }
 
     private User StoreUser(DateTime? lockedUntil = null, int failedAttempts = 0)
