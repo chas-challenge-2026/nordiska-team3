@@ -204,6 +204,47 @@ public class PdfSigningServiceTests : IDisposable
         exception.Which.Message.Should().Be("The PDF signer keys are not valid.");
     }
 
+    [Fact]
+    public async Task GetPublicKeyPemAsync_WhenThereIsNoKey_CreatesTheKeyPairAndReturnsThePublicKey()
+    {
+        var publicPem = await CreateService().GetPublicKeyPemAsync();
+
+        publicPem.Should().StartWith("-----BEGIN PUBLIC KEY-----");
+        File.Exists(PrivateKeyPath).Should().BeTrue();
+
+        using var privateKey = RSA.Create();
+        privateKey.ImportFromPem(await File.ReadAllTextAsync(PrivateKeyPath));
+        using var publicKey = RSA.Create();
+        publicKey.ImportFromPem(publicPem);
+        publicKey.ExportSubjectPublicKeyInfo().Should().Equal(privateKey.ExportSubjectPublicKeyInfo());
+    }
+
+    [Fact]
+    public async Task GetPublicKeyPemAsync_WhenTheKeyAlreadyExists_ReturnsItUnchanged()
+    {
+        var service = CreateService();
+        var first = await service.GetPublicKeyPemAsync();
+
+        var second = await service.GetPublicKeyPemAsync();
+
+        second.Should().Be(first);
+        (await File.ReadAllTextAsync(PublicKeyPath)).Should().Be(first);
+    }
+
+    [Fact]
+    public async Task GetPublicKeyPemAsync_WhenThePublicKeyDoesNotMatchThePrivateKey_Throws()
+    {
+        var service = CreateService();
+        await service.GetPublicKeyPemAsync();
+        using var otherKey = RSA.Create(2048);
+        await File.WriteAllTextAsync(PublicKeyPath, otherKey.ExportSubjectPublicKeyInfoPem());
+
+        var act = () => service.GetPublicKeyPemAsync();
+
+        var exception = await act.Should().ThrowAsync<TaxReportGenerationException>();
+        exception.Which.Message.Should().Be("The PDF signer keys are not valid.");
+    }
+
     private PdfSigningService CreateService(string? signerPath = null)
     {
         var configuration = new ConfigurationBuilder()

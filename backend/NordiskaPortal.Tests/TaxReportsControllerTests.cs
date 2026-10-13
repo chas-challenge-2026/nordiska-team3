@@ -1,6 +1,8 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
 using FluentAssertions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
@@ -15,13 +17,18 @@ public class TaxReportsControllerTests : IDisposable
 {
     private readonly Guid _userId = Guid.NewGuid();
     private readonly string _pdfPath = Path.Combine(Path.GetTempPath(), "tax-report-controller-" + Guid.NewGuid() + ".pdf");
+    private readonly string _signaturePath = Path.Combine(Path.GetTempPath(), "tax-report-controller-" + Guid.NewGuid() + ".sig");
     private readonly Mock<ITaxReportProcessingService> _serviceMock = new();
+    private readonly Mock<IPdfSigningService> _signingMock = new();
 
     public void Dispose()
     {
-        if (File.Exists(_pdfPath))
+        foreach (var path in new[] { _pdfPath, _signaturePath })
         {
-            File.Delete(_pdfPath);
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
         }
     }
 
@@ -71,6 +78,83 @@ public class TaxReportsControllerTests : IDisposable
     }
 
     [Fact]
+    public async Task DownloadSignature_WhenTheReportDoesNotBelongToTheCustomer_ReturnsNotFound()
+    {
+        var reportId = Guid.NewGuid();
+        _serviceMock.Setup(s => s.GetStatusAsync(_userId, reportId)).ReturnsAsync((TaxReport?)null);
+
+        var result = await CreateController().DownloadSignature(reportId);
+
+        result.Should().BeOfType<NotFoundResult>();
+    }
+
+    [Fact]
+    public async Task DownloadSignature_WhenTheReportIsNotReady_ReturnsConflict()
+    {
+        var report = SetupReport(status: "PROCESSING");
+
+        var result = await CreateController().DownloadSignature(report.Id);
+
+        result.Should().BeOfType<ConflictObjectResult>();
+    }
+
+    [Fact]
+    public async Task DownloadSignature_WhenTheReportHasNoSignature_ReturnsNotFound()
+    {
+        var report = SetupReport(status: "READY", pdfPath: _pdfPath);
+
+        var result = await CreateController().DownloadSignature(report.Id);
+
+        result.Should().BeOfType<NotFoundObjectResult>();
+    }
+
+    [Fact]
+    public async Task DownloadSignature_WhenTheSignatureFileIsGone_ReturnsNotFound()
+    {
+        var report = SetupReport(status: "READY", pdfPath: _pdfPath, signaturePath: _signaturePath);
+
+        var result = await CreateController().DownloadSignature(report.Id);
+
+        result.Should().BeOfType<NotFoundObjectResult>();
+    }
+
+    [Fact]
+    public async Task DownloadSignature_WhenTheReportIsSigned_ReturnsTheSignatureAsADownload()
+    {
+        File.WriteAllBytes(_signaturePath, new byte[] { 4, 5, 6 });
+        var report = SetupReport(status: "READY", pdfPath: _pdfPath, reportYear: 2026, signaturePath: _signaturePath);
+
+        var result = await CreateController().DownloadSignature(report.Id);
+
+        var file = result.Should().BeOfType<PhysicalFileResult>().Subject;
+        file.FileName.Should().Be(_signaturePath);
+        file.ContentType.Should().Be("application/octet-stream");
+        file.FileDownloadName.Should().Be("skatterapport-2026.pdf.sig");
+    }
+
+    [Fact]
+    public async Task DownloadPublicKey_ReturnsThePublicKeyAsAPemFile()
+    {
+        const string pem = "-----BEGIN PUBLIC KEY-----\nabc\n-----END PUBLIC KEY-----\n";
+        _signingMock.Setup(s => s.GetPublicKeyPemAsync(It.IsAny<CancellationToken>())).ReturnsAsync(pem);
+
+        var result = await CreateController().DownloadPublicKey(CancellationToken.None);
+
+        var file = result.Should().BeOfType<FileContentResult>().Subject;
+        Encoding.ASCII.GetString(file.FileContents).Should().Be(pem);
+        file.ContentType.Should().Be("application/x-pem-file");
+        file.FileDownloadName.Should().Be("skatterapport-publik-nyckel.pem");
+    }
+
+    [Fact]
+    public void TheController_RequiresAuthenticationAndHasNoAnonymousEndpoints()
+    {
+        typeof(TaxReportsController).Should().BeDecoratedWith<AuthorizeAttribute>();
+        typeof(TaxReportsController).GetMethods()
+            .Should().NotContain(method => method.IsDefined(typeof(AllowAnonymousAttribute), true));
+    }
+
+    [Fact]
     public async Task GetTaxReportStatus_WhenThereIsNoSignature_ReportsTheReportAsUnsigned()
     {
         var report = SetupReport(status: "READY", pdfPath: _pdfPath);
@@ -79,6 +163,17 @@ public class TaxReportsControllerTests : IDisposable
 
         var ok = result.Should().BeOfType<OkObjectResult>().Subject;
         ok.Value.Should().BeEquivalentTo(new { Status = "READY", Signed = false });
+    }
+
+    [Fact]
+    public async Task GetTaxReportStatus_WhenThePdfIsSigned_ReportsTheReportAsSigned()
+    {
+        var report = SetupReport(status: "READY", pdfPath: _pdfPath, signaturePath: _signaturePath);
+
+        var result = await CreateController().GetTaxReportStatus(report.Id);
+
+        var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+        ok.Value.Should().BeEquivalentTo(new { Status = "READY", Signed = true });
     }
 
     [Fact]
@@ -113,15 +208,22 @@ public class TaxReportsControllerTests : IDisposable
         }, options => options.WithStrictOrdering());
     }
 
-    private TaxReport SetupReport(string status, string? pdfPath = null, int reportYear = 2026)
+    private TaxReport SetupReport(string status, string? pdfPath = null, int reportYear = 2026, string? signaturePath = null)
     {
-        var report = new TaxReport { UserId = _userId, ReportYear = reportYear, Status = status, PdfPath = pdfPath };
+        var report = new TaxReport
+        {
+            UserId = _userId,
+            ReportYear = reportYear,
+            Status = status,
+            PdfPath = pdfPath,
+            SignaturePath = signaturePath
+        };
         _serviceMock.Setup(s => s.GetStatusAsync(_userId, report.Id)).ReturnsAsync(report);
         return report;
     }
 
     private TaxReportsController CreateController() =>
-        new(_serviceMock.Object)
+        new(_serviceMock.Object, _signingMock.Object)
         {
             ControllerContext = new ControllerContext
             {
