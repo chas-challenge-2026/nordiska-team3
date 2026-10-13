@@ -1,0 +1,22 @@
+@'
+# Version control and editor files
+.git
+.github
+.vs
+.vscode
+
+# Rebuilt inside the image, so the local copies must not be sent
+**/node_modules
+**/bin
+**/obj
+**/dist
+native/build
+native/out
+native/cmake-build-*
+native/CMakeCache.txt
+native/CMakeFiles
+
+# Local secrets
+**/.env
+**/.env.local
+'@ | Set-Content -Encoding ascii .dockerignore

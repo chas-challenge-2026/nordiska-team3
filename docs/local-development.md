@@ -23,7 +23,7 @@ Använd en egen databas och inte den som `docker compose` startar. Nyckeln som kr
 docker run --name nordiska-localdb -e POSTGRES_USER=nordiska -e POSTGRES_PASSWORD=valj-ett-losenord -e POSTGRES_DB=nordiska -p 5433:5432 -d postgres:15
 ```
 
-2. Skapa en slumpad nyckel i PowerShell. Kör kommandot två gånger, en nyckel till varje inställning nedan.
+2. Skapa en slumpad nyckel i PowerShell. Kör kommandot tre gånger, en nyckel till varje inställning nedan.
 
 ```
 $b = New-Object byte[] 32; (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($b); [Convert]::ToBase64String($b)
@@ -35,6 +35,7 @@ $b = New-Object byte[] 32; (New-Object System.Security.Cryptography.RNGCryptoSer
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5433;Database=nordiska;Username=nordiska;Password=valj-ett-losenord"
 dotnet user-secrets set "Jwt:Key" "<första nyckeln>"
 dotnet user-secrets set "PersonalNumberProtection:Key" "<andra nyckeln>"
+dotnet user-secrets set "Audit:Key" "<tredje nyckeln>"
 ```
 
 4. Starta API:et från Visual Studio eller med `dotnet run`. Det svarar på http://localhost:5077, och Swagger finns på `/swagger`. Kontrollera att http://localhost:5077/health svarar `Healthy`.
@@ -45,9 +46,10 @@ Skatterapporter fungerar bara i Docker, eftersom den inbyggda PDF-generatorn byg
 
 ## 3. Hemligheter i Docker, stage och prod
 
-Databaslösenordet och nycklarna genereras första gången appen startar och sparas i två volymer: `db_secret` (databaslösenordet) och `api_secrets` (`jwt.key` och `pn.key`). Ta inte bort en av dem ensam.
+Databaslösenordet och nycklarna genereras första gången appen startar och sparas i två volymer: `db_secret` (databaslösenordet) och `api_secrets` (`jwt.key`, `pn.key` och `audit.key`). Ta inte bort en av dem ensam.
 
 - Försvinner `api_secrets` medan databasen finns kvar går personnummer inte att läsa utan nyckeln, så API:et vägrar starta.
+- Försvinner `audit.key` medan databasen har audit-poster vägrar API:et starta, eftersom en ny nyckel inte kan verifiera de gamla posterna.
 - En ny `jwt.key` loggar bara ut alla inloggade.
 
 ## 4. Alla inställningar
