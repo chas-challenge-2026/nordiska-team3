@@ -14,6 +14,8 @@ public class User
 
     public string? RefreshToken { get; set; }
     public DateTime? RefreshTokenExpiryTime { get; set; }
+    public DateTime? LockedUntil { get; set; }
+    public int FailedPinAttempts { get; set; }
 
     public ICollection<Account> Accounts { get; set; } = new List<Account>();
     public ICollection<Notification> Notifications { get; set; } = new List<Notification>();

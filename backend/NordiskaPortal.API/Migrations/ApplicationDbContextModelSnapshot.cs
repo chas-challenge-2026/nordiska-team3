@@ -651,6 +651,9 @@ namespace NordiskaPortal.API.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("FailedPinAttempts")
+                        .HasColumnType("integer");
+
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("text");
@@ -658,6 +661,9 @@ namespace NordiskaPortal.API.Migrations
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<DateTime?>("LockedUntil")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("PersonalNumber")
                         .IsRequired()
@@ -695,6 +701,7 @@ namespace NordiskaPortal.API.Migrations
                             Id = new Guid("d0000000-0000-0000-0000-000000000001"),
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "demo@nordiskaportal.se",
+                            FailedPinAttempts = 0,
                             FirstName = "Demo",
                             LastName = "Kund",
                             PersonalNumber = "19850615-5678",
