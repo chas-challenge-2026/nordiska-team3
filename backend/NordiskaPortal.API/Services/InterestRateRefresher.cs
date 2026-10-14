@@ -35,7 +35,7 @@ public class InterestRateRefresher
     {
         var seriesId = _configuration["Riksbank:PolicyRateSeriesId"] ?? DefaultSeriesId;
         var now = _timeProvider.GetUtcNow().UtcDateTime;
-        var today = DateOnly.FromDateTime(now);
+        var today = SwedishTime.DateOf(now);
 
         try
         {

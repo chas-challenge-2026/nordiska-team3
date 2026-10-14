@@ -45,9 +45,9 @@ public class InterestService : IInterestService
     private async Task<AccountsResponseDto> BuildAsync(AccountsResponseDto accounts)
     {
         var seriesId = _configuration["Riksbank:PolicyRateSeriesId"] ?? InterestRateRefresher.DefaultSeriesId;
-        var today = DateOnly.FromDateTime(_timeProvider.GetUtcNow().UtcDateTime);
+        var today = SwedishTime.TodayIn(_timeProvider);
         var yearStart = new DateOnly(today.Year, 1, 1);
-        var yearStartUtc = new DateTime(today.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var yearStartUtc = SwedishTime.StartOfDayUtc(yearStart);
         var earliestRate = yearStart.AddDays(-31);
 
         var storedRates = await _context.InterestRateObservations
@@ -102,7 +102,7 @@ public class InterestService : IInterestService
 
             var changes = movements
                 .Where(m => m.AccountId == account.Id)
-                .Select(m => new BalanceChange(DateOnly.FromDateTime(m.CreatedAt), m.Amount))
+                .Select(m => new BalanceChange(SwedishTime.DateOf(m.CreatedAt), m.Amount))
                 .ToList();
 
             var currentRate = InterestCalculator.RateOn(rates, spreads, today);

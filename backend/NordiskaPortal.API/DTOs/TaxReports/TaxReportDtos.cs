@@ -1,4 +1,7 @@
-﻿namespace NordiskaPortal.API.DTOs.TaxReports
+﻿using System.Text.Json.Serialization;
+
+namespace NordiskaPortal.API.DTOs.TaxReports
+
 {
     public sealed record TaxReportInputDto(
         int schemaVersion,
@@ -33,7 +36,7 @@
 
     public sealed record TaxTransactionDto(
         Guid Id,
-        DateTimeOffset BookedAt,
+        [property: JsonConverter(typeof(SwedishDateTimeOffsetConverter))] DateTimeOffset BookedAt,
         string Type,
         string Description,
         string Amount

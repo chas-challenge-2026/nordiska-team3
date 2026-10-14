@@ -161,8 +161,8 @@ public class InterestPayoutService : IInterestPayoutService
             return null;
         }
 
-        var yearStartUtc = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        var periodEndUtc = new DateTime(year + 1, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var yearStartUtc = SwedishTime.StartOfDayUtc(new DateOnly(year, 1, 1));
+        var periodEndUtc = SwedishTime.StartOfDayUtc(new DateOnly(year + 1, 1, 1));
 
         var openingBalance = await _context.LedgerEntries
             .Where(l => l.AccountId == accountId && l.CreatedAt < yearStartUtc)
@@ -175,7 +175,7 @@ public class InterestPayoutService : IInterestPayoutService
             .ToListAsync(cancellationToken);
 
         var changes = movements
-            .Select(m => new BalanceChange(DateOnly.FromDateTime(m.CreatedAt), m.Amount))
+            .Select(m => new BalanceChange(SwedishTime.DateOf(m.CreatedAt), m.Amount))
             .ToList();
 
         var amount = InterestCalculator.AccruedInterest(
@@ -235,5 +235,5 @@ public class InterestPayoutService : IInterestPayoutService
         return new InterestPayoutResult(year, 0, 0, 0, 0, 0m, reason);
     }
 
-    private DateOnly Today() => DateOnly.FromDateTime(_timeProvider.GetUtcNow().UtcDateTime);
+    private DateOnly Today() => SwedishTime.TodayIn(_timeProvider);
 }
