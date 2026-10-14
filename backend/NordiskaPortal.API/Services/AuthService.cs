@@ -9,6 +9,7 @@ public class AuthService : IAuthService
 {
     private static readonly TimeSpan RefreshTokenLifetime = TimeSpan.FromDays(7);
     private static readonly TimeSpan RefreshGracePeriod = TimeSpan.FromSeconds(30);
+    private static readonly string DummyPinHash = BCrypt.Net.BCrypt.HashPassword("not-a-real-pin");
 
     private readonly IUserRepository _userRepository;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
@@ -40,6 +41,7 @@ public class AuthService : IAuthService
 
         if (user is null)
         {
+            _ = BCrypt.Net.BCrypt.Verify(request.Pin, DummyPinHash);
             _logger.LogWarning("Failed PIN login attempt.");
             return LoginResult.InvalidCredentials();
         }
