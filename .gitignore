@@ -15,7 +15,6 @@ dist/
 
 broken.json
 
-# Local PDF tests
-/backend/NordiskaPortal.API/tax-reports/pagination-test-60.json
-/backend/NordiskaPortal.API/tax-reports/empty-transactions-test.json
-/backend/NordiskaPortal.API/tax-reports/nordiska-long-text.json
+# Tax report JSON written by local runs of the API and by the PDF tests.
+# The sample files native uses are already tracked and stay in git.
+/backend/NordiskaPortal.API/tax-reports/*.json
