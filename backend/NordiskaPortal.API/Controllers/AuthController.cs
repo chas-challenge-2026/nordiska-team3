@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Globalization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,10 +12,11 @@ using NordiskaPortal.API.Services.Interfaces;
 namespace NordiskaPortal.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/auth")]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private const string RefreshCookiePath = "/api/auth";
 
     public AuthController(IAuthService authService)
     {
@@ -42,11 +44,19 @@ public class AuthController : ControllerBase
     {
         var result = await _authService.LoginWithPinAsync(request);
 
-        if (result is null) return Unauthorized(new ErrorResponseDto("Invalid personal number or PIN."));
+        if (result.IsLockedOut)
+        {
+            var seconds = (int)Math.Ceiling(result.RetryAfter!.Value.TotalSeconds);
+            Response.Headers.RetryAfter = seconds.ToString(CultureInfo.InvariantCulture);
+            return StatusCode(StatusCodes.Status423Locked,
+                new ErrorResponseDto("Too many failed PIN attempts. Try again later."));
+        }
 
-        SetRefreshTokenCookie(result.RefreshToken, result.RefreshTokenExpiry);
+        if (!result.IsSuccess) return Unauthorized(new ErrorResponseDto("Invalid personal number or PIN."));
 
-        return Ok(result.Response);
+        SetRefreshTokenCookie(result.AuthResult!.RefreshToken, result.AuthResult.RefreshTokenExpiry);
+
+        return Ok(result.AuthResult.Response);
     }
 
     // POST /api/auth/refresh
@@ -63,7 +73,7 @@ public class AuthController : ControllerBase
 
         if (result is null)
         {
-            Response.Cookies.Delete("refreshToken", new CookieOptions { Path = "/api/Auth" });
+            Response.Cookies.Delete("refreshToken", new CookieOptions { Path = RefreshCookiePath });
             return Unauthorized(new ErrorResponseDto("Invalid or expired refresh token."));
         }
 
@@ -89,9 +99,9 @@ public class AuthController : ControllerBase
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
-        await _authService.LogoutAsync(CurrentUserId);
+        await _authService.LogoutAsync(CurrentUserId, Request.Cookies["refreshToken"]);
 
-        Response.Cookies.Delete("refreshToken", new CookieOptions { Path = "/api/Auth" });
+        Response.Cookies.Delete("refreshToken", new CookieOptions { Path = RefreshCookiePath });
 
         return NoContent();
     }
@@ -103,7 +113,7 @@ public class AuthController : ControllerBase
             HttpOnly = true,
             Secure = Request.IsHttps,
             SameSite = SameSiteMode.Strict,
-            Path = "/api/Auth",
+            Path = RefreshCookiePath,
             Expires = expiry
         });
     }

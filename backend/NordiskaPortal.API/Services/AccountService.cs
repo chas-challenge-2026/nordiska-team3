@@ -15,7 +15,8 @@ public class AccountService : IAccountService
     private readonly ITransactionRepository _transactionRepository;
     private readonly IRepository<LedgerEntry> _ledgerEntryRepository;
     private readonly IRepository<Notification> _notificationRepository;
-    private readonly ApplicationDbContext _context; // Enbart för row-lock transaktionen i "WithdrawAsync"
+    private readonly ApplicationDbContext _context; // Used for the database transactions and row locks in DepositAsync, WithdrawAsync and TransferAsync
+    private readonly IAuditService _auditService;
     private readonly ILogger<AccountService> _logger;
 
     public AccountService(
@@ -25,6 +26,7 @@ public class AccountService : IAccountService
         IRepository<LedgerEntry> ledgerEntryRepository,
         IRepository<Notification> notificationRepository,
         ApplicationDbContext context,
+        IAuditService auditService,
         ILogger<AccountService> logger)
     {
         _accountRepository = accountRepository;
@@ -33,6 +35,7 @@ public class AccountService : IAccountService
         _ledgerEntryRepository = ledgerEntryRepository;
         _notificationRepository = notificationRepository;
         _context = context;
+        _auditService = auditService;
         _logger = logger;
     }
 
@@ -42,10 +45,23 @@ public class AccountService : IAccountService
         ["CHECKING"] = "Transaktionskonto"
     };
 
+    private const string IdempotencyKeyReused = "Idempotency key was already used for a different request.";
+
+    // A repeated request with the same key on the same account finds the transaction the first request created.
+    private async Task<Transaction?> FindByIdempotencyKeyAsync(Guid accountId, string? idempotencyKey)
+    {
+        if (idempotencyKey is null) return null;
+
+        return await _context.Transactions
+            .AsNoTracking()
+            .FirstOrDefaultAsync(t => t.AccountId == accountId && t.IdempotencyKey == idempotencyKey);
+    }
+
     public async Task<AccountDto?> CreateAccountAsync(Guid userId, string accountType)
     {
         var user = await _userRepository.GetByIdAsync(userId);
         if (user is null) return null;
+        accountType = accountType.ToUpperInvariant();
 
         var account = new Account
         {
@@ -104,7 +120,7 @@ public class AccountService : IAccountService
         return MapToDto(account, balance);
     }
 
-    public async Task<AccountOperationResult> DepositAsync(Guid userId, Guid accountId, decimal amount)
+    public async Task<AccountOperationResult> DepositAsync(Guid userId, Guid accountId, decimal amount, string? idempotencyKey = null)
     {
         if (amount <= 0) return AccountOperationResult.Failure("Amount must be positive.");
 
@@ -117,7 +133,8 @@ public class AccountService : IAccountService
             Amount = amount,
             TransactionType = "DEPOSIT",
             Status = "COMPLETED",
-            CompletedAt = DateTime.UtcNow
+            CompletedAt = DateTime.UtcNow,
+            IdempotencyKey = idempotencyKey
         };
 
         var ledgerEntry = new LedgerEntry
@@ -137,10 +154,28 @@ public class AccountService : IAccountService
             Status = "PENDING"
         };
 
+        // The audit entry is saved in the same database transaction as the deposit.
+        await using var dbTransaction = await _context.Database.BeginTransactionAsync();
+
+        // Same lock order as withdrawals and transfers: the account row first, the audit chain last.
+        await _context.Database.ExecuteSqlInterpolatedAsync(
+            $"SELECT 1 FROM \"Accounts\" WHERE \"Id\" = {accountId} FOR UPDATE");
+
+        var existing = await FindByIdempotencyKeyAsync(accountId, idempotencyKey);
+        if (existing is not null)
+        {
+            if (existing.TransactionType != "DEPOSIT" || existing.Amount != amount)
+                return AccountOperationResult.Failure(IdempotencyKeyReused);
+
+            return AccountOperationResult.Success(existing.Id, await _accountRepository.GetBalanceAsync(accountId));
+        }
+
         await _notificationRepository.AddAsync(notification);
         await _transactionRepository.AddAsync(transaction);
         await _ledgerEntryRepository.AddAsync(ledgerEntry);
+        await _auditService.AppendAsync(userId, AuditActions.Deposit, nameof(Transaction), transaction.Id, new { accountId, amount = amount.ToString("F2", CultureInfo.InvariantCulture) });
         await _accountRepository.SaveChangesAsync();
+        await dbTransaction.CommitAsync();
 
         var newBalance = await _accountRepository.GetBalanceAsync(accountId);
 
@@ -150,7 +185,7 @@ public class AccountService : IAccountService
         return AccountOperationResult.Success(transaction.Id, newBalance);
     }
 
-    public async Task<AccountOperationResult> WithdrawAsync(Guid userId, Guid accountId, decimal amount)
+    public async Task<AccountOperationResult> WithdrawAsync(Guid userId, Guid accountId, decimal amount, string? idempotencyKey = null)
     {
         if (amount <= 0) return AccountOperationResult.Failure("Amount must be positive.");
 
@@ -161,6 +196,15 @@ public class AccountService : IAccountService
 
         await _context.Database.ExecuteSqlInterpolatedAsync(
             $"SELECT 1 FROM \"Accounts\" WHERE \"Id\" = {accountId} FOR UPDATE");
+
+        var existing = await FindByIdempotencyKeyAsync(accountId, idempotencyKey);
+        if (existing is not null)
+        {
+            if (existing.TransactionType != "WITHDRAWAL" || existing.Amount != amount)
+                return AccountOperationResult.Failure(IdempotencyKeyReused);
+
+            return AccountOperationResult.Success(existing.Id, await _accountRepository.GetBalanceAsync(accountId));
+        }
 
         var currentBalance = await _accountRepository.GetBalanceAsync(accountId);
         if (currentBalance < amount)
@@ -177,7 +221,8 @@ public class AccountService : IAccountService
             Amount = amount,
             TransactionType = "WITHDRAWAL",
             Status = "COMPLETED",
-            CompletedAt = DateTime.UtcNow
+            CompletedAt = DateTime.UtcNow,
+            IdempotencyKey = idempotencyKey
         };
 
         var ledgerEntry = new LedgerEntry
@@ -200,6 +245,7 @@ public class AccountService : IAccountService
         await _notificationRepository.AddAsync(notification);
         await _transactionRepository.AddAsync(transaction);
         await _ledgerEntryRepository.AddAsync(ledgerEntry);
+        await _auditService.AppendAsync(userId, AuditActions.Withdrawal, nameof(Transaction), transaction.Id, new { accountId, amount = amount.ToString("F2", CultureInfo.InvariantCulture) });
         await _accountRepository.SaveChangesAsync();
 
         await dbTransaction.CommitAsync();
@@ -210,6 +256,161 @@ public class AccountService : IAccountService
             amount, accountId, transaction.Id);
 
         return AccountOperationResult.Success(transaction.Id, newBalance);
+    }
+
+    // Slår upp mottagare via kontonummer. Returnerar bara maskerat namn ("Robin M."), aldrig personnummer eller e-post.
+    public async Task<RecipientLookupDto?> LookupRecipientAsync(string accountNumber)
+    {
+        var account = await _accountRepository.GetByAccountNumberAsync(accountNumber);
+        if (account is null) return null;
+
+        var owner = await _userRepository.GetByIdAsync(account.UserId);
+        if (owner is null) return null;
+
+        return new RecipientLookupDto(account.AccountNumber, MaskName(owner.FirstName, owner.LastName));
+    }
+
+    // Atomisk överforing: båda kontona låst i fast ordning (lägst konto-Id först) så att två överföringar aldrig kan hamna i deadlock
+    public async Task<TransferOperationResult> TransferAsync(Guid userId, Guid fromAccountId, string toAccountNumber, decimal amount, string? idempotencyKey = null)
+    {
+        if (amount <= 0) return TransferOperationResult.Failure("Amount must be positive.");
+
+        var fromAccount = await _accountRepository.GetByIdAsync(fromAccountId);
+        if (fromAccount is null || fromAccount.UserId != userId) return TransferOperationResult.Failure("Account does not exist.");
+
+        var toAccount = await _accountRepository.GetByAccountNumberAsync(toAccountNumber);
+        if (toAccount is null) return TransferOperationResult.Failure("Recipient account does not exist.");
+
+        if (toAccount.Id == fromAccount.Id) return TransferOperationResult.Failure("Accounts must be different.");
+
+        var isOwnTransfer = toAccount.UserId == userId;
+
+        var sender = await _userRepository.GetByIdAsync(userId);
+        var recipient = isOwnTransfer ? sender : await _userRepository.GetByIdAsync(toAccount.UserId);
+        if (sender is null || recipient is null) return TransferOperationResult.Failure("Account does not exist.");
+
+        // Etiketter som visas i historiken: eget konto visar kontonamn, annan användare visar maskerat namn
+        var outLabel = isOwnTransfer ? toAccount.Name : MaskName(recipient.FirstName, recipient.LastName);
+        var inLabel = isOwnTransfer ? fromAccount.Name : MaskName(sender.FirstName, sender.LastName);
+
+        await using var dbTransaction = await _context.Database.BeginTransactionAsync();
+
+        foreach (var lockId in new[] { fromAccount.Id, toAccount.Id }.OrderBy(id => id))
+        {
+            await _context.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT 1 FROM \"Accounts\" WHERE \"Id\" = {lockId} FOR UPDATE");
+        }
+
+        var existing = await FindByIdempotencyKeyAsync(fromAccount.Id, idempotencyKey);
+        if (existing is not null)
+        {
+            var sameRecipient = existing.TransferId.HasValue && await _context.Transactions.AnyAsync(t =>
+                t.TransferId == existing.TransferId && t.TransactionType == "TRANSFER_IN" && t.AccountId == toAccount.Id);
+
+            if (existing.TransactionType != "TRANSFER_OUT" || existing.Amount != amount || !sameRecipient)
+                return TransferOperationResult.Failure(IdempotencyKeyReused);
+
+            var replayFromBalance = await _accountRepository.GetBalanceAsync(fromAccount.Id);
+            decimal? replayToBalance = isOwnTransfer ? await _accountRepository.GetBalanceAsync(toAccount.Id) : null;
+
+            return TransferOperationResult.Success(existing.TransferId!.Value, replayFromBalance, replayToBalance);
+        }
+
+        var currentBalance = await _accountRepository.GetBalanceAsync(fromAccount.Id);
+        if (currentBalance < amount)
+        {
+            _logger.LogWarning("Transfer denied for account {AccountId}: insufficient funds (balance {Balance}, requested {Amount})",
+                fromAccount.Id, currentBalance, amount);
+
+            return TransferOperationResult.Failure("Insufficient funds.");
+        }
+
+        var transferId = Guid.NewGuid();
+        var completedAt = DateTime.UtcNow;
+
+        var outTransaction = new Transaction
+        {
+            AccountId = fromAccount.Id,
+            Amount = amount,
+            TransactionType = "TRANSFER_OUT",
+            Status = "COMPLETED",
+            CompletedAt = completedAt,
+            TransferId = transferId,
+            CounterpartyLabel = outLabel,
+            IdempotencyKey = idempotencyKey
+        };
+
+        var inTransaction = new Transaction
+        {
+            AccountId = toAccount.Id,
+            Amount = amount,
+            TransactionType = "TRANSFER_IN",
+            Status = "COMPLETED",
+            CompletedAt = completedAt,
+            TransferId = transferId,
+            CounterpartyLabel = inLabel
+        };
+
+        var outLedgerEntry = new LedgerEntry
+        {
+            AccountId = fromAccount.Id,
+            TransactionId = outTransaction.Id,
+            Amount = -amount,
+            EntryType = "TRANSFER_OUT",
+            Description = $"Transfer to {toAccount.AccountNumber}"
+        };
+
+        var inLedgerEntry = new LedgerEntry
+        {
+            AccountId = toAccount.Id,
+            TransactionId = inTransaction.Id,
+            Amount = amount,
+            EntryType = "TRANSFER_IN",
+            Description = $"Transfer from {fromAccount.AccountNumber}"
+        };
+
+        await _notificationRepository.AddAsync(new Notification
+        {
+            UserId = userId,
+            Type = "TRANSFER_SENT",
+            Message = $"Transfer of {amount:F2} from account {fromAccount.AccountNumber} to {toAccount.AccountNumber} completed.",
+            Status = "PENDING"
+        });
+
+        // Mottagaren får bara ett eget meddelande om kontot tillhör en annan användare
+        if (!isOwnTransfer)
+        {
+            await _notificationRepository.AddAsync(new Notification
+            {
+                UserId = toAccount.UserId,
+                Type = "TRANSFER_RECEIVED",
+                Message = $"You received {amount:F2} on account {toAccount.AccountNumber}.",
+                Status = "PENDING"
+            });
+        }
+
+        await _transactionRepository.AddAsync(outTransaction);
+        await _transactionRepository.AddAsync(inTransaction);
+        await _ledgerEntryRepository.AddAsync(outLedgerEntry);
+        await _ledgerEntryRepository.AddAsync(inLedgerEntry);
+        await _auditService.AppendAsync(userId, AuditActions.Transfer, "Transfer", transferId, new
+        {
+            fromAccountId = fromAccount.Id,
+            toAccountId = toAccount.Id,
+            amount = amount.ToString("F2", CultureInfo.InvariantCulture)
+        });
+        await _accountRepository.SaveChangesAsync();
+        await dbTransaction.CommitAsync();
+
+        var fromBalance = await _accountRepository.GetBalanceAsync(fromAccount.Id);
+
+        // Mottagarens saldo skickas bara tillbaka vid överforing mellan egna konton
+        decimal? toBalance = isOwnTransfer ? await _accountRepository.GetBalanceAsync(toAccount.Id) : null;
+
+        _logger.LogInformation("Transfer {TransferId} of {Amount} completed from account {FromAccountId} to account {ToAccountId}",
+            transferId, amount, fromAccount.Id, toAccount.Id);
+
+        return TransferOperationResult.Success(transferId, fromBalance, toBalance);
     }
 
     private async Task<string> GenerateUniqueAccountNumberAsync()
@@ -232,19 +433,60 @@ public class AccountService : IAccountService
 
         var (transactions, totalCount) = await _transactionRepository.GetByAccountIdAsync(accountId, page, pageSize);
 
+        return BuildHistoryResponse(transactions, totalCount, page, pageSize);
+    }
+
+    // Alla konton för en användare i datumordning, med valfria filter. Null om accountId inte tillhör användaren.
+    public async Task<TransactionHistoryResponseDto?> GetUserTransactionsAsync(
+        Guid userId, Guid? accountId, string? type, DateOnly? fromDate, DateOnly? toDate, int page, int pageSize)
+    {
+        if (accountId.HasValue)
+        {
+            var account = await _accountRepository.GetByIdAsync(accountId.Value);
+            if (account is null || account.UserId != userId) return null;
+        }
+
+        // Datum tolkas som hela UTC-dagar, båda inkluderade
+        DateTime? fromUtc = fromDate.HasValue
+            ? DateTime.SpecifyKind(fromDate.Value.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc)
+            : null;
+
+        DateTime? toUtcExclusive = toDate.HasValue && toDate.Value < DateOnly.MaxValue
+            ? DateTime.SpecifyKind(toDate.Value.AddDays(1).ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc)
+            : null;
+
+        var (transactions, totalCount) = await _transactionRepository.GetByUserIdAsync(
+            userId, accountId, type, fromUtc, toUtcExclusive, page, pageSize);
+
+        return BuildHistoryResponse(transactions, totalCount, page, pageSize);
+    }
+
+    private static TransactionHistoryResponseDto BuildHistoryResponse(
+        IReadOnlyList<Transaction> transactions, int totalCount, int page, int pageSize)
+    {
         var dtos = transactions
             .Select(t => new TransactionDto(
                 t.Id,
+                t.AccountId,
                 t.TransactionType,
                 t.Amount.ToString("F2", CultureInfo.InvariantCulture),
                 t.Status,
                 t.CreatedAt,
-                t.CompletedAt))
+                t.CompletedAt,
+                t.TransferId,
+                t.CounterpartyLabel))
             .ToList();
 
         var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
         return new TransactionHistoryResponseDto(dtos, page, pageSize, totalCount, totalPages);
+    }
+
+    private static string MaskName(string firstName, string lastName)
+    {
+        var first = firstName.Trim();
+        var last = lastName.Trim();
+        return last.Length == 0 ? first : $"{first} {char.ToUpperInvariant(last[0])}.";
     }
 
     private static AccountDto MapToDto(Account account, decimal balance) =>

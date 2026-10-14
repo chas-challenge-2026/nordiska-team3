@@ -21,6 +21,7 @@ public static class ServiceCollectionExtensions
     {
         // Repositories
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IAccountRepository, AccountRepository>();
         services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<IRepository<LedgerEntry>, Repository<LedgerEntry>>();
@@ -39,6 +40,11 @@ public static class ServiceCollectionExtensions
         services.AddHostedService<NotificationBackgroundWorker>();
         services.AddScoped<IFaqService, FaqService>();
         services.AddSingleton<IPersonalNumberProtector, PersonalNumberProtector>();
+        services.AddSingleton<INativeProcessRunner, NativeProcessRunner>();
+        services.AddScoped<IAuditService, AuditService>();
+        services.AddSingleton(sp => AuditKey.Load(sp.GetRequiredService<IConfiguration>()));
+        services.AddSingleton<ISignedReportCheck, SignedReportCheck>();
+        services.AddSingleton<IPdfSigningService, PdfSigningService>();
 
         // Validation
         services.AddValidatorsFromAssemblyContaining<Program>(); // Letar alla klasser som ärver AbstractValidator<T>
@@ -171,7 +177,10 @@ public static class ServiceCollectionExtensions
             configuration
                 .MinimumLevel.Information()
                 .Enrich.FromLogContext()
-                .WriteTo.Console();
+                // Shown for logs written outside a request. A request's own ID wins, since FromLogContext runs first.
+                .Enrich.WithProperty("CorrelationId", "-")
+                .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] [{CorrelationId}] {Message:lj}{NewLine}{Exception}");
+                   
         });
 
         return builder;
@@ -186,6 +195,17 @@ public static class ServiceCollectionExtensions
         db.Database.Migrate();
 
         return app;
+    }
+
+    // Creates the audit key on the first start and verifies the audit chain. A broken chain stops the app.
+    public static async Task VerifyAuditChainAsync(this WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+
+        await AuditStartup.RunAsync(
+            scope.ServiceProvider.GetRequiredService<IAuditService>(),
+            app.Configuration.GetValue<bool>("Audit:AllowBrokenChain"),
+            scope.ServiceProvider.GetRequiredService<ILogger<AuditService>>());
     }
 
     // Lägger in en testanvändare om den saknas, efter att migrationerna körts.

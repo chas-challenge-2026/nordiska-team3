@@ -81,7 +81,7 @@ function LoginPage() {
 
                     <form className="login-card" onSubmit={handlePinLogin}>
                         <div>
-                            <h1 tabIndex={0}>Välkommen tillbaka</h1>
+                            <h1>Välkommen tillbaka</h1>
                             <p>Logga in med PIN-kod. BankID kommer snart.</p>
                         </div>
 
@@ -114,7 +114,7 @@ function LoginPage() {
                             </div>
                         </div>
 
-                        <p className="login-error">
+                        <p className="login-error" role={errorMessage ? 'alert' : undefined}>
                             {errorMessage}
                         </p>
 

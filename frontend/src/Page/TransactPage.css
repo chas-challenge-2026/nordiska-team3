@@ -30,6 +30,10 @@
   visibility: hidden;
 }
 
+.transfer-recipient-lookup.transact-available-balance--empty {
+  display: none;
+}
+
 .dashboard-page .transact-header h1 {
   margin: 0 0 8px;
   color: var(--color-text-inverted);
@@ -97,6 +101,7 @@
 .pill-toggle-row {
   display: flex;
   gap: var(--space-2);
+  flex-wrap: wrap;
 }
 
 .pill-toggle {
@@ -104,9 +109,14 @@
   min-height: 36px;
   padding: 0 24px;
   border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   font-weight: 800;
   font-size: 13px;
   line-height: 1;
+  white-space: nowrap;
   cursor: pointer;
   background: var(--color-surface-soft);
   color: var(--color-text-primary);
@@ -114,8 +124,18 @@
   transition: color 0.15s ease, box-shadow 0.15s ease;
 }
 
+@media (min-width: 701px) {
+  .transact-content > .pill-toggle-row {
+    flex-wrap: nowrap;
+  }
+}
+
 .pill-toggle:hover {
   color: var(--color-primary-text);
+}
+
+.transfer-recipient-toggle-row .pill-toggle {
+  min-width: 136px;
 }
 
 .pill-toggle--deposit.pill-toggle--active {
@@ -141,6 +161,10 @@
 .pill-toggle--transfer.pill-toggle--active {
   color: var(--color-primary-text);
   box-shadow: 0 8px 18px var(--color-shadow), inset 0 0 0 3px var(--color-primary);
+}
+
+.pill-toggle--transfer {
+  min-width: 132px;
 }
 
 [data-theme="dark"] .pill-toggle--transfer.pill-toggle--active {
@@ -261,6 +285,7 @@
 
 /* Form card */
 .transact-form-card {
+  position: relative;
   width: 100%;
   box-sizing: border-box;
   background: var(--dashboard-card-bg, var(--color-text-inverted));
@@ -322,24 +347,67 @@
 }
 
 .transact-message {
-  /* Reserverad plats så att kortet inte hoppar när ett kort meddelande visas */
-  min-height: 16px;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 16px;
+  position: absolute;
+  left: 24px;
+  right: auto;
+  bottom: 76px;
+  z-index: 2;
+  width: auto;
+  max-width: min(280px, calc(100% - 36px));
+  min-height: 0;
   margin: 0;
+  padding: 9px 12px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  border-radius: 16px 4px 16px 16px;
+  background: var(--dashboard-card-bg, var(--color-text-inverted));
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 14px;
+}
+
+.transact-message::after {
+  content: "";
+  position: absolute;
+  left: 28px;
+  top: -6px;
+  width: 12px;
+  height: 12px;
+  background: inherit;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  transform: rotate(45deg);
 }
 
 .transact-message--empty {
-  visibility: hidden;
+  display: none;
 }
 
 .transact-message--error {
+  border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+  background: var(--color-danger-soft);
   color: var(--color-danger);
 }
 
 .transact-message--success {
+  border-color: color-mix(in srgb, var(--color-success) 35%, transparent);
+  background: var(--color-success-soft);
   color: var(--color-success);
+}
+
+.transact-message--transfer {
+  bottom: 74px;
+}
+
+.transact-message--error::after {
+  border-top-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+  border-left-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+}
+
+.transact-message--success::after {
+  border-top-color: color-mix(in srgb, var(--color-success) 35%, transparent);
+  border-left-color: color-mix(in srgb, var(--color-success) 35%, transparent);
 }
 
 .transact-submit-btn {

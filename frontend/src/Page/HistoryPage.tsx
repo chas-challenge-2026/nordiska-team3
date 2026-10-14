@@ -1,11 +1,10 @@
-import { type TransactionType } from './mockHistoryTransaction'
+import { type TransactionType } from '../types/historyTransaction'
 import { UserProfile } from '../components/UserProfile'
 import './HistoryPage.css'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { type BackendAccount, type BackendTransaction } from '../services/accountService'
-import { useAccountsWithTransactions } from '../hooks/useAccountsWithTransactions'
-import { getTransactionsNewestFirst } from '../utils/transactionOrder'
+import { useQuery } from '@tanstack/react-query'
+import { getAccounts, getTransactions, type BackendAccount, type BackendTransaction } from '../services/accountService'
 import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import { AppNav } from '../components/AppNav'
 import { DecorativeCircle } from '../components/DecorativeCircle'
@@ -13,14 +12,22 @@ import { CustomerServiceFooter } from '../components/CustomerServiceFooter'
 import { useLogout } from '../hooks/useLogout'
 import { useTheme } from '../context/useTheme'
 
-type HistoryFilter = 'all' | 'deposit' | 'withdrawal' | 'interest'
+type HistoryFilter = 'all' | 'deposit' | 'withdrawal' | 'transfer' | 'interest'
 type AccountFilter = 'all' | string
+type PeriodFilter = 'last30days' | 'thisYear' | 'all'
 
 const historyFilters: { value: HistoryFilter; label: string }[] = [
     { value: 'all', label: 'Alla' },
     { value: 'deposit', label: 'Insättningar' },
     { value: 'withdrawal', label: 'Uttag' },
+    { value: 'transfer', label: 'Överföringar' },
     { value: 'interest', label: 'Ränta' },
+]
+
+const periodFilters: { value: PeriodFilter; label: string }[] = [
+    { value: 'last30days', label: 'Senaste 30 dagarna' },
+    { value: 'thisYear', label: 'I år' },
+    { value: 'all', label: 'Allt' },
 ]
 
 function formatTransactionAmount(amount: number) {
@@ -49,7 +56,19 @@ function getTransactionLabel(type: TransactionType) {
         return 'Uttag'
     }
 
+    if (type === 'transfer') {
+        return 'Överföring'
+    }
+
     return 'Ränta'
+}
+
+function getTransactionBadgeType(transaction: { type: TransactionType; amount: number }): TransactionType {
+    if (transaction.type === 'transfer') {
+        return transaction.amount < 0 ? 'withdrawal' : 'deposit'
+    }
+
+    return transaction.type
 }
 
 function parseBackendAmount(amount: string) {
@@ -63,6 +82,10 @@ function mapBackendTransactionType(transactionType: string): TransactionType {
 
     if (transactionType === 'WITHDRAWAL') {
         return 'withdrawal'
+    }
+
+    if (transactionType === 'TRANSFER_OUT' || transactionType === 'TRANSFER_IN') {
+        return 'transfer'
     }
 
     return 'interest'
@@ -122,6 +145,10 @@ function getTransactionTitle(type: TransactionType) {
         return 'Uttag'
     }
 
+    if (type === 'transfer') {
+        return 'Överföring'
+    }
+
     return 'Ränta'
 }
 
@@ -131,14 +158,19 @@ function mapBackendTransactionToHistoryTransaction(
 ) {
     const type = mapBackendTransactionType(transaction.transactionType)
     const rawAmount = parseBackendAmount(transaction.amount)
-    const amount = type === 'withdrawal' ? -Math.abs(rawAmount) : rawAmount
+    const amount =
+        type === 'withdrawal' || transaction.transactionType === 'TRANSFER_OUT'
+            ? -Math.abs(rawAmount)
+            : Math.abs(rawAmount)
     const date = transaction.completedAt ?? transaction.createdAt
 
     return {
         id: transaction.id,
         title: getTransactionTitle(type),
         accountName: account.name,
+        counterparty: transaction.counterparty,
         date: `${formatTransactionDate(date)} · ${formatTransactionTime(date)}`,
+        rawDate: date,
         month: formatTransactionMonth(date),
         status: mapBackendTransactionStatus(transaction.status),
         amount,
@@ -151,26 +183,73 @@ function HistoryPage() {
     const { toggleTheme } = useTheme()
     const [searchParams, setSearchParams] = useSearchParams()
     const [activeFilter, setActiveFilter] = useState<HistoryFilter>('all')
+    const [activePeriodFilter, setActivePeriodFilter] = useState<PeriodFilter>('all')
     const [currentPage, setCurrentPage] = useState(1)
     const pageSize = 20
     const accountParam = searchParams.get('konto')?.trim()
     const activeAccount: AccountFilter = accountParam || 'all'
-    const { data: accountTransactionGroups, isLoading: isLoadingTransactions, isError: transactionsError } = useAccountsWithTransactions(currentPage, pageSize)
-    const transactions = getTransactionsNewestFirst(accountTransactionGroups ?? []).map(({ account, transaction }) =>
-        mapBackendTransactionToHistoryTransaction(transaction, account)
+    const { data: accounts = [], isLoading: isLoadingAccounts, isError: accountsError } = useQuery({
+        queryKey: ['accounts'],
+        queryFn: getAccounts,
+        staleTime: 30_000,
+    })
+    const activeAccountId = accounts.find((account) => account.name === activeAccount)?.id
+    const backendTransactionType =
+        activeFilter === 'deposit'
+            ? 'DEPOSIT'
+            : activeFilter === 'withdrawal'
+                ? 'WITHDRAWAL'
+                : activeFilter === 'interest'
+                    ? 'INTEREST'
+                    : undefined
+    const {
+        data: transactionHistory,
+        isLoading: isLoadingTransactions,
+        isError: transactionsError,
+    } = useQuery({
+        queryKey: ['transactions', currentPage, pageSize, activeAccountId ?? 'all', backendTransactionType ?? 'all'],
+        queryFn: () =>
+            getTransactions(currentPage, pageSize, {
+                accountId: activeAccountId,
+                type: backendTransactionType,
+            }),
+        enabled: activeAccount === 'all' || Boolean(activeAccountId),
+        staleTime: 30_000,
+    })
+    const accountById = new Map(accounts.map((account) => [account.id, account]))
+    const fallbackAccount: BackendAccount = {
+        id: '',
+        accountNumber: '',
+        accountType: '',
+        name: 'Okänt konto',
+        status: '',
+        balance: '0',
+    }
+    const transactions = (transactionHistory?.transactions ?? []).map((transaction) =>
+        mapBackendTransactionToHistoryTransaction(
+            transaction,
+            accountById.get(transaction.accountId ?? '') ?? fallbackAccount
+        )
     )
 
-    const accountFilters = (accountTransactionGroups ?? []).map(({ account }) => account.name)
-    const matchingHistoryGroups = (accountTransactionGroups ?? []).filter(({ account }) =>
-        activeAccount === 'all' || account.name === activeAccount
-    )
-    const totalPages = Math.max(1, ...matchingHistoryGroups.map(({ history }) => history.totalPages))
+    const accountFilters = accounts.map((account) => account.name)
+    const totalPages = transactionHistory?.totalPages ?? 1
 
     const visibleTransactions = transactions.filter((transaction) => {
         const matchesType = activeFilter === 'all' || transaction.type === activeFilter
-        const matchesAccount = activeAccount === 'all' || transaction.accountName === activeAccount
+        const transactionDate = new Date(transaction.rawDate)
+        const now = new Date()
+        const thirtyDaysAgo = new Date(now)
 
-        return matchesType && matchesAccount
+        thirtyDaysAgo.setDate(now.getDate() - 30)
+
+        // Periodfiltret gäller bara den redan hämtade sidan, eftersom backend paginerar per konto.
+        const matchesPeriod =
+            activePeriodFilter === 'all' ||
+            (activePeriodFilter === 'last30days' && transactionDate >= thirtyDaysAgo) ||
+            (activePeriodFilter === 'thisYear' && transactionDate.getFullYear() === now.getFullYear())
+
+        return matchesType && matchesPeriod
     })
 
     function handleAccountChange(accountName: AccountFilter) {
@@ -191,6 +270,11 @@ function HistoryPage() {
         setCurrentPage(1)
     }
 
+    function handlePeriodChange(filter: PeriodFilter) {
+        setActivePeriodFilter(filter)
+        setCurrentPage(1)
+    }
+
     function goToPreviousPage() {
         setCurrentPage((page) => Math.max(1, page - 1))
     }
@@ -200,6 +284,8 @@ function HistoryPage() {
     }
 
     const selectedAccountLabel = activeAccount === 'all' ? 'Alla konton' : activeAccount
+    const isLoadingHistory = isLoadingAccounts || isLoadingTransactions
+    const hasHistoryError = accountsError || transactionsError
 
     const groupedTransactions = visibleTransactions.reduce<Record<string, typeof transactions>>(
         (groups, transaction) => {
@@ -235,52 +321,14 @@ function HistoryPage() {
 
                 <section className="history-content">
                     <header className="history-header">
-                        <h1 tabIndex={0}>Transaktionshistorik</h1>
+                        <h1>Transaktionshistorik</h1>
                         <p>Alla rörelser på dina sparkonton.</p>
                     </header>
 
                     <div className="history-controls">
                         <div className="history-controls-desktop">
                             <label
-                                className={`history-select-filter ${
-                                    activeAccount !== 'all' ? 'history-select-filter--active' : ''
-                                }`}
-                            >
-                                <span>Konto</span>
-                                <select
-                                    aria-label="Välj konto"
-                                    value={activeAccount}
-                                    onChange={(event) => handleAccountChange(event.target.value)}
-                                >
-                                    <option value="all">Alla konton</option>
-                                    {accountFilters.map((accountName) => (
-                                        <option value={accountName} key={accountName}>
-                                            {accountName}
-                                        </option>
-                                    ))}
-                                </select>
-                            </label>
-
-                            {historyFilters
-                                .filter((filter) => filter.value !== 'all')
-                                .map((filter) => (
-                                    <button
-                                        className={`history-filter ${
-                                            activeFilter === filter.value ? 'history-filter--active' : ''
-                                        }`}
-                                        type="button"
-                                        key={filter.value}
-                                        aria-pressed={activeFilter === filter.value}
-                                        onClick={() => handleTypeChange(activeFilter === filter.value ? 'all' : filter.value)}
-                                    >
-                                        {filter.label}
-                                    </button>
-                                ))}
-                        </div>
-
-                        <div className="history-controls-mobile">
-                            <label
-                                className={`history-select-filter ${
+                                className={`history-select-filter history-select-filter--account ${
                                     activeAccount !== 'all' ? 'history-select-filter--active' : ''
                                 }`}
                             >
@@ -300,7 +348,7 @@ function HistoryPage() {
                             </label>
 
                             <label
-                                className={`history-select-filter ${
+                                className={`history-select-filter history-select-filter--type ${
                                     activeFilter !== 'all' ? 'history-select-filter--active' : ''
                                 }`}
                             >
@@ -320,24 +368,106 @@ function HistoryPage() {
                                         ))}
                                 </select>
                             </label>
+
+                            <label
+                                className={`history-select-filter history-select-filter--period ${
+                                    activePeriodFilter !== 'all' ? 'history-select-filter--active' : ''
+                                }`}
+                            >
+                                <span>Period</span>
+                                <select
+                                    aria-label="Välj period"
+                                    value={activePeriodFilter}
+                                    onChange={(event) => handlePeriodChange(event.target.value as PeriodFilter)}
+                                >
+                                    {periodFilters.map((filter) => (
+                                        <option value={filter.value} key={filter.value}>
+                                            {filter.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                        </div>
+
+                        <div className="history-controls-mobile">
+                            <label
+                                className={`history-select-filter history-select-filter--account ${
+                                    activeAccount !== 'all' ? 'history-select-filter--active' : ''
+                                }`}
+                            >
+                                <span>Konto</span>
+                                <select
+                                    aria-label="Välj konto"
+                                    value={activeAccount}
+                                    onChange={(event) => handleAccountChange(event.target.value)}
+                                >
+                                    <option value="all">Alla konton</option>
+                                    {accountFilters.map((accountName) => (
+                                        <option value={accountName} key={accountName}>
+                                            {accountName}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+
+                            <label
+                                className={`history-select-filter history-select-filter--type ${
+                                    activeFilter !== 'all' ? 'history-select-filter--active' : ''
+                                }`}
+                            >
+                                <span>Typ</span>
+                                <select
+                                    aria-label="Välj transaktionstyp"
+                                    value={activeFilter}
+                                    onChange={(event) => handleTypeChange(event.target.value as HistoryFilter)}
+                                >
+                                    <option value="all">Alla typer</option>
+                                    {historyFilters
+                                        .filter((filter) => filter.value !== 'all')
+                                        .map((filter) => (
+                                            <option value={filter.value} key={filter.value}>
+                                                {filter.label}
+                                            </option>
+                                        ))}
+                                </select>
+                            </label>
+
+                            <label
+                                className={`history-select-filter history-select-filter--period ${
+                                    activePeriodFilter !== 'all' ? 'history-select-filter--active' : ''
+                                }`}
+                            >
+                                <span>Period</span>
+                                <select
+                                    aria-label="Välj period"
+                                    value={activePeriodFilter}
+                                    onChange={(event) => handlePeriodChange(event.target.value as PeriodFilter)}
+                                >
+                                    {periodFilters.map((filter) => (
+                                        <option value={filter.value} key={filter.value}>
+                                            {filter.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
                         </div>
                     </div>
 
-                    {isLoadingTransactions ? (
+                    {isLoadingHistory ? (
                         <div className="history-empty">
-                            <h2 tabIndex={0}>Laddar transaktioner</h2>
+                            <h2>Laddar transaktioner</h2>
                             <p>Hämtar historik för dina konton.</p>
                         </div>
-                    ) : transactionsError ? (
+                    ) : hasHistoryError ? (
                         <div className="history-empty">
-                            <h2 tabIndex={0}>Historiken kunde inte hämtas</h2>
-                            <p>{transactionsError}</p>
+                            <h2>Historiken kunde inte hämtas</h2>
+                            <p>Försök igen om en stund.</p>
                         </div>
                     ) : visibleTransactions.length > 0 ? (
                         <div className="history-list">
                             {Object.entries(groupedTransactions).map(([month, transactions]) => (
                                 <section className="history-month" key={month}>
-                                    <h2 tabIndex={0}>{month}</h2>
+                                    <h2>{month}</h2>
 
                                     {transactions.map((transaction) => (
                                         <article className="transaction-card" key={transaction.id}>
@@ -350,9 +480,10 @@ function HistoryPage() {
                                             </div>
 
                                             <div className="transaction-info">
-                                                <h3 tabIndex={0}>{transaction.title}</h3>
+                                                <h3>{transaction.title}</h3>
                                                 <p>
-                                                    {transaction.accountName} ·{' '}
+                                                    {transaction.accountName}
+                                                    {transaction.counterparty && ` · ${transaction.counterparty}`} ·{' '}
                                                     <span className="transaction-date">{transaction.date}</span>
                                                     {transaction.status && (
                                                         <span
@@ -373,8 +504,12 @@ function HistoryPage() {
                                                     {formatTransactionAmount(transaction.amount)}
                                                 </strong>
 
-                                                <span className={`transaction-badge transaction-badge--${transaction.type}`}>
-                                                    {getTransactionLabel(transaction.type)}
+                                                <span
+                                                    className={`transaction-badge transaction-badge--${getTransactionBadgeType(
+                                                        transaction
+                                                    )}`}
+                                                >
+                                                    {getTransactionLabel(getTransactionBadgeType(transaction))}
                                                 </span>
                                             </div>
                                         </article>
@@ -384,12 +519,12 @@ function HistoryPage() {
                         </div>
                     ) : (
                         <div className="history-empty">
-                            <h2 tabIndex={0}>Inga transaktioner hittades</h2>
+                            <h2>Inga transaktioner hittades</h2>
                             <p>Det finns inga rörelser för {selectedAccountLabel} som matchar det valda filtret.</p>
                         </div>
                     )}
 
-                    {!isLoadingTransactions && !transactionsError && totalPages > 1 && (
+                    {!isLoadingHistory && !hasHistoryError && totalPages > 1 && (
                         <nav className="history-pagination" aria-label="Sidnavigering för transaktionshistorik">
                             <button
                                 type="button"

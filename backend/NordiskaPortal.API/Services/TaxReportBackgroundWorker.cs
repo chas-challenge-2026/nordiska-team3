@@ -17,6 +17,8 @@ namespace NordiskaPortal.API.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            await RecoverUnfinishedReportsAsync();
+
             while (!stoppingToken.IsCancellationRequested)
             {
                 var reportId = await _queue.DequeueAsync(stoppingToken);
@@ -32,6 +34,20 @@ namespace NordiskaPortal.API.Services
                 {
                     _logger.LogError(ex, "Failed to process TaxReport {TaxReportId}", reportId);
                 }
+            }
+        }
+
+        private async Task RecoverUnfinishedReportsAsync()
+        {
+            try
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var processingService = scope.ServiceProvider.GetRequiredService<ITaxReportProcessingService>();
+                await processingService.RecoverUnfinishedReportsAsync();
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _logger.LogError(ex, "Could not put unfinished tax reports back in the queue");
             }
         }
     }

@@ -8,10 +8,16 @@ public interface IAccountService
     Task<AccountsResponseDto> GetAccountsForUserAsync(Guid userId);
 
     Task<AccountDto?> GetBalanceAsync(Guid userId, Guid accountId);
-    Task<AccountOperationResult> DepositAsync(Guid userId, Guid accountId, decimal amount);
-    Task<AccountOperationResult> WithdrawAsync(Guid userId, Guid accountId, decimal amount);
+    Task<AccountOperationResult> DepositAsync(Guid userId, Guid accountId, decimal amount, string? idempotencyKey = null);
+    Task<AccountOperationResult> WithdrawAsync(Guid userId, Guid accountId, decimal amount, string? idempotencyKey = null);
 
     Task<AccountDto?> RenameAccountAsync(Guid userId, Guid accountId, string name);
 
     Task<TransactionHistoryResponseDto?> GetTransactionHistoryAsync(Guid userId, Guid accountId, int page, int pageSize);
+
+    Task<RecipientLookupDto?> LookupRecipientAsync(string accountNumber);
+
+    Task<TransferOperationResult> TransferAsync(Guid userId, Guid fromAccountId, string toAccountNumber, decimal amount, string? idempotencyKey = null);
+
+    Task<TransactionHistoryResponseDto?> GetUserTransactionsAsync(Guid userId, Guid? accountId, string? type, DateOnly? fromDate, DateOnly? toDate, int page, int pageSize);
 }

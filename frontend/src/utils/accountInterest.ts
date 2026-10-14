@@ -7,13 +7,6 @@ type AccountInterest = {
     type: InterestType
 }
 
-// Tillfälliga värden tills backend skickar interestRate/interestType på kontot.
-// Sparkontots ränta är samma som i FAQ:n.
-const fallbackInterestByAccountType: Record<string, AccountInterest> = {
-    SAVINGS: { rate: 3.5, type: 'VARIABLE' },
-    CHECKING: { rate: 0, type: 'VARIABLE' },
-}
-
 const interestTypeLabels: Record<InterestType, string> = {
     VARIABLE: 'rörlig',
     FIXED: 'fast',
@@ -24,19 +17,38 @@ export const interestTypeExplanations: Record<InterestType, string> = {
     FIXED: 'Fast ränta är densamma under hela bindningstiden.',
 }
 
-export function getAccountInterest(account: BackendAccount): AccountInterest | null {
-    if (account.interestRate !== undefined && account.interestType) {
-        const rate = Number(account.interestRate.replace(',', '.'))
-
-        if (!Number.isNaN(rate)) {
-            return { rate, type: account.interestType }
-        }
-    }
-
-    return fallbackInterestByAccountType[account.accountType] ?? null
+/** Gör om backendens siffervärden till number. */
+function parseAmount(value: string) {
+    return Number(value.replace(/\s/g, '').replace(',', '.'))
 }
 
-// Ex: "3,50 % · rörlig"
+/** Hämtar kontots ränta om backend skickar den. */
+export function getAccountInterest(account: BackendAccount): AccountInterest | null {
+    if (account.interestRate === undefined || !account.interestType) {
+        return null
+    }
+
+    const rate = parseAmount(account.interestRate)
+
+    return Number.isNaN(rate) ? null : { rate, type: account.interestType }
+}
+
+/** Visar upplupen ränta om den finns. */
+export function formatAccruedInterest(account: BackendAccount) {
+    if (account.accruedInterest === undefined) {
+        return null
+    }
+
+    const amount = parseAmount(account.accruedInterest)
+
+    if (Number.isNaN(amount)) {
+        return null
+    }
+
+    return `${amount.toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kr`
+}
+
+/** Visar räntan som text, till exempel "3,50 % · rörlig". */
 export function formatAccountInterest({ rate, type }: AccountInterest) {
     const formattedRate = rate.toLocaleString('sv-SE', {
         minimumFractionDigits: 2,

@@ -231,6 +231,7 @@
 [data-theme="dark"] .balance-card,
 [data-theme="dark"] .account-card,
 [data-theme="dark"] .recent-events__list,
+[data-theme="dark"] .next-event__card,
 [data-theme="dark"] .dashboard-actions__button,
 [data-theme="dark"] .transaction-card,
 [data-theme="dark"] .account-preview-card,
@@ -377,84 +378,4 @@ h3[tabindex="0"]:focus-visible {
   .decorative-circle {
     display: none;
   }
-}
-
-/* ============================= */
-/* BlobCard-komponent (Nordiska) */
-/* ============================= */
-.blob-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
-}
-
-.blob-card-icon {
-  margin-bottom: var(--space-2);
-}
-
-.blob-card-label {
-  font-size: 11px;
-  margin: 0 0 4px;
-  opacity: 0.75;
-}
-
-.blob-card-value {
-  font-family: monospace;
-  font-weight: 600;
-  margin: 0;
-}
-
-.blob-card-sublabel {
-  font-size: 10px;
-  margin: 4px 0 0;
-  opacity: 0.6;
-}
-
-.blob-card--lg {
-  width: 240px;
-  padding: var(--space-6);
-  box-shadow: var(--shadow-lg);
-}
-.blob-card--lg .blob-card-value {
-  font-size: 28px;
-}
-
-.blob-card--md {
-  width: 140px;
-}
-.blob-card--md .blob-card-value {
-  font-size: 16px;
-}
-
-.blob-card--sm {
-  width: 110px;
-  padding: var(--space-3);
-}
-.blob-card--sm .blob-card-value {
-  font-size: 14px;
-}
-
-.blob-card--white {
-  background: var(--color-surface);
-  color: var(--color-text-primary);
-  border: 1px solid var(--color-border);
-}
-
-.blob-card--mint {
-  background: var(--color-success-soft);
-  color: var(--color-jungle-teal);
-}
-
-.blob-card--peach {
-  background: var(--color-primary-pale);
-  color: var(--color-chestnut);
-}
-
-.blob-card--dark {
-  background: var(--color-page-bg);
-  color: var(--color-text-inverted);
 }

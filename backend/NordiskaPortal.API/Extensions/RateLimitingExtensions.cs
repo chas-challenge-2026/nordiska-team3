@@ -13,6 +13,7 @@ public static class RateLimitPolicies
     public const string Refresh = "refresh";
     public const string MoneyTransaction = "money-transaction";
     public const string TaxReport = "tax-report";
+    public const string AccountLookup = "account-lookup";
 }
 
 public static class RateLimitingExtensions
@@ -26,6 +27,7 @@ public static class RateLimitingExtensions
         var refreshLimit = section.GetValue("RefreshPerMinute", 30);
         var moneyLimit = section.GetValue("MoneyTransactionPerMinute", 10);
         var taxLimit = section.GetValue("TaxReportPerMinute", 5);
+        var lookupLimit = section.GetValue("AccountLookupPerMinute", 10);
 
         services.AddRateLimiter(options =>
         {
@@ -38,6 +40,7 @@ public static class RateLimitingExtensions
             // Inloggad: Ränka per användare, så att kunder bakom samma IP adress inte delar budget.
             options.AddPolicy(RateLimitPolicies.MoneyTransaction, ctx => ByUser(ctx, moneyLimit));
             options.AddPolicy(RateLimitPolicies.TaxReport, ctx => ByUser(ctx, taxLimit));
+            options.AddPolicy(RateLimitPolicies.AccountLookup, ctx => ByUser(ctx, lookupLimit));
 
             options.OnRejected = async (context, cancellationToken) =>
             {

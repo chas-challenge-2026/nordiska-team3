@@ -17,10 +17,12 @@ namespace NordiskaPortal.API.Controllers;
 public class  AccountsController : ControllerBase
 {
     private readonly IAccountService _accountService;
+    private readonly IInterestService _interestService;
 
-    public AccountsController(IAccountService accountService)
+    public AccountsController(IAccountService accountService, IInterestService interestService)
     {
         _accountService = accountService;
+        _interestService = interestService;
     }
 
     // POST /api/accounts
@@ -39,7 +41,7 @@ public class  AccountsController : ControllerBase
     public async Task<IActionResult> GetAccounts()
     {
         var accounts = await _accountService.GetAccountsForUserAsync(CurrentUserId);
-        return Ok(accounts);
+        return Ok(await _interestService.AddInterestAsync(accounts));
     }
 
     [HttpGet("{accountId}/balance")]
@@ -53,9 +55,12 @@ public class  AccountsController : ControllerBase
 
     [EnableRateLimiting(RateLimitPolicies.MoneyTransaction)]
     [HttpPost("{accountId}/deposit")]
-    public async Task<IActionResult> Deposit(Guid accountId, TransactionRequestDto request)
+    public async Task<IActionResult> Deposit(Guid accountId, TransactionRequestDto request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey = null)
     {
-        var result = await _accountService.DepositAsync(CurrentUserId, accountId, request.Amount);
+        if (!IsValidIdempotencyKey(idempotencyKey)) return BadRequest(new ErrorResponseDto(InvalidIdempotencyKeyMessage));
+
+        var result = await _accountService.DepositAsync(CurrentUserId, accountId, request.Amount, idempotencyKey);
 
         if (!result.IsSuccess) return BadRequest(new ErrorResponseDto(result.ErrorMessage!));
 
@@ -66,15 +71,46 @@ public class  AccountsController : ControllerBase
 
     [EnableRateLimiting(RateLimitPolicies.MoneyTransaction)]
     [HttpPost("{accountId}/withdraw")]
-    public async Task<IActionResult> Withdraw(Guid accountId, TransactionRequestDto request)
+    public async Task<IActionResult> Withdraw(Guid accountId, TransactionRequestDto request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey = null)
     {
-        var result = await _accountService.WithdrawAsync(CurrentUserId, accountId, request.Amount);
+        if (!IsValidIdempotencyKey(idempotencyKey)) return BadRequest(new ErrorResponseDto(InvalidIdempotencyKeyMessage));
+
+        var result = await _accountService.WithdrawAsync(CurrentUserId, accountId, request.Amount, idempotencyKey);
 
         if (!result.IsSuccess) return BadRequest(new ErrorResponseDto(result.ErrorMessage!));
 
         return Ok(new TransactionResultDto(
             result.TransactionId!.Value,
             result.Balance!.Value.ToString("F2", CultureInfo.InvariantCulture)));
+    }
+
+    [EnableRateLimiting(RateLimitPolicies.AccountLookup)]
+    [HttpGet("lookup")]
+    public async Task<IActionResult> LookupRecipient([FromQuery] string accountNumber)
+    {
+        var recipient = await _accountService.LookupRecipientAsync(accountNumber ?? string.Empty);
+
+        if (recipient is null) return NotFound(new ErrorResponseDto("Account does not exist."));
+
+        return Ok(recipient);
+    }
+
+    [EnableRateLimiting(RateLimitPolicies.MoneyTransaction)]
+    [HttpPost("{accountId:guid}/transfer")]
+    public async Task<IActionResult> Transfer(Guid accountId, TransferRequestDto request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey = null)
+    {
+        if (!IsValidIdempotencyKey(idempotencyKey)) return BadRequest(new ErrorResponseDto(InvalidIdempotencyKeyMessage));
+
+        var result = await _accountService.TransferAsync(CurrentUserId, accountId, request.ToAccountNumber, request.Amount, idempotencyKey);
+
+        if (!result.IsSuccess) return BadRequest(new ErrorResponseDto(result.ErrorMessage!));
+
+        return Ok(new TransferResultDto(
+            result.TransferId!.Value,
+            result.FromBalance!.Value.ToString("F2", CultureInfo.InvariantCulture),
+            result.ToBalance?.ToString("F2", CultureInfo.InvariantCulture)));
     }
 
     [HttpPatch("{accountId:guid}/name")]
@@ -100,6 +136,12 @@ public class  AccountsController : ControllerBase
 
         return Ok(history);
     }
+
+    private const int MaxIdempotencyKeyLength = 100;
+    private const string InvalidIdempotencyKeyMessage = "Idempotency-Key must be 1 to 100 characters.";
+
+    private static bool IsValidIdempotencyKey(string? key) =>
+        key is null || (!string.IsNullOrWhiteSpace(key) && key.Length <= MaxIdempotencyKeyLength);
 
     private Guid CurrentUserId =>
         Guid.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub)!);

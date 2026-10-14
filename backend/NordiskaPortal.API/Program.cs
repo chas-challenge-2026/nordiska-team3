@@ -2,8 +2,12 @@ using System.Net;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using NordiskaPortal.API.Data;
+using NordiskaPortal.API.DTOs.ErrorResponse;
 using NordiskaPortal.API.Extensions;
 using NordiskaPortal.API.Filters;
+using NordiskaPortal.API.Services.Interfaces;
+using NordiskaPortal.API.HealthChecks;
+using NordiskaPortal.API.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,10 +19,13 @@ builder.Services.AddRateLimiting(builder.Configuration);
 builder.Services.AddSwaggerDocs();
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddApplicationServices();
+builder.Services.AddInterestServices(builder.Configuration);
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<ValidationFilter>();
 });
+builder.Services.AddHealthChecks()
+    .AddCheck<DatabaseHealthCheck>("database");
 
 builder.WebHost.ConfigureKestrel(options => options.AddServerHeader = false);
 
@@ -47,6 +54,8 @@ app.UseForwardedHeaders();
 
 app.UseSecurityHeaders();
 
+app.UseMiddleware<CorrelationIdMiddleware>();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -59,6 +68,8 @@ app.UseExceptionHandler();
 app.ApplyMigrations();
 
 await app.ProtectExistingPersonalNumbersAsync();
+
+await app.VerifyAuditChainAsync();
 
 if (app.Environment.IsDevelopment())
 {
@@ -81,31 +92,19 @@ app.UseRateLimiter();
 
 app.MapControllers();
 
-var summaries = new[]
+if (app.Environment.IsDevelopment())
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    // Development only: pays the interest for a year right away, so it can be shown without waiting for next year.
+    app.MapPost("/api/dev/interest/payout/{year:int}", async (int year, IInterestPayoutService payouts, CancellationToken cancellationToken) =>
+        Results.Ok(await payouts.PayoutYearAsync(year, cancellationToken)))
+        .RequireAuthorization();
+}
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
+app.MapHealthChecks("/health");
+
+// Unknown API routes must give a 404, not the frontend's index.html.
+app.MapFallback("/api/{**path}", () => Results.NotFound(new ErrorResponseDto("Not found.")));
 
 app.MapFallbackToFile("index.html");
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

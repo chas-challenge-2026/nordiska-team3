@@ -14,8 +14,22 @@ public class UserRepository : Repository<User>, IUserRepository // Ärver CRUD fr
     public async Task<User?> GetByPersonalNumberHashAsync(string personalNumberHash) => // Söks via PIN-login, POST /api/auth/login-pin
         await _dbSet.SingleOrDefaultAsync(u => u.PersonalNumberHash == personalNumberHash); // Null om det inte matchar (hashen är unik)
 
-    public async Task<User?> GetByRefreshTokenAsync(string refreshToken) => // Söks via POST /api/auth/refresh
-        await _dbSet.SingleOrDefaultAsync(u => u.RefreshToken == refreshToken); // Null om ingen matchar (t.ex. redan roterad/utloggad)
+    public async Task<int> RegisterFailedPinAttemptAsync(Guid userId)
+    {
+        await _dbSet.Where(u => u.Id == userId)
+            .ExecuteUpdateAsync(s => s.SetProperty(u => u.FailedPinAttempts, u => u.FailedPinAttempts + 1));
+
+        return await _dbSet.AsNoTracking()
+            .Where(u => u.Id == userId)
+            .Select(u => u.FailedPinAttempts)
+            .SingleAsync();
+    }
+
+    public async Task LockPinLoginAsync(Guid userId, DateTime lockedUntil) =>
+        await _dbSet.Where(u => u.Id == userId)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(u => u.LockedUntil, (DateTime?)lockedUntil)
+                .SetProperty(u => u.FailedPinAttempts, 0));
 
     public async Task<bool> ExistsByEmailAsync(string email) => // Används av RegisterAsync för att undvika dubbletter
         await _dbSet.AnyAsync(u => u.Email == email);

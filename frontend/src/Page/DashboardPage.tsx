@@ -1,7 +1,7 @@
-import { type DashboardAccountTransaction } from '../components/DashboardActions/mockDashboardAccountTransactions'
-import { useState } from 'react'
+import { type PointerEvent, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { UserProfile } from '../components/UserProfile'
+import { useModalFromLink } from '../hooks/useModalFromLink'
 import './DashboardPage.css'
 import { AppNav } from '../components/AppNav'
 import {
@@ -22,7 +22,8 @@ import { RecentEvents } from '../components/RecentEvents/RecentEvents'
 import { NextEvent } from '../components/NextEvent/NextEvent'
 import { CustomerServiceFooter } from '../components/CustomerServiceFooter'
 import type { Account } from '../components/DashboardActions/BalanceOverview'
-import type { DashboardAction } from '../components/DashboardActions/mockDashboardActions'
+import type { DashboardAction } from '../components/DashboardActions/DashboardActions'
+import type { DashboardAccountTransaction } from '../types/dashboardTransaction'
 import { useLogout } from '../hooks/useLogout'
 import { useTheme } from '../context/useTheme'
 import { Modal } from '../components/Modal'
@@ -39,7 +40,7 @@ import {
     type AccountPresentation,
     type AccountVariant,
 } from '../utils/accountPresentation'
-import { formatAccountInterest, getAccountInterest } from '../utils/accountInterest'
+import { formatAccountInterest, formatAccruedInterest, getAccountInterest } from '../utils/accountInterest'
 import { getNextEvent } from '../utils/nextEvent'
 import { getTransactionsNewestFirst } from '../utils/transactionOrder'
 import { OrderReceipt, type OrderReceiptData } from '../components/OrderReceipt/OrderReceipt'
@@ -49,18 +50,22 @@ import { transactionAmountSchema } from '../schemas/transactionSchema'
 type CreateAccountIconId = AccountIconId
 type CreateAccountVariant = AccountVariant
 
+/** Gör om en kr-text till number. */
 function parseKr(value: string) {
     return Number(value.replace(/\s/g, '').replace('kr', '').replace(',', '.'))
 }
 
+/** Visar ett belopp i kronor. */
 function formatKr(amount: number) {
     return `${amount.toLocaleString('sv-SE')} kr`
 }
 
+/** Gör om backendens saldo till number. */
 function parseBackendBalance(balance: string) {
     return Number(balance.replace(/\s/g, '').replace(',', '.'))
 }
 
+/** Visar backendens saldo i kontokortet. */
 function formatBackendBalance(balance: string) {
     const numericBalance = parseBackendBalance(balance)
 
@@ -71,6 +76,7 @@ function formatBackendBalance(balance: string) {
     return formatKr(numericBalance)
 }
 
+/** Gör om ett backend-konto till ett dashboard-konto. */
 function mapBackendAccountToDashboardAccount(account: BackendAccount, index: number): Account {
     const presentation = getAccountPresentation(account.id, index)
     const interest = getAccountInterest(account)
@@ -82,11 +88,14 @@ function mapBackendAccountToDashboardAccount(account: BackendAccount, index: num
         value: formatBackendBalance(account.balance),
         interest: interest ? formatAccountInterest(interest) : undefined,
         interestType: interest?.type,
+        // Konton utan ränta (t.ex. lönekonto på 0 %) visar ingen upplupen ränta
+        accruedInterest: interest && interest.rate > 0 ? (formatAccruedInterest(account) ?? undefined) : undefined,
         accountNumber: account.accountNumber,
         variant: presentation.variant,
     }
 }
 
+/** Gör om backendens transaktionstyp till frontendens typ. */
 function mapBackendTransactionType(transactionType: string): DashboardAccountTransaction['type'] {
     if (transactionType === 'DEPOSIT') {
         return 'deposit'
@@ -96,9 +105,14 @@ function mapBackendTransactionType(transactionType: string): DashboardAccountTra
         return 'withdrawal'
     }
 
+    if (transactionType === 'TRANSFER_OUT' || transactionType === 'TRANSFER_IN') {
+        return 'transfer'
+    }
+
     return 'interest'
 }
 
+/** Visar transaktionsdatum i kort format. */
 function formatDashboardTransactionDate(date: string) {
     return new Intl.DateTimeFormat('sv-SE', {
         day: 'numeric',
@@ -107,22 +121,33 @@ function formatDashboardTransactionDate(date: string) {
     }).format(new Date(date))
 }
 
+/** Gör om en backend-transaktion till en dashboard-rad. */
 function mapBackendTransactionToDashboardTransaction(
     transaction: BackendTransaction,
     accountId: string
 ): DashboardAccountTransaction {
     const type = mapBackendTransactionType(transaction.transactionType)
     const rawAmount = parseBackendBalance(transaction.amount)
-    const amount = type === 'withdrawal' ? -Math.abs(rawAmount) : rawAmount
+    const amount =
+        type === 'withdrawal' || transaction.transactionType === 'TRANSFER_OUT'
+            ? -Math.abs(rawAmount)
+            : Math.abs(rawAmount)
     const date = transaction.completedAt ?? transaction.createdAt
 
     return {
         id: transaction.id,
         accountId,
-        title: type === 'deposit' ? 'Insättning' : type === 'withdrawal' ? 'Uttag' : 'Ränta',
+        title: type === 'deposit'
+            ? 'Insättning'
+            : type === 'withdrawal'
+                ? 'Uttag'
+                : type === 'transfer'
+                    ? 'Överföring'
+                    : 'Ränta',
         date: formatDashboardTransactionDate(date),
         amount,
         type,
+        counterparty: transaction.counterparty,
     }
 }
 
@@ -135,6 +160,7 @@ function DashboardPage() {
     const handleLogout = useLogout()
     const { toggleTheme } = useTheme()
     const queryClient = useQueryClient()
+    const createAccountNameFieldRef = useRef<HTMLDivElement | null>(null)
 
     const { data: accountTransactionGroups, isLoading: isLoadingAccounts, isError: accountsError } = useAccountsWithTransactions()
 
@@ -148,6 +174,8 @@ function DashboardPage() {
 
     const [createAccountError, setCreateAccountError] = useState('')
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+    // FAQ-svaret "Skapa nytt sparkonto" länkar hit och öppnar modalen direkt
+    const createAccountLink = useModalFromLink('createAccount')
     const [newAccountName, setNewAccountName] = useState('')
     const [newAccountIconId, setNewAccountIconId] = useState<CreateAccountIconId>('piggyBank')
     const [newAccountVariant, setNewAccountVariant] = useState<CreateAccountVariant>('default')
@@ -182,6 +210,7 @@ function DashboardPage() {
         date: transaction.date,
         amount: transaction.amount,
         type: transaction.type,
+        counterparty: transaction.counterparty,
     }))
     const selectedAccountRecentEvents = selectedAccountEvents.slice(0, 5)
     const selectedAccountHistoryUrl = selectedBackendAccountName
@@ -199,9 +228,22 @@ function DashboardPage() {
                 date: transaction.date,
                 amount: transaction.amount,
                 type: transaction.type,
+                counterparty: transaction.counterparty,
             }
         })
         .slice(0, 5)
+
+    function handleCreateAccountModalPointerDown(event: PointerEvent<HTMLDivElement>) {
+        if (!createAccountError) return
+
+        const target = event.target
+
+        if (target instanceof Node && createAccountNameFieldRef.current?.contains(target)) {
+            return
+        }
+
+        setCreateAccountError('')
+    }
 
     function handleAccountClick(accountId: string) {
         setSelectedAccountId(accountId)
@@ -287,6 +329,7 @@ function DashboardPage() {
             setNewAccountVariant('default')
             setCreateAccountError('')
             setIsCreateModalOpen(false)
+            createAccountLink.clearRequest()
         } catch (error) {
             setCreateAccountError(error instanceof Error ? error.message : 'Kunde inte skapa konto.')
         }
@@ -444,16 +487,16 @@ function DashboardPage() {
 
                     {isLoadingAccounts ? (
                         <div className="dashboard-empty-card">
-                            <h2 tabIndex={0}>Laddar konton</h2>
+                            <h2>Laddar konton</h2>
                             <p>Hämtar dina konton...</p>
                         </div>
                     ) : accountsError ? (
                         <div className="dashboard-empty-card">
-                            <h2 tabIndex={0}>Konton kunde inte hämtas</h2>
+                            <h2>Konton kunde inte hämtas</h2>
                         </div>
                     ) : accounts.length === 0 ? (
                         <div className="dashboard-empty-card">
-                            <h2 tabIndex={0}>Du har inga konton än</h2>
+                            <h2>Du har inga konton än</h2>
                             <p>Skapa ett sparkonto för att komma igång.</p>
                         </div>
                     ) : (
@@ -468,8 +511,6 @@ function DashboardPage() {
                         />
                     )}
 
-                    <NextEvent event={nextEvent} />
-
                     <button
                         type="button"
                         className="create-account-btn"
@@ -479,29 +520,39 @@ function DashboardPage() {
                         Skapa nytt sparkonto
                     </button>
 
+                    <NextEvent event={nextEvent} />
+
                     <Modal
-                        isOpen={isCreateModalOpen}
+                        isOpen={isCreateModalOpen || createAccountLink.isRequested}
                         onClose={() => {
                             setIsCreateModalOpen(false)
+                            createAccountLink.clearRequest()
                             setCreateAccountError('')
                         }}
                         title="Skapa nytt sparkonto"
                     >
-                        <div className="create-account-modal">
-                            <Input
-                                label="Kontonamn"
-                                type="text"
-                                placeholder="T.ex. Resekassa"
-                                value={newAccountName}
-                                onChange={(e) => {
-                                    setNewAccountName(e.target.value)
-                                    setCreateAccountError('')
-                                }}
-                            />
+                        <div className="create-account-modal" onPointerDown={handleCreateAccountModalPointerDown}>
+                            <div className="create-account-modal__name-field" ref={createAccountNameFieldRef}>
+                                <Input
+                                    label="Kontonamn"
+                                    type="text"
+                                    placeholder="T.ex. Resekassa"
+                                    value={newAccountName}
+                                    onChange={(e) => {
+                                        setNewAccountName(e.target.value)
+                                        setCreateAccountError('')
+                                    }}
+                                />
 
-                            <p className="create-account-modal__message">
-                                {createAccountError}
-                            </p>
+                                <p
+                                    className={`create-account-modal__message ${
+                                        createAccountError ? '' : 'create-account-modal__message--empty'
+                                    }`}
+                                    role={createAccountError ? 'alert' : undefined}
+                                >
+                                    {createAccountError}
+                                </p>
+                            </div>
 
                             <div className="create-account-modal__field">
                                 <p>Ikon</p>
@@ -573,12 +624,18 @@ function DashboardPage() {
                                         {selectedAccount.value}
                                     </p>
 
-                                    {(selectedAccount.interest || selectedAccount.accountNumber) && (
+                                    {(selectedAccount.interest || selectedAccount.accruedInterest || selectedAccount.accountNumber) && (
                                         <dl className="account-modal__details">
                                             {selectedAccount.interest && (
                                                 <div>
                                                     <dt>Ränta</dt>
                                                     <dd>{selectedAccount.interest}</dd>
+                                                </div>
+                                            )}
+                                            {selectedAccount.accruedInterest && (
+                                                <div>
+                                                    <dt>Upplupen ränta i år</dt>
+                                                    <dd>{selectedAccount.accruedInterest}</dd>
                                                 </div>
                                             )}
                                             {selectedAccount.accountNumber && (
@@ -605,7 +662,7 @@ function DashboardPage() {
                                 </div>
 
                                 <div className="account-modal__section account-modal__transfer">
-                                    <h3>Flytta pengar</h3>
+                                    <h3>Sätt in eller ta ut</h3>
 
                                     <div className="pill-toggle-row account-modal__mode-row">
                                         <button
@@ -657,6 +714,7 @@ function DashboardPage() {
                                             className={`transact-message account-modal__message ${
                                                 modalTransactionMessage || modalReceipt ? '' : 'account-modal__message--empty'
                                             } ${modalTransactionMessage ? 'account-modal__message--error' : ''}`}
+                                            role={modalTransactionMessage ? 'alert' : modalReceipt ? 'status' : undefined}
                                         >
                                             {modalTransactionMessage ||
                                                 (modalReceipt && <OrderReceipt receipt={modalReceipt} />)}
@@ -703,28 +761,46 @@ function DashboardPage() {
                                     </select>
                                 </label>
 
-                                <Input
-                                    label="Belopp"
-                                    type="amount"
-                                    placeholder="0"
-                                    value={dashboardTransactionAmount}
-                                    onChange={(e) => {
-                                        setDashboardTransactionAmount(e.target.value)
-                                        setDashboardTransactionMessage('')
-                                        setDashboardReceipt(null)
-                                    }}
-                                />
-                                <p
-                                    className={`dashboard-transaction-modal__message ${
-                                        dashboardTransactionType === 'deposit' && !dashboardTransactionMessage && !dashboardReceipt
-                                            ? 'dashboard-transaction-modal__message--empty'
-                                            : ''
-                                    }`}
-                                >
-                                    {dashboardTransactionMessage ||
-                                        (dashboardReceipt && <OrderReceipt receipt={dashboardReceipt} />) ||
-                                        `Tillgängligt: ${dashboardTransactionAccount.value}`}
-                                </p>
+                                <div className="dashboard-transaction-modal__amount-area">
+                                    <Input
+                                        label="Belopp"
+                                        type="amount"
+                                        placeholder="0"
+                                        value={dashboardTransactionAmount}
+                                        onChange={(e) => {
+                                            setDashboardTransactionAmount(e.target.value)
+                                            setDashboardTransactionMessage('')
+                                            setDashboardReceipt(null)
+                                        }}
+                                    />
+                                    <p
+                                        className={`dashboard-transaction-modal__available ${
+                                            dashboardTransactionType === 'deposit'
+                                                ? 'dashboard-transaction-modal__available--empty'
+                                                : ''
+                                        }`}
+                                    >
+                                        Tillgängligt: {dashboardTransactionAccount.value}
+                                    </p>
+                                    <p
+                                        className={`dashboard-transaction-modal__message ${
+                                            !dashboardTransactionMessage && !dashboardReceipt
+                                                ? 'dashboard-transaction-modal__message--empty'
+                                                : ''
+                                        } ${
+                                            dashboardTransactionMessage
+                                                ? 'dashboard-transaction-modal__message--error'
+                                                : dashboardReceipt
+                                                    ? 'dashboard-transaction-modal__message--success'
+                                                    : ''
+                                        }`}
+                                        role={dashboardTransactionMessage ? 'alert' : dashboardReceipt ? 'status' : undefined}
+                                    >
+                                        <span className="dashboard-transaction-modal__message-bubble">
+                                            {dashboardTransactionMessage || (dashboardReceipt && <OrderReceipt receipt={dashboardReceipt} />)}
+                                        </span>
+                                    </p>
+                                </div>
 
                                 <div className="dashboard-transaction-modal__actions">
                                     <Button type="button" variant="secondary" onClick={closeDashboardTransactionModal}>

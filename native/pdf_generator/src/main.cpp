@@ -10,11 +10,20 @@
 
 #include <hpdf.h>
 
+#include <cstdlib>
+#include <cerrno>
+#include <cstring>
+#include <unistd.h>
 #include <iostream>
 #include <string>
 #include <filesystem>
 #include <fstream>
 #include <nlohmann/json.hpp>
+#include <algorithm>
+#include <vector>
+#include <system_error>
+#include <memory>
+#include <type_traits>
 
 static void print_haru_error(
     HPDF_STATUS error_number,
@@ -23,6 +32,90 @@ static void print_haru_error(
 {
     std::cerr << "LibHaru error: " << error_number
               << ", detail: " << detail_number << "\n";
+}
+
+static std::vector<std::string> wrap_text(
+    HPDF_Page page,
+    const std::string& text,
+    HPDF_REAL max_width)
+{
+    std::vector<std::string> lines;
+    std::string line;
+    std::string word;
+
+    const auto add_word = [&]()
+    {
+        if (word.empty())
+            return;
+
+        const std::string candidate = line.empty() ? word : line + " " + word;
+
+        if (HPDF_Page_TextWidth(page, candidate.c_str()) <= max_width)
+        {
+            line = candidate;
+            word.clear();
+            return;
+        }
+
+        if (!line.empty())
+        {
+            lines.push_back(line);
+            line.clear();
+        }
+
+        //Split an oversized word without splitting UTF-8 characters
+        for (std::size_t position = 0; position < word.size();)
+        {
+            std::size_t next = position + 1;
+
+            while (next < word.size() && (static_cast<unsigned char>(word[next]) & 0xC0) == 0x80)
+            {
+                ++next;
+            }
+
+            const std::string character = word.substr(position, next - position);
+            const std::string fragment = line + character;
+
+            if (!line.empty() && HPDF_Page_TextWidth(page, fragment.c_str()) > max_width)
+            {
+                lines.push_back(line);
+                line.clear();
+            }
+
+            line += character;
+            position = next;
+        }
+
+        word.clear();
+    };
+
+    for (char character : text)
+    {
+        if 
+        (
+            character == ' ' || 
+            character == '\t' ||
+            character == '\r' ||
+            character == '\n'
+        )
+        {
+            add_word();
+
+            if (character == '\n')
+            {
+                lines.push_back(line);
+                line.clear();
+            }
+        }
+        else
+        {
+            word += character;
+        }
+    }
+    
+    add_word();
+    lines.push_back(line);
+    return lines;
 }
 
 int main(int argc, char* argv[])
@@ -192,26 +285,56 @@ int main(int argc, char* argv[])
 
     const char* output_pdf_path = argv[2]; // Path for creating a PDF-File
 
-    if (std::filesystem::exists(output_pdf_path))
+    std::error_code path_error;
+
+    const bool output_exists = std::filesystem::exists(output_pdf_path, path_error);
+
+    if (path_error)
+    {
+        std::cerr << "Error: could not inspect output path: " << path_error.message() << "\n";
+        return NORDISKA_EXIT_FILE_ERROR;
+    }
+    if (output_exists)
     {
         std::cerr << "Error: output PDF already exists: " << output_pdf_path << "\n";
         return NORDISKA_EXIT_FILE_ERROR;
     }
 
+    const std::filesystem::path output_path(output_pdf_path);
+
+    const std::filesystem::path output_folder = 
+        output_path.has_parent_path()
+        ? output_path.parent_path()
+        : std::filesystem::path(".");
+
+    path_error.clear();
+
+    const bool folder_exists = std::filesystem::is_directory(output_folder, path_error);
+
+    if (path_error || !folder_exists)
+    {
+        std::cerr << "Error: output folder is missing or inaccessible: " << output_folder << "\n";
+        return NORDISKA_EXIT_FILE_ERROR;
+    }
+
     HPDF_Doc pdf = HPDF_New(print_haru_error, nullptr); // Create new PDF in memory
 
-    if (pdf == nullptr) // 
+    if (pdf == nullptr) // PDF allocation failure
     {
         std::cerr << "Error: could not create PDF document\n";
         return NORDISKA_EXIT_PDF_GENERATION_ERROR;
     }
+
+    std::unique_ptr<
+        std::remove_pointer_t<HPDF_Doc>,
+        decltype(&HPDF_Free)
+    > pdf_guard(pdf, &HPDF_Free);
 
     HPDF_Page page = HPDF_AddPage(pdf); // Create a page in the PDF-File
 
     if (page == nullptr)
     {
         std::cerr << "Error: could not add PDF page\n";
-        HPDF_Free(pdf);
         return NORDISKA_EXIT_PDF_GENERATION_ERROR;
     }
 
@@ -220,7 +343,6 @@ int main(int argc, char* argv[])
     if (HPDF_UseUTFEncodings(pdf) != HPDF_OK)
     {
         std::cerr << "Error: could not enable UTF-8 PDF encoding\n";
-        HPDF_Free(pdf);
         return NORDISKA_EXIT_PDF_GENERATION_ERROR;
     }
 
@@ -240,7 +362,6 @@ int main(int argc, char* argv[])
     if (font_name == nullptr)
     {
         std::cerr << "Error: could not load PDF font\n";
-        HPDF_Free(pdf);
         return NORDISKA_EXIT_PDF_GENERATION_ERROR;
     }
 
@@ -249,7 +370,6 @@ int main(int argc, char* argv[])
     if (font == nullptr)
     {
         std::cerr << "Error: could not create UTF-8 PDF font\n";
-        HPDF_Free(pdf);
         return NORDISKA_EXIT_PDF_GENERATION_ERROR;
     }
 
@@ -262,7 +382,7 @@ int main(int argc, char* argv[])
     HPDF_Page_BeginText(page);
 
     HPDF_Page_SetFontAndSize(page, font, 18);
-    HPDF_Page_TextOut(page, 50, 780, "NORDISKA Skatt Rapport");
+    HPDF_Page_TextOut(page, 50, 780, "NORDISKA Skatterapport");
 
     HPDF_Page_SetFontAndSize(page, font, 12);
     HPDF_Page_TextOut(page, 50, 750, bank_name.c_str());
@@ -279,13 +399,43 @@ int main(int argc, char* argv[])
 
     HPDF_REAL account_y = 588;
 
+    const auto start_next_page = [&]() -> bool
+    {
+        if (HPDF_Page_EndText(page) != HPDF_OK)
+            return false;
+        
+        page = HPDF_AddPage(pdf);
+
+        if (page == nullptr)
+            return false;
+        
+        if 
+        (
+            HPDF_Page_SetSize(page, HPDF_PAGE_SIZE_A4, HPDF_PAGE_PORTRAIT) != HPDF_OK ||
+            HPDF_Page_BeginText(page) != HPDF_OK ||
+            HPDF_Page_SetFontAndSize(page, font, 12) != HPDF_OK ||
+            HPDF_Page_TextOut(page, 50, 780, "NORDISKA Skatterapport") != HPDF_OK
+        )
+        {
+            return false;
+        }
+
+        account_y = 740;
+        return true;
+    };
+
+    if (accounts.empty())
+    {
+        HPDF_Page_TextOut(page, 50, account_y, "Inga konton att redovisa.");
+
+        account_y -= 26;
+    }
+
     for (const auto& account : accounts)
     {
-        if (account_y < 110)
+        if (account_y < 130 && !start_next_page())
         {
-            std::cerr << "Error: report requires multiple pages\n";
-            HPDF_Page_EndText(page);
-            HPDF_Free(pdf);
+            std::cerr << "Error: could not create continuation page\n";
             return NORDISKA_EXIT_PDF_GENERATION_ERROR;
         }
 
@@ -308,36 +458,74 @@ int main(int argc, char* argv[])
         HPDF_Page_TextOut(page, 440, account_y, amount_heading.c_str());
         account_y -= 18;
 
+        if (account["transactions"].empty())
+        {
+            HPDF_Page_TextOut(page, 50, account_y, "Inga transactioner under rapportåret.");
+            account_y -= 18;
+        }
+
         for (const auto& transaction : account["transactions"])
         {
-            if (account_y < 50)
-            {
-                std::cerr << "Error: report requires multiple pages\n";
-                HPDF_Page_EndText(page);
-                HPDF_Free(pdf);
-                return NORDISKA_EXIT_PDF_GENERATION_ERROR;
-            }
+
             const std::string date = transaction["bookedAt"].get<std::string>().substr(0, 10);
-            const std::string type = transaction["type"].get<std::string>();
-            const std::string description = transaction["description"].get<std::string>();
             const std::string amount = transaction["amount"].get<std::string>();
 
-            HPDF_Page_TextOut(page, 50, account_y, date.c_str());
-            HPDF_Page_TextOut(page, 120, account_y, type.c_str());
-            HPDF_Page_TextOut(page, 220, account_y, description.c_str());
-            HPDF_Page_TextOut(page, 440, account_y, amount.c_str());
+            HPDF_Page_SetFontAndSize(page, font, 10);
 
-            account_y -= 18;
+            const auto type_lines = wrap_text(page, transaction["type"].get<std::string>(), 90);
+            const auto description_lines = wrap_text(page, transaction["description"].get<std::string>(), 210);
+            const auto amount_lines = wrap_text(page, amount, 105);
+            
+            const std::size_t line_count = std::max({type_lines.size(), description_lines.size(), amount_lines.size()});
+
+            for (std::size_t index = 0; index < line_count; ++index)
+            {
+                if (account_y < 50)
+                {
+                    if (!start_next_page())
+                    {
+                        std::cerr << "Error: could not create continuation page\n";
+                        return NORDISKA_EXIT_PDF_GENERATION_ERROR;
+                    }
+                
+                    HPDF_Page_SetFontAndSize(page, font, 12);
+                    HPDF_Page_TextOut(page, 50, account_y, account_line.c_str());
+                    account_y -= 26;
+                
+                    HPDF_Page_SetFontAndSize(page, font, 10);
+                    HPDF_Page_TextOut(page, 50, account_y, "Datum");
+                    HPDF_Page_TextOut(page, 120, account_y, "Typ");
+                    HPDF_Page_TextOut(page, 220, account_y, "Beskrivning");
+                    HPDF_Page_TextOut(page, 440, account_y, amount_heading.c_str());
+                    account_y -= 18;
+                }
+
+                if (index == 0)
+                {
+                    HPDF_Page_TextOut(page, 50, account_y, date.c_str());
+                }
+                if (index < type_lines.size())
+                {
+                    HPDF_Page_TextOut(page, 120, account_y, type_lines[index].c_str());
+                }
+                if (index < description_lines.size())
+                {
+                    HPDF_Page_TextOut(page, 220, account_y, description_lines[index].c_str()); // Susie Deltarune
+                }
+                if (index < amount_lines.size())
+                {
+                    HPDF_Page_TextOut(page, 440, account_y, amount_lines[index].c_str());
+                }
+                account_y -= 18;
+            }
         }
 
         account_y -= 24;
     }
 
-    if (account_y < 170)
+    if (account_y < 170 && !start_next_page())
     {
-        std::cerr << "Error: report summary requires another page\n";
-        HPDF_Page_EndText(page);
-        HPDF_Free(pdf);
+        std::cerr << "Error: could not create summary page\n";
         return NORDISKA_EXIT_PDF_GENERATION_ERROR;
     }
     
@@ -362,16 +550,71 @@ int main(int argc, char* argv[])
         account_y -= 18;
     }
 
-    HPDF_Page_EndText(page);
-
-    if (HPDF_SaveToFile(pdf, output_pdf_path) != HPDF_OK)
+    if (HPDF_Page_EndText(page) != HPDF_OK)
     {
-        std::cerr << "Error: could not save PDF: " << output_pdf_path << "\n";
-        HPDF_Free(pdf);
+        std::cerr << "Error: could not finish PDF text\n";
         return NORDISKA_EXIT_PDF_GENERATION_ERROR;
     }
 
-    HPDF_Free(pdf);
+    // Create a unique temporary file beside the requested PDF
+    std::string temporary_path = std::string(output_pdf_path) + ".tmp.XXXXXX"; // that buncha X's is placeholder for mkstemp
+
+    const int temporary_fd = mkstemp(temporary_path.data());
+
+    if (temporary_fd == -1)
+    {
+        std::cerr << "Error: could not create temporary PDF: " << std::strerror(errno) << "\n";
+        return NORDISKA_EXIT_FILE_ERROR;
+    }
+
+    // Remove only temp file when this scope ends
+    const auto remove_temporary = [](char* path)
+    {
+        std::error_code cleanup_error;
+        std::filesystem::remove(path, cleanup_error);
+
+        if (cleanup_error)
+        {
+            std::cerr << "Warning: could not remove temporary PDF: " << path << ": " << cleanup_error.message() << "\n";
+        }
+    };
+
+    std::unique_ptr<char, decltype(remove_temporary)>temporary_guard(temporary_path.data(), remove_temporary);
+
+    if (close(temporary_fd) != 0)
+    {
+        std::cerr << "Error: could not close temporary PDF: " <<  std::strerror(errno) << "\n";
+        return NORDISKA_EXIT_FILE_ERROR;
+    }
+
+    const HPDF_STATUS save_status = HPDF_SaveToFile(pdf, temporary_path.c_str());
+
+    if (save_status != HPDF_OK)
+    {
+        std::cerr << "Error: could not save PDF\n";
+
+        if 
+        (
+            save_status == HPDF_FILE_OPEN_ERROR ||
+            save_status == HPDF_FILE_IO_ERROR
+        )
+        {
+            return NORDISKA_EXIT_FILE_ERROR;
+        }
+
+        return NORDISKA_EXIT_PDF_GENERATION_ERROR;
+    }
+
+    // Publish the completed file without replacing an existing destination
+    std::error_code publish_error;
+
+    std::filesystem::create_hard_link(temporary_path, output_pdf_path, publish_error);
+
+    if (publish_error)
+    {
+        std::cerr << "Error: could not publish PDF: " << publish_error.message() << "\n";
+        return NORDISKA_EXIT_FILE_ERROR;
+    }
 
     std::cout << "Created PDF: " << output_pdf_path << "\n";
     return NORDISKA_EXIT_SUCCESS;

@@ -11,24 +11,38 @@ namespace NordiskaPortal.API.Services
 {
     public class TaxReportProcessingService : ITaxReportProcessingService
     {
+        private const string GenericErrorMessage = "The report could not be generated.";
+        private const int MaxLoggedErrorLength = 1000;
+
         private readonly ApplicationDbContext _context;
         private readonly ITaxReportDataService _taxReportDataService;
+        private readonly INativeProcessRunner _processRunner;
         private readonly IConfiguration _configuration;
         private readonly ILogger<TaxReportProcessingService> _logger;
         private readonly TaxReportQueue _queue;
+        private readonly IAuditService _auditService;
+        private readonly IPdfSigningService _signingService;
 
         public TaxReportProcessingService(
             ApplicationDbContext context,
             ITaxReportDataService taxReportDataService,
+            INativeProcessRunner processRunner,
             IConfiguration configuration,
-            ILogger<TaxReportProcessingService> logger, TaxReportQueue queue)
+            ILogger<TaxReportProcessingService> logger,
+            TaxReportQueue queue,
+            IAuditService auditService,
+            IPdfSigningService signingService)
         {
-             _context = context;
+            _context = context;
             _taxReportDataService = taxReportDataService;
+            _processRunner = processRunner;
             _configuration = configuration;
             _logger = logger;
             _queue = queue;
+            _auditService = auditService;
+            _signingService = signingService;
         }
+
 
         public async Task<TaxReport> QueueReportAsync(Guid userId, int reportYear)
         {
@@ -39,8 +53,13 @@ namespace NordiskaPortal.API.Services
                 Status = "QUEUED",
             };
 
+            // The audit entry is saved in the same database transaction as the report.
+            await using var dbTransaction = await _context.Database.BeginTransactionAsync();
+
             _context.TaxReports.Add(report);
+            await _auditService.AppendAsync(userId, AuditActions.TaxReportRequested, nameof(TaxReport), report.Id, new { reportYear });
             await _context.SaveChangesAsync();
+            await dbTransaction.CommitAsync();
 
             _logger.LogInformation("TaxReport {TaxreportId} queued for user {UserId}, year {ReportYear}", report.Id, userId, reportYear);
 
@@ -49,10 +68,37 @@ namespace NordiskaPortal.API.Services
             return report;
         }
 
+        public async Task<int> RecoverUnfinishedReportsAsync()
+        {
+            var unfinished = await _context.TaxReports
+                .Where(r => r.Status == "QUEUED" || r.Status == "PROCESSING")
+                .OrderBy(r => r.CreatedAt)
+                .ToListAsync();
+
+            if (unfinished.Count == 0) return 0;
+
+            foreach (var report in unfinished.Where(r => r.Status == "PROCESSING"))
+            {
+                report.Status = "QUEUED";
+            }
+
+            await _context.SaveChangesAsync();
+
+            foreach (var report in unfinished)
+            {
+                _queue.Enqueue(report.Id);
+            }
+
+            _logger.LogInformation("Put {Count} unfinished tax reports back in the queue after a restart", unfinished.Count);
+
+            return unfinished.Count;
+        }
+
         public async Task ProcessReportAsync(Guid reportId)
         {
             var report = await _context.TaxReports.FindAsync(reportId);
             if (report is null) return;
+            if (report.Status != "QUEUED") return;
 
             report.Status = "PROCESSING";
             await _context.SaveChangesAsync();
@@ -79,14 +125,22 @@ namespace NordiskaPortal.API.Services
 
                 _logger.LogInformation("TaxReport {TaxReportId} input written to {Path}", report.Id, finalPath);
 
-                // Stays PROCESSING here (not a misleading READY) the JSON step succeeded,
-                // native just hasn't run yet. Genuine failures are caught below and marked FAILED.
+                await GeneratePdfAsync(report, finalPath, Path.Combine(outputDirectory, $"{report.Id}.pdf"));
+
+                // The READY status and its audit entry are saved in the same database transaction.
+                await using var dbTransaction = await _context.Database.BeginTransactionAsync();
+                await _auditService.AppendAsync(report.UserId, AuditActions.TaxReportGenerated, nameof(TaxReport), report.Id,
+                    new { reportYear = report.ReportYear, pdfSha256 = report.Sha256 });
+                await _context.SaveChangesAsync();
+                await dbTransaction.CommitAsync();
             }
 
             catch (Exception ex)
             {
+                // ErrorMessage is returned to the customer, so unexpected errors get a generic text
+                // and the details only go to the log.
                 report.Status = "FAILED";
-                report.ErrorMessage = ex.Message;
+                report.ErrorMessage = ex is TaxReportGenerationException ? ex.Message : GenericErrorMessage;
                 await _context.SaveChangesAsync();
 
                 _logger.LogError(ex, "TaxReport {TaxReportId} failed to process", report.Id);
@@ -98,6 +152,95 @@ namespace NordiskaPortal.API.Services
         {
             return await _context.TaxReports
                 .FirstOrDefaultAsync(r => r.Id == reportId && r.UserId == userId);
+        }
+
+        public async Task<IReadOnlyList<TaxReport>> GetReportsForUserAsync(Guid userId)
+        {
+            return await _context.TaxReports
+                .Where(r => r.UserId == userId)
+                .OrderByDescending(r => r.ReportYear)
+                .ThenByDescending(r => r.CreatedAt)
+                .ToListAsync();
+        }
+
+        // Runs the native PDF generator on the input JSON, then signs the PDF. A report only becomes READY
+        // after the signature has been checked, so a READY report is always signed.
+        private async Task GeneratePdfAsync(TaxReport report, string jsonPath, string pdfPath)
+        {
+            var generatorPath = Path.GetFullPath(_configuration["TaxReport:PdfGeneratorPath"]!);
+            if (!System.IO.File.Exists(generatorPath))
+            {
+                _logger.LogError("PDF generator not found at {Path}", generatorPath);
+                throw new TaxReportGenerationException("The PDF generator is not available.");
+            }
+
+            var jsonFullPath = Path.GetFullPath(jsonPath);
+            var pdfFullPath = Path.GetFullPath(pdfPath);
+
+            // The generator rejects an existing output file, so clear any leftover from an earlier attempt.
+            if (System.IO.File.Exists(pdfFullPath))
+            {
+                System.IO.File.Delete(pdfFullPath);
+            }
+
+            var timeoutSeconds = _configuration.GetValue("TaxReport:TimeoutSeconds", 30);
+
+            var result = await _processRunner.RunAsync(
+                generatorPath,
+                new[] { jsonFullPath, pdfFullPath },
+                TimeSpan.FromSeconds(timeoutSeconds));
+
+            report.NativeExitCode = result.TimedOut ? null : result.ExitCode;
+
+            if (result.TimedOut)
+            {
+                _logger.LogError("PDF generator timed out after {Seconds}s for TaxReport {TaxReportId}", timeoutSeconds, report.Id);
+                throw new TaxReportGenerationException("PDF generation timed out.");
+            }
+
+            if (result.ExitCode != 0)
+            {
+                _logger.LogError(
+                    "PDF generator failed for TaxReport {TaxReportId} with exit code {ExitCode}: {StandardError}",
+                    report.Id, result.ExitCode, Truncate(result.StandardError));
+                throw new TaxReportGenerationException($"PDF generation failed (code {result.ExitCode}).");
+            }
+
+            if (!System.IO.File.Exists(pdfFullPath) || new FileInfo(pdfFullPath).Length == 0)
+            {
+                throw new TaxReportGenerationException("The PDF generator did not produce a file.");
+            }
+
+            PdfSignature signature;
+            try
+            {
+                signature = await _signingService.SignAsync(pdfFullPath);
+            }
+            catch
+            {
+                // An unsigned PDF must not be left on disk: it holds customer data and is never published.
+                System.IO.File.Delete(pdfFullPath);
+                throw;
+            }
+
+            report.PdfPath = pdfFullPath;
+            report.SignaturePath = signature.SignaturePath;
+            report.Sha256 = signature.Sha256;
+            report.Status = "READY";
+            report.CompletedAt = DateTime.UtcNow;
+
+            _logger.LogInformation("TaxReport {TaxReportId} PDF written and signed at {Path}", report.Id, pdfFullPath);
+        }
+
+        private static string Truncate(string text) =>
+            text.Length <= MaxLoggedErrorLength ? text : text[..MaxLoggedErrorLength];
+    }
+
+    // A failure whose message is safe to show to the customer (it is stored in TaxReport.ErrorMessage).
+    public sealed class TaxReportGenerationException : Exception
+    {
+        public TaxReportGenerationException(string message) : base(message)
+        {
         }
     }
 }

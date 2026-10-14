@@ -13,9 +13,8 @@ namespace NordiskaPortal.API.Services
 
         public Task SendAsync(string toEmail, string subject, string body)
         {
-            _logger.LogInformation("Simulated email to {ToEmail}: {Subject} - {Body}", toEmail, subject, body);
+            _logger.LogInformation("Simulated email sent: {Subject}", subject);
             return Task.CompletedTask;
         }
-
     }
 }

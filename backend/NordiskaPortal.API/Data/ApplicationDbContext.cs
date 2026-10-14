@@ -17,6 +17,11 @@ public class ApplicationDbContext : DbContext
     public DbSet<Transaction> Transactions { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<TaxReport> TaxReports { get; set; }
+    public DbSet<AuditEntry> AuditEntries { get; set; } = null!;
+    public DbSet<InterestRateObservation> InterestRateObservations { get; set; } = null!;
+    public DbSet<AccountInterestPolicy> AccountInterestPolicies { get; set; } = null!;
+    public DbSet<InterestPayout> InterestPayouts { get; set; } = null!;
+    public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -62,6 +67,25 @@ public class ApplicationDbContext : DbContext
             .WithMany(a => a.Transactions)
             .HasForeignKey(t => t.AccountId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Transaction>()
+            .Property(t => t.IdempotencyKey)
+            .HasMaxLength(100);
+
+        modelBuilder.Entity<Transaction>()
+            .HasIndex(t => t.AccountId);
+
+        modelBuilder.Entity<Transaction>()
+            .HasIndex(t => new { t.AccountId, t.IdempotencyKey })
+            .IsUnique()
+            .HasFilter("\"IdempotencyKey\" IS NOT NULL");
+
+        modelBuilder.Entity<Transaction>()
+            .HasIndex(t => t.TransferId);
+
+        // Money columns: exact amounts with two decimals, same as InterestPayout.Amount.
+        modelBuilder.Entity<Transaction>().Property(t => t.Amount).HasPrecision(18, 2);
+        modelBuilder.Entity<LedgerEntry>().Property(l => l.Amount).HasPrecision(18, 2);
 
         // Notification relationships
         modelBuilder.Entity<Notification>()
@@ -148,5 +172,51 @@ public class ApplicationDbContext : DbContext
             .WithMany(u => u.TaxReports)
             .HasForeignKey(t => t.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // AuditEntry: Id follows the order of the hash chain. Details stays plain text (not jsonb),
+        // because the hash covers its exact characters.
+        modelBuilder.Entity<AuditEntry>(entity =>
+        {
+            entity.Property(a => a.Action).HasMaxLength(64);
+            entity.Property(a => a.EntityType).HasMaxLength(64);
+            entity.Property(a => a.PreviousHash).HasMaxLength(64);
+            entity.Property(a => a.Hash).HasMaxLength(64);
+        });
+
+        // Policy rate values fetched from Riksbanken, one row per series and day.
+        modelBuilder.Entity<InterestRateObservation>(entity =>
+        {
+            entity.HasKey(o => new { o.SeriesId, o.Date });
+            entity.Property(o => o.SeriesId).HasMaxLength(64);
+            entity.Property(o => o.Value).HasPrecision(9, 4);
+        });
+
+        // Spread per account type, in percentage points compared with the policy rate.
+        // CHECKING has -100, which always ends up at 0 % because a rate is never below 0.
+        modelBuilder.Entity<AccountInterestPolicy>(entity =>
+        {
+            entity.HasKey(p => new { p.AccountType, p.EffectiveFrom });
+            entity.Property(p => p.AccountType).HasMaxLength(32);
+            entity.Property(p => p.SpreadPercentagePoints).HasPrecision(9, 4);
+
+            entity.HasData(
+                new AccountInterestPolicy { AccountType = "SAVINGS", EffectiveFrom = new DateOnly(2026, 1, 1), SpreadPercentagePoints = -0.5m },
+                new AccountInterestPolicy { AccountType = "CHECKING", EffectiveFrom = new DateOnly(2026, 1, 1), SpreadPercentagePoints = -100m });
+        });
+
+        // One row per account and year, the interest for that year has been handled.
+        modelBuilder.Entity<InterestPayout>(entity =>
+        {
+            entity.HasIndex(p => new { p.AccountId, p.Year }).IsUnique();
+            entity.Property(p => p.Amount).HasPrecision(18, 2);
+            entity.HasOne<Account>().WithMany().HasForeignKey(p => p.AccountId);
+        });
+
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.Property(t => t.TokenHash).IsRequired().HasMaxLength(64);
+            entity.HasIndex(t => t.TokenHash).IsUnique();
+            entity.HasOne<User>().WithMany().HasForeignKey(t => t.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }

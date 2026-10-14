@@ -87,6 +87,84 @@ namespace NordiskaPortal.API.Migrations
                         });
                 });
 
+            modelBuilder.Entity("NordiskaPortal.API.Models.AccountInterestPolicy", b =>
+                {
+                    b.Property<string>("AccountType")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateOnly>("EffectiveFrom")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("SpreadPercentagePoints")
+                        .HasPrecision(9, 4)
+                        .HasColumnType("numeric(9,4)");
+
+                    b.HasKey("AccountType", "EffectiveFrom");
+
+                    b.ToTable("AccountInterestPolicies");
+
+                    b.HasData(
+                        new
+                        {
+                            AccountType = "SAVINGS",
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            SpreadPercentagePoints = -0.5m
+                        },
+                        new
+                        {
+                            AccountType = "CHECKING",
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            SpreadPercentagePoints = -100m
+                        });
+                });
+
+            modelBuilder.Entity("NordiskaPortal.API.Models.AuditEntry", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Details")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Hash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("PreviousHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AuditEntries");
+                });
+
             modelBuilder.Entity("NordiskaPortal.API.Models.FaqEntry", b =>
                 {
                     b.Property<Guid>("Id")
@@ -248,6 +326,57 @@ namespace NordiskaPortal.API.Migrations
                         });
                 });
 
+            modelBuilder.Entity("NordiskaPortal.API.Models.InterestPayout", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("PaidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("TransactionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId", "Year")
+                        .IsUnique();
+
+                    b.ToTable("InterestPayouts");
+                });
+
+            modelBuilder.Entity("NordiskaPortal.API.Models.InterestRateObservation", b =>
+                {
+                    b.Property<string>("SeriesId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime>("FetchedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("Value")
+                        .HasPrecision(9, 4)
+                        .HasColumnType("numeric(9,4)");
+
+                    b.HasKey("SeriesId", "Date");
+
+                    b.ToTable("InterestRateObservations");
+                });
+
             modelBuilder.Entity("NordiskaPortal.API.Models.LedgerEntry", b =>
                 {
                     b.Property<Guid>("Id")
@@ -258,7 +387,8 @@ namespace NordiskaPortal.API.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("Amount")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -372,6 +502,39 @@ namespace NordiskaPortal.API.Migrations
                     b.ToTable("Notifications");
                 });
 
+            modelBuilder.Entity("NordiskaPortal.API.Models.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("RotatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RefreshTokens");
+                });
+
             modelBuilder.Entity("NordiskaPortal.API.Models.TaxReport", b =>
                 {
                     b.Property<Guid>("Id")
@@ -426,13 +589,21 @@ namespace NordiskaPortal.API.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("Amount")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("CounterpartyLabel")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -442,9 +613,18 @@ namespace NordiskaPortal.API.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("TransferId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AccountId");
+
+                    b.HasIndex("TransferId");
+
+                    b.HasIndex("AccountId", "IdempotencyKey")
+                        .IsUnique()
+                        .HasFilter("\"IdempotencyKey\" IS NOT NULL");
 
                     b.ToTable("Transactions");
 
@@ -514,6 +694,9 @@ namespace NordiskaPortal.API.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("FailedPinAttempts")
+                        .HasColumnType("integer");
+
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("text");
@@ -521,6 +704,9 @@ namespace NordiskaPortal.API.Migrations
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<DateTime?>("LockedUntil")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("PersonalNumber")
                         .IsRequired()
@@ -532,12 +718,6 @@ namespace NordiskaPortal.API.Migrations
                     b.Property<string>("PinHash")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<string>("RefreshToken")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("RefreshTokenExpiryTime")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -558,6 +738,7 @@ namespace NordiskaPortal.API.Migrations
                             Id = new Guid("d0000000-0000-0000-0000-000000000001"),
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "demo@nordiskaportal.se",
+                            FailedPinAttempts = 0,
                             FirstName = "Demo",
                             LastName = "Kund",
                             PersonalNumber = "19850615-5678",
@@ -575,6 +756,15 @@ namespace NordiskaPortal.API.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("NordiskaPortal.API.Models.InterestPayout", b =>
+                {
+                    b.HasOne("NordiskaPortal.API.Models.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("NordiskaPortal.API.Models.LedgerEntry", b =>
@@ -605,6 +795,15 @@ namespace NordiskaPortal.API.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("NordiskaPortal.API.Models.RefreshToken", b =>
+                {
+                    b.HasOne("NordiskaPortal.API.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("NordiskaPortal.API.Models.TaxReport", b =>
