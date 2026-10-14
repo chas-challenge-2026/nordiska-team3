@@ -71,6 +71,10 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Transaction>()
             .HasIndex(t => t.TransferId);
 
+        // Money columns: exact amounts with two decimals, same as InterestPayout.Amount.
+        modelBuilder.Entity<Transaction>().Property(t => t.Amount).HasPrecision(18, 2);
+        modelBuilder.Entity<LedgerEntry>().Property(l => l.Amount).HasPrecision(18, 2);
+
         // Notification relationships
         modelBuilder.Entity<Notification>()
             .HasOne(n => n.User)
