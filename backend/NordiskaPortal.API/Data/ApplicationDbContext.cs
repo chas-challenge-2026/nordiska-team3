@@ -69,6 +69,18 @@ public class ApplicationDbContext : DbContext
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Transaction>()
+            .Property(t => t.IdempotencyKey)
+            .HasMaxLength(100);
+
+        modelBuilder.Entity<Transaction>()
+            .HasIndex(t => t.AccountId);
+
+        modelBuilder.Entity<Transaction>()
+            .HasIndex(t => new { t.AccountId, t.IdempotencyKey })
+            .IsUnique()
+            .HasFilter("\"IdempotencyKey\" IS NOT NULL");
+
+        modelBuilder.Entity<Transaction>()
             .HasIndex(t => t.TransferId);
 
         // Notification relationships

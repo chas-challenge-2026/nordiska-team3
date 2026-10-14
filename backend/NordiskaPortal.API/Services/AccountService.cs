@@ -45,6 +45,18 @@ public class AccountService : IAccountService
         ["CHECKING"] = "Transaktionskonto"
     };
 
+    private const string IdempotencyKeyReused = "Idempotency key was already used for a different request.";
+
+    // A repeated request with the same key on the same account finds the transaction the first request created.
+    private async Task<Transaction?> FindByIdempotencyKeyAsync(Guid accountId, string? idempotencyKey)
+    {
+        if (idempotencyKey is null) return null;
+
+        return await _context.Transactions
+            .AsNoTracking()
+            .FirstOrDefaultAsync(t => t.AccountId == accountId && t.IdempotencyKey == idempotencyKey);
+    }
+
     public async Task<AccountDto?> CreateAccountAsync(Guid userId, string accountType)
     {
         var user = await _userRepository.GetByIdAsync(userId);
@@ -108,7 +120,7 @@ public class AccountService : IAccountService
         return MapToDto(account, balance);
     }
 
-    public async Task<AccountOperationResult> DepositAsync(Guid userId, Guid accountId, decimal amount)
+    public async Task<AccountOperationResult> DepositAsync(Guid userId, Guid accountId, decimal amount, string? idempotencyKey = null)
     {
         if (amount <= 0) return AccountOperationResult.Failure("Amount must be positive.");
 
@@ -121,7 +133,8 @@ public class AccountService : IAccountService
             Amount = amount,
             TransactionType = "DEPOSIT",
             Status = "COMPLETED",
-            CompletedAt = DateTime.UtcNow
+            CompletedAt = DateTime.UtcNow,
+            IdempotencyKey = idempotencyKey
         };
 
         var ledgerEntry = new LedgerEntry
@@ -148,12 +161,21 @@ public class AccountService : IAccountService
         await _context.Database.ExecuteSqlInterpolatedAsync(
             $"SELECT 1 FROM \"Accounts\" WHERE \"Id\" = {accountId} FOR UPDATE");
 
+        var existing = await FindByIdempotencyKeyAsync(accountId, idempotencyKey);
+        if (existing is not null)
+        {
+            if (existing.TransactionType != "DEPOSIT" || existing.Amount != amount)
+                return AccountOperationResult.Failure(IdempotencyKeyReused);
+
+            return AccountOperationResult.Success(existing.Id, await _accountRepository.GetBalanceAsync(accountId));
+        }
+
         await _notificationRepository.AddAsync(notification);
         await _transactionRepository.AddAsync(transaction);
         await _ledgerEntryRepository.AddAsync(ledgerEntry);
         await _auditService.AppendAsync(userId, AuditActions.Deposit, nameof(Transaction), transaction.Id, new { accountId, amount = amount.ToString("F2", CultureInfo.InvariantCulture) });
         await _accountRepository.SaveChangesAsync();
-        await dbTransaction.CommitAsync();        
+        await dbTransaction.CommitAsync();
 
         var newBalance = await _accountRepository.GetBalanceAsync(accountId);
 
@@ -163,7 +185,7 @@ public class AccountService : IAccountService
         return AccountOperationResult.Success(transaction.Id, newBalance);
     }
 
-    public async Task<AccountOperationResult> WithdrawAsync(Guid userId, Guid accountId, decimal amount)
+    public async Task<AccountOperationResult> WithdrawAsync(Guid userId, Guid accountId, decimal amount, string? idempotencyKey = null)
     {
         if (amount <= 0) return AccountOperationResult.Failure("Amount must be positive.");
 
@@ -174,6 +196,15 @@ public class AccountService : IAccountService
 
         await _context.Database.ExecuteSqlInterpolatedAsync(
             $"SELECT 1 FROM \"Accounts\" WHERE \"Id\" = {accountId} FOR UPDATE");
+
+        var existing = await FindByIdempotencyKeyAsync(accountId, idempotencyKey);
+        if (existing is not null)
+        {
+            if (existing.TransactionType != "WITHDRAWAL" || existing.Amount != amount)
+                return AccountOperationResult.Failure(IdempotencyKeyReused);
+
+            return AccountOperationResult.Success(existing.Id, await _accountRepository.GetBalanceAsync(accountId));
+        }
 
         var currentBalance = await _accountRepository.GetBalanceAsync(accountId);
         if (currentBalance < amount)
@@ -190,7 +221,8 @@ public class AccountService : IAccountService
             Amount = amount,
             TransactionType = "WITHDRAWAL",
             Status = "COMPLETED",
-            CompletedAt = DateTime.UtcNow
+            CompletedAt = DateTime.UtcNow,
+            IdempotencyKey = idempotencyKey
         };
 
         var ledgerEntry = new LedgerEntry
@@ -239,7 +271,7 @@ public class AccountService : IAccountService
     }
 
     // Atomisk överforing: båda kontona låst i fast ordning (lägst konto-Id först) så att två överföringar aldrig kan hamna i deadlock
-    public async Task<TransferOperationResult> TransferAsync(Guid userId, Guid fromAccountId, string toAccountNumber, decimal amount)
+    public async Task<TransferOperationResult> TransferAsync(Guid userId, Guid fromAccountId, string toAccountNumber, decimal amount, string? idempotencyKey = null)
     {
         if (amount <= 0) return TransferOperationResult.Failure("Amount must be positive.");
 
@@ -269,6 +301,21 @@ public class AccountService : IAccountService
                 $"SELECT 1 FROM \"Accounts\" WHERE \"Id\" = {lockId} FOR UPDATE");
         }
 
+        var existing = await FindByIdempotencyKeyAsync(fromAccount.Id, idempotencyKey);
+        if (existing is not null)
+        {
+            var sameRecipient = existing.TransferId.HasValue && await _context.Transactions.AnyAsync(t =>
+                t.TransferId == existing.TransferId && t.TransactionType == "TRANSFER_IN" && t.AccountId == toAccount.Id);
+
+            if (existing.TransactionType != "TRANSFER_OUT" || existing.Amount != amount || !sameRecipient)
+                return TransferOperationResult.Failure(IdempotencyKeyReused);
+
+            var replayFromBalance = await _accountRepository.GetBalanceAsync(fromAccount.Id);
+            decimal? replayToBalance = isOwnTransfer ? await _accountRepository.GetBalanceAsync(toAccount.Id) : null;
+
+            return TransferOperationResult.Success(existing.TransferId!.Value, replayFromBalance, replayToBalance);
+        }
+
         var currentBalance = await _accountRepository.GetBalanceAsync(fromAccount.Id);
         if (currentBalance < amount)
         {
@@ -289,7 +336,8 @@ public class AccountService : IAccountService
             Status = "COMPLETED",
             CompletedAt = completedAt,
             TransferId = transferId,
-            CounterpartyLabel = outLabel
+            CounterpartyLabel = outLabel,
+            IdempotencyKey = idempotencyKey
         };
 
         var inTransaction = new Transaction

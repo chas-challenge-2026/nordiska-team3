@@ -599,6 +599,10 @@ namespace NordiskaPortal.API.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
@@ -615,6 +619,10 @@ namespace NordiskaPortal.API.Migrations
                     b.HasIndex("AccountId");
 
                     b.HasIndex("TransferId");
+
+                    b.HasIndex("AccountId", "IdempotencyKey")
+                        .IsUnique()
+                        .HasFilter("\"IdempotencyKey\" IS NOT NULL");
 
                     b.ToTable("Transactions");
 
