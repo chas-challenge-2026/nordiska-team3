@@ -109,11 +109,36 @@ public class InterestServiceTests
         result.Should().BeSameAs(empty);
     }
 
-    private InterestService CreateService() =>
+    [Fact]
+    public async Task AddInterestAsync_CountsADepositMadeAfterSwedishMidnightFromTheSwedishDay()
+    {
+        var accountId = Guid.NewGuid();
+        await AddPolicyRatesAsync();
+        await AddLedgerEntryAsync(accountId, new DateTime(2026, 6, 30, 22, 30, 0, DateTimeKind.Utc), 36500m);
+
+        var result = await CreateService().AddInterestAsync(Accounts(Account(accountId, "SAVINGS")));
+
+        result.Accounts.Single().AccruedInterest.Should().Be("3.50");
+    }
+
+    [Fact]
+    public async Task AddInterestAsync_UsesTheSwedishDateAsToday()
+    {
+        var accountId = Guid.NewGuid();
+        await AddPolicyRatesAsync();
+        await AddLedgerEntryAsync(accountId, new DateTime(2026, 6, 1, 8, 0, 0, DateTimeKind.Utc), 36500m);
+
+        var result = await CreateService(new DateTimeOffset(2026, 7, 1, 22, 30, 0, TimeSpan.Zero))
+            .AddInterestAsync(Accounts(Account(accountId, "SAVINGS")));
+
+        result.Accounts.Single().AccruedInterest.Should().Be("108.50");
+    }
+
+    private InterestService CreateService(DateTimeOffset? now = null) =>
         new(
             _context,
             new ConfigurationBuilder().Build(),
-            new FixedTimeProvider(Now),
+            new FixedTimeProvider(now ?? Now),
             NullLogger<InterestService>.Instance);
 
     private async Task AddPolicyRatesAsync()

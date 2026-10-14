@@ -22,10 +22,8 @@ namespace NordiskaPortal.API.Services
             var user = await _context.Users.FindAsync(userId)
                 ?? throw new InvalidOperationException("User not found.");
 
-            //Swedish tax year follow Europe/Stockholm loccal time, not native UTC, the CET/CEST timezone is used in Sweden, which is UTC+1 in winter and UTC+2 in summer.
-            var stockholmTz = TimeZoneInfo.FindSystemTimeZoneById("Europe/Stockholm");
-            var yearStartUtc = TimeZoneInfo.ConvertTimeToUtc(new DateTime(reportYear, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), stockholmTz);
-            var yearEndUtc = TimeZoneInfo.ConvertTimeToUtc(new DateTime(reportYear + 1, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), stockholmTz);
+            var yearStartUtc = SwedishTime.StartOfDayUtc(new DateOnly(reportYear, 1, 1));
+            var yearEndUtc = SwedishTime.StartOfDayUtc(new DateOnly(reportYear + 1, 1, 1));
 
             var accounts = await _context.Accounts
                 .Where(a => a.UserId == userId)

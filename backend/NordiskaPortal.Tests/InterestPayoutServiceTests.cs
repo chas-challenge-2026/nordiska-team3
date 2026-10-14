@@ -194,6 +194,32 @@ public class InterestPayoutServiceTests
         results[0].Paid.Should().Be(1);
     }
 
+    [Fact]
+    public async Task PayoutYearAsync_CountsADepositMadeAfterSwedishMidnightFromTheSwedishDay()
+    {
+        var accountId = await AddAccountAsync("SAVINGS");
+        await AddPolicyAsync();
+        await AddRatesAsync(new DateOnly(2025, 12, 31), new DateOnly(2026, 12, 30));
+        await AddLedgerEntryAsync(accountId, new DateTime(2026, 6, 30, 22, 30, 0, DateTimeKind.Utc), 36500m);
+
+        var result = await CreateService(AfterYearEnd).PayoutYearAsync(2026);
+
+        result.TotalAmount.Should().Be(644.00m);
+    }
+
+    [Fact]
+    public async Task PayoutDueYearsAsync_PaysTheYearAsSoonAsItIsNewYearInSweden()
+    {
+        var accountId = await AddAccountAsync("SAVINGS");
+        await AddPolicyAsync();
+        await AddRatesAsync(new DateOnly(2025, 12, 31), new DateOnly(2026, 12, 30));
+        await AddLedgerEntryAsync(accountId, new DateTime(2025, 12, 15, 0, 0, 0, DateTimeKind.Utc), 36500m);
+
+        var results = await CreateService(new DateTimeOffset(2026, 12, 31, 23, 30, 0, TimeSpan.Zero)).PayoutDueYearsAsync();
+
+        results.Should().ContainSingle(r => r.Year == 2026 && r.Paid == 1);
+    }
+
     private InterestPayoutService CreateService(DateTimeOffset now) =>
         new(
             _context,
