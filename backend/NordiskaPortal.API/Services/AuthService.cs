@@ -174,6 +174,8 @@ public class AuthService : IAuthService
 
     public async Task<RegisterResult> RegisterAsync(RegisterRequestDto request)
     {
+        var pinHash = BCrypt.Net.BCrypt.HashPassword(request.Pin);
+
         // Samma meddelande oavsett orsak, så klienten inte kan avgöra om ett personnummer eller e-post redan finns.
         const string genericConflictMessage =
             "Registration could not be completed with the provided details.";
@@ -199,7 +201,7 @@ public class AuthService : IAuthService
             FirstName = request.FirstName,
             LastName = request.LastName,
             Email = request.Email,
-            PinHash = BCrypt.Net.BCrypt.HashPassword(request.Pin),
+            PinHash = pinHash,
         };
 
         await _userRepository.AddAsync(user);
