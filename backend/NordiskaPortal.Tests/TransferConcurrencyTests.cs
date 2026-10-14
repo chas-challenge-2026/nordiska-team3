@@ -11,6 +11,7 @@ namespace NordiskaPortal.Tests.Postgres;
 
 // Runs real transfers at the same time against a real Postgres database, because the row locks
 // in AccountService.TransferAsync cannot be proven with the InMemory provider.
+[Collection("Postgres")]
 public class TransferConcurrencyTests : IAsyncLifetime
 {
     private static readonly AuditKey TestAuditKey = new(new byte[32]);
