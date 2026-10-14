@@ -55,9 +55,12 @@ public class  AccountsController : ControllerBase
 
     [EnableRateLimiting(RateLimitPolicies.MoneyTransaction)]
     [HttpPost("{accountId}/deposit")]
-    public async Task<IActionResult> Deposit(Guid accountId, TransactionRequestDto request)
+    public async Task<IActionResult> Deposit(Guid accountId, TransactionRequestDto request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey = null)
     {
-        var result = await _accountService.DepositAsync(CurrentUserId, accountId, request.Amount);
+        if (!IsValidIdempotencyKey(idempotencyKey)) return BadRequest(new ErrorResponseDto(InvalidIdempotencyKeyMessage));
+
+        var result = await _accountService.DepositAsync(CurrentUserId, accountId, request.Amount, idempotencyKey);
 
         if (!result.IsSuccess) return BadRequest(new ErrorResponseDto(result.ErrorMessage!));
 
@@ -68,9 +71,12 @@ public class  AccountsController : ControllerBase
 
     [EnableRateLimiting(RateLimitPolicies.MoneyTransaction)]
     [HttpPost("{accountId}/withdraw")]
-    public async Task<IActionResult> Withdraw(Guid accountId, TransactionRequestDto request)
+    public async Task<IActionResult> Withdraw(Guid accountId, TransactionRequestDto request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey = null)
     {
-        var result = await _accountService.WithdrawAsync(CurrentUserId, accountId, request.Amount);
+        if (!IsValidIdempotencyKey(idempotencyKey)) return BadRequest(new ErrorResponseDto(InvalidIdempotencyKeyMessage));
+
+        var result = await _accountService.WithdrawAsync(CurrentUserId, accountId, request.Amount, idempotencyKey);
 
         if (!result.IsSuccess) return BadRequest(new ErrorResponseDto(result.ErrorMessage!));
 
@@ -92,9 +98,12 @@ public class  AccountsController : ControllerBase
 
     [EnableRateLimiting(RateLimitPolicies.MoneyTransaction)]
     [HttpPost("{accountId:guid}/transfer")]
-    public async Task<IActionResult> Transfer(Guid accountId, TransferRequestDto request)
+    public async Task<IActionResult> Transfer(Guid accountId, TransferRequestDto request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey = null)
     {
-        var result = await _accountService.TransferAsync(CurrentUserId, accountId, request.ToAccountNumber, request.Amount);
+        if (!IsValidIdempotencyKey(idempotencyKey)) return BadRequest(new ErrorResponseDto(InvalidIdempotencyKeyMessage));
+
+        var result = await _accountService.TransferAsync(CurrentUserId, accountId, request.ToAccountNumber, request.Amount, idempotencyKey);
 
         if (!result.IsSuccess) return BadRequest(new ErrorResponseDto(result.ErrorMessage!));
 
@@ -127,6 +136,12 @@ public class  AccountsController : ControllerBase
 
         return Ok(history);
     }
+
+    private const int MaxIdempotencyKeyLength = 100;
+    private const string InvalidIdempotencyKeyMessage = "Idempotency-Key must be 1 to 100 characters.";
+
+    private static bool IsValidIdempotencyKey(string? key) =>
+        key is null || (!string.IsNullOrWhiteSpace(key) && key.Length <= MaxIdempotencyKeyLength);
 
     private Guid CurrentUserId =>
         Guid.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub)!);

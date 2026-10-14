@@ -11,6 +11,7 @@ public class Transaction
     public DateTime? CompletedAt { get; set; }
     public Guid? TransferId { get; set; }
     public string? CounterpartyLabel { get; set; }
+    public string? IdempotencyKey { get; set; }
 
     public Account Account { get; set; }
     public ICollection<LedgerEntry> LedgerEntries { get; set; } = new List<LedgerEntry>();
