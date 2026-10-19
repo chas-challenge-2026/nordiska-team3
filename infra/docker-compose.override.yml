@@ -5,6 +5,7 @@ services:
   app:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      Demo__SeedData: "true"
       Cors__AllowedOrigins__2: http://localhost:5173
       Cors__AllowedOrigins__3: http://localhost:5077
     ports:
