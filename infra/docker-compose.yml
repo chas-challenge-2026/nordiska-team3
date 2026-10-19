@@ -53,6 +53,7 @@ services:
       - Jwt__Audience=NordiskaPortal.Client
       - Cors__AllowedOrigins__0=https://nordiska-team3.team.chas-challenge.comerit.se
       - Cors__AllowedOrigins__1=https://nordiska-team3-dev.team.chas-challenge.comerit.se
+      - Demo__SeedData=true
     volumes:
       - api_secrets:/secrets
       - db_secret:/run/secrets:ro

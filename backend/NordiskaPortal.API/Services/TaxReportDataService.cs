@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using NordiskaPortal.API.Data;
+using NordiskaPortal.API.Models;
 using NordiskaPortal.API.DTOs.TaxReports;
 using NordiskaPortal.API.Services.Interfaces;
 using System.Globalization;
@@ -27,6 +28,7 @@ namespace NordiskaPortal.API.Services
 
             var accounts = await _context.Accounts
                 .Where(a => a.UserId == userId)
+                .OrderBy(a => a.AccountNumber)
                 .ToListAsync();
 
             var accountDtos = new List<TaxAccountDto>();
@@ -35,6 +37,7 @@ namespace NordiskaPortal.API.Services
             foreach (var account in accounts)
             {
                 var entries = await _context.LedgerEntries
+                    .Include(l => l.Transaction)
                     .Where(l => l.AccountId == account.Id && l.Transaction.Status == "COMPLETED")
                     .OrderBy(l => l.CreatedAt)
                     .ThenBy(l => l.Id)
@@ -71,7 +74,7 @@ namespace NordiskaPortal.API.Services
                         entry.Id,
                         new DateTimeOffset(entry.CreatedAt, TimeSpan.Zero),
                         entry.EntryType,
-                        entry.Description,
+                        DescribeEntry(entry),
                         entry.Amount.ToString("F2", CultureInfo.InvariantCulture)
                     )).ToList()
                 ));
@@ -104,6 +107,19 @@ namespace NordiskaPortal.API.Services
                 )
             );
 
+        }
+
+        private static string DescribeEntry(LedgerEntry entry)
+        {
+            var label = entry.Transaction?.CounterpartyLabel;
+
+            if ((entry.EntryType == "TRANSFER_OUT" || entry.EntryType == "TRANSFER_IN")
+                && !string.IsNullOrWhiteSpace(label))
+            {
+                return $"{entry.Description} ({label})";
+            }
+
+            return entry.Description;
         }
     }
 }
