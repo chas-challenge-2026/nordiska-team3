@@ -76,6 +76,8 @@ if (app.Environment.IsDevelopment())
     await app.SeedTestDataAsync();
 }
 
+await app.SeedDemoDataAsync();
+
 app.UseCors("Frontend");
 
 app.UseHttpsRedirection();
