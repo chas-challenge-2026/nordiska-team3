@@ -1,7 +1,7 @@
 export const customerServiceContact = {
-    phone: '08-123 456 78',
-    phoneHref: 'tel:0812345678',
-    email: 'hej@nordiska.se',
-    emailHref: 'mailto:hej@nordiska.se',
-    openingHours: 'Vardagar kl 8-18',
+    phone: '08-23 28 00',
+    phoneHref: 'tel:08232800',
+    email: 'info@nordiska.se',
+    emailHref: 'mailto:info@nordiska.se',
+    openingHours: 'Vardagar kl 8:30-16:30',
 }
