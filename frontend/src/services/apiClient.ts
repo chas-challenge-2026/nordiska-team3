@@ -1,8 +1,4 @@
-import { clearStoredAuth, getStoredAccessToken, storeLoginResponse, type LoginResponse } from './authService'
-
-const API_URL = import.meta.env.VITE_API_URL
-
-let refreshRequest: Promise<boolean> | null = null
+import { clearStoredAuth, getStoredAccessToken, refreshSession } from './authService'
 
 function withAuthHeaders(headers: HeadersInit | undefined) {
     const nextHeaders = new Headers(headers)
@@ -23,30 +19,6 @@ function redirectToLogin() {
     }
 }
 
-async function refreshAccessToken() {
-    const response = await fetch(`${API_URL}/api/auth/refresh`, {
-        method: 'POST',
-        credentials: 'include',
-    })
-
-    if (!response.ok) {
-        return false
-    }
-
-    const data: LoginResponse = await response.json()
-    storeLoginResponse(data)
-
-    return true
-}
-
-async function getFreshAccessToken() {
-    refreshRequest ??= refreshAccessToken().finally(() => {
-        refreshRequest = null
-    })
-
-    return refreshRequest
-}
-
 /**
  * Gör API-anrop med token.
  * Om token har gått ut testas refresh en gång.
@@ -64,7 +36,7 @@ export async function apiFetch(input: RequestInfo | URL, init: RequestInit = {})
         return response
     }
 
-    const didRefresh = await getFreshAccessToken()
+    const didRefresh = await refreshSession()
 
     if (!didRefresh) {
         redirectToLogin()

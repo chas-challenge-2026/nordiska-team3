@@ -1,6 +1,6 @@
 import { type FormEvent, useState } from 'react'
 import { Eye, EyeOff, Moon, PlusSquare, ShieldCheck, Sun } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import './LoginPage.css'
 import { Button } from '../components/Button'
 import { Input } from '../components/Input'
@@ -11,13 +11,17 @@ import { loginSchema } from '../schemas/loginSchema'
 
 function LoginPage() {
     const navigate = useNavigate()
+    const location = useLocation()
     const { theme, toggleTheme } = useTheme()
 
     const [isCheckingPin, setIsCheckingPin] = useState(false)
     const [personalNumber, setPersonalNumber] = useState('')
     const [pin, setPin] = useState('')
     const [showPin, setShowPin] = useState(false)
-    const [errorMessage, setErrorMessage] = useState('')
+    // Visar t.ex. meddelandet om utloggning vid inaktivitet.
+    const [errorMessage, setErrorMessage] = useState(
+        (location.state as { logoutMessage?: string } | null)?.logoutMessage ?? ''
+    )
 
     // Körs när användaren skickar PIN-formuläret.
     async function handlePinLogin(event: FormEvent<HTMLFormElement>) {
