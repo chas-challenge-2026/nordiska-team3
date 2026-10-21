@@ -379,3 +379,10 @@ h3[tabindex="0"]:focus-visible {
     display: none;
   }
 }
+
+.session-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}

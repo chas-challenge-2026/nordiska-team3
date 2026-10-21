@@ -113,8 +113,7 @@ public class AuthController : ControllerBase
             HttpOnly = true,
             Secure = Request.IsHttps,
             SameSite = SameSiteMode.Strict,
-            Path = RefreshCookiePath,
-            Expires = expiry
+            Path = RefreshCookiePath
         });
     }
 
