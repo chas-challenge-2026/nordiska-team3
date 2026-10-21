@@ -1,6 +1,7 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { isAuthenticated } from './services/authService'
+import { isAuthenticated, refreshSession } from './services/authService'
+import { useIdleLogout } from './hooks/useIdleLogout'
 import LoginPage from './Page/LoginPage'
 import DashboardPage from './Page/DashboardPage'
 import TransactPage from './Page/TransactPage'
@@ -9,8 +10,34 @@ import TaxPage from './Page/TaxPage'
 import FaqPage from './Page/FaqPage'
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
-  // Kollar om användaren har en sparad token innan skyddade sidor visas.
-  if (!isAuthenticated()) {
+  // Token finns bara i minnet, så efter omladdning försöker vi återställa sessionen via refresh-cookien.
+  const [status, setStatus] = useState<'checking' | 'authenticated' | 'unauthenticated'>(
+    isAuthenticated() ? 'authenticated' : 'checking'
+  )
+
+  useEffect(() => {
+    if (status !== 'checking') return
+
+    let isActive = true
+
+    refreshSession().then((didRefresh) => {
+      if (isActive) setStatus(didRefresh ? 'authenticated' : 'unauthenticated')
+    })
+
+    return () => {
+      isActive = false
+    }
+  }, [status])
+
+  if (status === 'checking') {
+    return (
+      <div className="session-loading" role="status">
+        <p>Laddar...</p>
+      </div>
+    )
+  }
+
+  if (status === 'unauthenticated') {
     return <Navigate to="/login" replace />
   }
 
@@ -28,6 +55,8 @@ function ScrollToTop() {
 }
 
 function App() {
+  useIdleLogout()
+
   return (
     <>
       <ScrollToTop />
