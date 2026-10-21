@@ -33,7 +33,7 @@ public class AuthControllerTests
         await controller.LoginPin(new LoginPinRequestDto("19900101-1234", "1234"));
 
         var cookie = SetCookieHeader(controller);
-        cookie.Should().Contain("refreshToken=refresh-token");
+        cookie.Should().NotContainEquivalentOf("expires=");
         cookie.Should().Contain("path=/api/auth");
         cookie.Should().ContainEquivalentOf("httponly");
         cookie.Should().ContainEquivalentOf("samesite=strict");

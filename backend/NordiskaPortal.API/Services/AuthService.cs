@@ -7,7 +7,7 @@ namespace NordiskaPortal.API.Services;
 
 public class AuthService : IAuthService
 {
-    private static readonly TimeSpan RefreshTokenLifetime = TimeSpan.FromDays(7);
+    private static readonly TimeSpan RefreshTokenLifetime = TimeSpan.FromMinutes(30);
     private static readonly TimeSpan RefreshGracePeriod = TimeSpan.FromSeconds(30);
     private static readonly string DummyPinHash = BCrypt.Net.BCrypt.HashPassword("not-a-real-pin");
 
@@ -79,6 +79,24 @@ public class AuthService : IAuthService
         return LoginResult.Success(result);
     }
 
+    public async Task<AuthResult?> LoginWithPersonalNumberAsync(string personalNumber)
+    {
+        var personalNumberHash = _personalNumberProtector.ComputeHash(personalNumber);
+        var user = await _userRepository.GetByPersonalNumberHashAsync(personalNumberHash);
+
+        if (user is null)
+        {
+            _logger.LogWarning("BankID login for a personal number without an account.");
+            return null;
+        }
+
+        var result = await IssueTokensAsync(user);
+
+        _logger.LogInformation("User {UserId} logged in with BankID.", user.Id);
+
+        return result;
+    }
+
     public async Task<AuthResult?> RefreshAsync(string refreshToken)
     {
         var now = _timeProvider.GetUtcNow().UtcDateTime;
@@ -145,8 +163,13 @@ public class AuthService : IAuthService
     }
 
     private UserDto MapToUserDto(User user) =>
-        new(user.Id, $"{user.FirstName} {user.LastName}", user.Email,
-            _personalNumberProtector.Unprotect(user.PersonalNumber));
+    new(user.Id, $"{user.FirstName} {user.LastName}", user.Email,
+        MaskPersonalNumber(_personalNumberProtector.Unprotect(user.PersonalNumber)));
+
+    private static string MaskPersonalNumber(string? personalNumber) =>
+        string.IsNullOrEmpty(personalNumber) || personalNumber.Length < 4
+            ? "XXXX"
+            : personalNumber[..^4] + "XXXX";
 
     private async Task<AuthResult> IssueTokensAsync(User user)
     {

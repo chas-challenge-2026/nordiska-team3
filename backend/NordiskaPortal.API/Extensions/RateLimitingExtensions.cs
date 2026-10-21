@@ -14,6 +14,7 @@ public static class RateLimitPolicies
     public const string MoneyTransaction = "money-transaction";
     public const string TaxReport = "tax-report";
     public const string AccountLookup = "account-lookup";
+    public const string BankIdStatus = "bankid-status";
 }
 
 public static class RateLimitingExtensions
@@ -28,6 +29,7 @@ public static class RateLimitingExtensions
         var moneyLimit = section.GetValue("MoneyTransactionPerMinute", 10);
         var taxLimit = section.GetValue("TaxReportPerMinute", 5);
         var lookupLimit = section.GetValue("AccountLookupPerMinute", 10);
+        var bankIdStatusLimit = section.GetValue("BankIdStatusPerMinute", 120);
 
         services.AddRateLimiter(options =>
         {
@@ -41,6 +43,7 @@ public static class RateLimitingExtensions
             options.AddPolicy(RateLimitPolicies.MoneyTransaction, ctx => ByUser(ctx, moneyLimit));
             options.AddPolicy(RateLimitPolicies.TaxReport, ctx => ByUser(ctx, taxLimit));
             options.AddPolicy(RateLimitPolicies.AccountLookup, ctx => ByUser(ctx, lookupLimit));
+            options.AddPolicy(RateLimitPolicies.BankIdStatus, ctx => ByIp(ctx, bankIdStatusLimit));
 
             options.OnRejected = async (context, cancellationToken) =>
             {
