@@ -52,7 +52,7 @@ public class AuthServiceRefreshTokenTests
         row.UserId.Should().Be(_user.Id);
         row.TokenHash.Should().Be(RefreshTokenHasher.Hash("refresh-1"));
         row.TokenHash.Should().NotContain("refresh-1");
-        row.ExpiresAt.Should().Be(_clock.Now.UtcDateTime.AddDays(7));
+        row.ExpiresAt.Should().Be(_clock.Now.UtcDateTime.AddMinutes(30));
         login.RefreshTokenExpiry.Should().Be(row.ExpiresAt);
         row.RotatedAt.Should().BeNull();
     }
@@ -101,7 +101,7 @@ public class AuthServiceRefreshTokenTests
     public async Task Refresh_RejectsAnExpiredToken()
     {
         await LoginAsync();
-        _clock.Advance(TimeSpan.FromDays(7).Add(TimeSpan.FromSeconds(1)));
+        _clock.Advance(TimeSpan.FromMinutes(30).Add(TimeSpan.FromSeconds(1)));
 
         var result = await CreateService().RefreshAsync("refresh-1");
 
@@ -117,6 +117,16 @@ public class AuthServiceRefreshTokenTests
 
         result.Should().BeNull();
         _refreshTokens.Tokens.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task Login_ReturnsTheMaskedPersonalNumber()
+    {
+        _protector.Setup(p => p.Unprotect("enc")).Returns("19900101-1234");
+
+        var login = await LoginAsync();
+
+        login.Response.User.PersonalNumber.Should().Be("19900101-XXXX");
     }
 
     [Fact]
