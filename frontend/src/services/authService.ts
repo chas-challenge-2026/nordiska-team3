@@ -11,6 +11,9 @@ export type LoginResponse = {
 }
 
 // Token och användare finns bara i minnet. Refresh-token-cookien (HttpOnly) återställer sessionen vid omladdning.
+// sessionStorage-flaggan överlever omladdning men inte en stängd flik, så en ny flik kräver ny inloggning.
+const SESSION_FLAG_KEY = 'sessionActive'
+
 let accessToken: string | null = null
 let currentUser: LoginResponse['user'] | null = null
 let refreshRequest: Promise<boolean> | null = null
@@ -23,12 +26,14 @@ localStorage.removeItem('user')
 export function storeLoginResponse(data: LoginResponse) {
     accessToken = data.accessToken
     currentUser = data.user
+    sessionStorage.setItem(SESSION_FLAG_KEY, 'true')
 }
 
 /** Rensar inloggningen i minnet. */
 export function clearStoredAuth() {
     accessToken = null
     currentUser = null
+    sessionStorage.removeItem(SESSION_FLAG_KEY)
 }
 
 async function requestRefresh() {
@@ -56,6 +61,11 @@ async function requestRefresh() {
  * Samtidiga anrop delar samma request (t.ex. StrictMode som kör effekter två gånger).
  */
 export function refreshSession(): Promise<boolean> {
+    // Fliken har stängts sedan inloggningen, så sessionen ska inte återställas.
+    if (!sessionStorage.getItem(SESSION_FLAG_KEY)) {
+        return Promise.resolve(false)
+    }
+
     refreshRequest ??= requestRefresh().finally(() => {
         refreshRequest = null
     })
