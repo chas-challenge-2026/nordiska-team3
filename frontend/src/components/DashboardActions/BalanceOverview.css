@@ -138,6 +138,20 @@
   letter-spacing: 0.01em;
 }
 
+.account-card-interest__rate {
+  display: block;
+  color: var(--color-primary-text);
+  font-size: min(14px, 10cqi);
+  font-weight: 800;
+}
+
+.account-card-interest__type {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: 10px;
+  font-weight: 600;
+}
+
 .accounts-interest-note {
   width: 100%;
   display: flex;
