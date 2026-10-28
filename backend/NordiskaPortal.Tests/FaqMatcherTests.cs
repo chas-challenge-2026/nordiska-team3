@@ -33,7 +33,42 @@ public class FaqMatcherTests
         result!.Entry.Question.Should().Be(expectedQuestion);
     }
 
-    [Fact]
+    [Theory]
+    [InlineData("Hej! jag undrar hur jag gör ett uttag", "Hur tar jag ut pengar?")]
+    public void FindBestMatch_WhenQueryHasFillerWords_ReturnExpectedEntry(string query, string expectedQuestion)
+    {
+        var result = FaqMatcher.FindBestMatch(query, Entries);
+        
+        result.Should().NotBeNull();
+
+        result!.Entry.Question.Should().Be(expectedQuestion);
+    }
+
+    [Theory]
+    [InlineData("utag", "Hur tar jag ut pengar?")]
+    [InlineData("insätning", "Hur sätter jag in pengar?")]
+    public void FindBestMatch_WhenQueryHasATypo_ReturnsExpectedEntry(string query, string expectedQuestion)
+    {
+        var result = FaqMatcher.FindBestMatch(query, Entries);
+
+        result.Should().NotBeNull();
+
+        result!.Entry.Question.Should().Be(expectedQuestion);
+    }
+
+    [Theory]
+    [InlineData("radera mitt sparkonto", "Hur avslutar jag mitt sparkonto?")]
+    [InlineData("ta bort mitt sparkonto", "Hur avslutar jag mitt sparkonto?")]
+    public void FindBestMatch_WhenWordsAreCombinedDifferently_ReturnsExpectedEntry(string query, string expectedQuestion)
+    {
+        var result = FaqMatcher.FindBestMatch(query, Entries);
+
+        result.Should().NotBeNull();
+        result!.Entry.Question.Should().Be(expectedQuestion);
+
+    }
+
+        [Fact]
     public void FindBestMatch_WhenQueryIsAnEntryQuestion_ReturnsThatEntry()
     {
         foreach (var entry in Entries)
