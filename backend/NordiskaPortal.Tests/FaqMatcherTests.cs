@@ -34,13 +34,13 @@ public class FaqMatcherTests
     }
 
     [Theory]
-    [InlineData("Hej! jag undrar hur jag gör ett uttag", "Hur tar jag ut pengar?")]
-    public void FindBestMatch_WhenQueryHasFillerWords_ReturnExpectedEntry(string query, string expectedQuestion)
+    [InlineData("hej! jag undrar hur jag gör ett uttag", "Hur tar jag ut pengar?")]
+    [InlineData("tack! jag har en fråga om insättning", "Hur sätter jag in pengar?")]
+    public void FindBestMatch_WhenQueryHasFillerWords_ReturnsExpectedEntry(string query, string expectedQuestion)
     {
         var result = FaqMatcher.FindBestMatch(query, Entries);
-        
-        result.Should().NotBeNull();
 
+        result.Should().NotBeNull();
         result!.Entry.Question.Should().Be(expectedQuestion);
     }
 
@@ -52,7 +52,6 @@ public class FaqMatcherTests
         var result = FaqMatcher.FindBestMatch(query, Entries);
 
         result.Should().NotBeNull();
-
         result!.Entry.Question.Should().Be(expectedQuestion);
     }
 

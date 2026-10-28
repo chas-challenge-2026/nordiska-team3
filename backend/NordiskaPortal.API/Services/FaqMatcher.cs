@@ -25,7 +25,8 @@ public static class FaqMatcher
         "får", "få", "fick", "gör", "göra", "gjorde", "gjort", "finns", "hitta", "hittar",
         "en", "ett", "i", "på", "till", "från", "av", "med", "för", "om", "att", "och", "eller",
         "men", "som", "så", "då", "där", "här", "inte", "ju", "bara", "också", "mycket", "lite",
-        "någon", "något", "några", "alla"
+        "någon", "något", "några", "alla", "hej", "hejsan", "hallå", "tjena", "tack", "snälla", 
+        "undrar", "undrade", "funderar", "fråga", "vet", "veta"
     };
 
     private static readonly string[] Suffixes = new[]
