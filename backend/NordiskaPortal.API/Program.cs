@@ -19,6 +19,7 @@ builder.Services.AddRateLimiting(builder.Configuration);
 builder.Services.AddSwaggerDocs();
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddApplicationServices();
+builder.Services.AddBankId(builder.Configuration, builder.Environment);
 builder.Services.AddInterestServices(builder.Configuration);
 builder.Services.AddControllers(options =>
 {
