@@ -5,6 +5,12 @@ using NordiskaPortal.API.Repositories.Interfaces;
 using NordiskaPortal.API.Services;
 using Xunit;
 using NordiskaPortal.API.Models;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Serilog;
+using Serilog.Core;
+using Serilog.Events;
+using Serilog.Extensions.Logging;
 
 namespace NordiskaPortal.Tests.Services;
 
@@ -16,7 +22,16 @@ public class FaqServiceTests
     {
         _faqRepoMock.Setup(r => r.GetAllOrderedAsync()).ReturnsAsync(FaqSeedData.Entries);
 
-        return new FaqService(_faqRepoMock.Object);
+        return new FaqService(_faqRepoMock.Object, NullLogger<FaqService>.Instance);
+    }
+
+    private FaqService CreateServiceLoggingTo(ILogEventSink sink)
+    {
+        _faqRepoMock.Setup(r => r.GetAllOrderedAsync()).ReturnsAsync(FaqSeedData.Entries);
+
+        var logger = new LoggerConfiguration().WriteTo.Sink(sink).CreateLogger();
+
+        return new FaqService(_faqRepoMock.Object, new SerilogLoggerFactory(logger).CreateLogger<FaqService>());
     }
 
     [Fact]
@@ -74,7 +89,7 @@ public class FaqServiceTests
             .ToList();
         _faqRepoMock.Setup(r => r.GetAllOrderedAsync()).ReturnsAsync(entries);
 
-        var result = await new FaqService(_faqRepoMock.Object).SearchAsync("sparmål");
+        var result = await new FaqService(_faqRepoMock.Object, NullLogger<FaqService>.Instance).SearchAsync("sparmål");
 
         result.MatchFound.Should().BeFalse();
         result.Suggestions.Select(s => s.Question).Should().Equal("Fråga 1?", "Fråga 2?", "Fråga 3?");
@@ -108,5 +123,42 @@ public class FaqServiceTests
         result.Should().HaveCount(FaqSeedData.Entries.Count);
         result.Select(e => e.Id).Should().Equal(FaqSeedData.Entries.Select(e => e.Id));
         result[0].Question.Should().Be("Hur öppnar jag ett nytt sparkonto?");
+    }
+
+    [Theory]
+    [InlineData("mitt personnummer är 19900101-1234", "mitt personnummer är ########-####")]
+    [InlineData("skicka till NKM-12345", "skicka till NKM-#####")]
+    [InlineData("mejla anna.svensson@example.com", "mejla [e-post]")]
+    public void MaskForLog_HidesDigitsAndEmailAddresses(string query, string expected)
+    {
+        FaqService.MaskForLog(query).Should().Be(expected);
+    }
+
+    [Fact]
+    public async Task SearchAsync_WhenNothingMatches_LogsTheMaskedQuery()
+    {
+        var sink = new CollectingSink();
+
+        await CreateServiceLoggingTo(sink).SearchAsync("mitt personnummer är 19900101-1234");
+
+        var logEvent = sink.Events.Should().ContainSingle().Which;
+        ((ScalarValue)logEvent.Properties["Query"]).Value.Should().Be("mitt personnummer är ########-####");
+    }
+
+    [Fact]
+    public async Task SearchAsync_WhenAnEntryMatches_DoesNotLog()
+    {
+        var sink = new CollectingSink();
+
+        await CreateServiceLoggingTo(sink).SearchAsync("hur tar jag ut pengar");
+
+        sink.Events.Should().BeEmpty();
+    }
+
+    private sealed class CollectingSink : ILogEventSink
+    {
+        public List<LogEvent> Events { get; } = new();
+
+        public void Emit(LogEvent logEvent) => Events.Add(logEvent);
     }
 }
