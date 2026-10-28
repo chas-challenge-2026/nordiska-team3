@@ -7,7 +7,7 @@ namespace NordiskaPortal.API.Services;
 public class FaqService : IFaqService
 {
     private const string NoMatchMessage = "Vi hittade inget svar på din fråga. Kontakta kundtjänst på 08-123 456 78, vardagar 8-18, eller mejla hej@nordiska.se.";
-
+    private const int MaxSuggestions = 3;
     private readonly IFaqRepository _faqRepository;
 
     public FaqService(IFaqRepository faqRepository)
@@ -15,15 +15,22 @@ public class FaqService : IFaqService
         _faqRepository = faqRepository;
     }
 
-    public async Task<FaqSearchResultDto> SearchAsync(string qyery)
+    public async Task<FaqSearchResultDto> SearchAsync(string query)
     {
         var entries = await _faqRepository.GetAllOrderedAsync();
-        var match = FaqMatcher.FindBestMatch(qyery, entries);
+        var match = FaqMatcher.FindBestMatch(query, entries);
 
         if (match is null)
-            return new FaqSearchResultDto(false, 0, null, null, null, NoMatchMessage);
+        {
+            var suggestions = FaqMatcher.Rank(query, entries)
+                .Take(MaxSuggestions)
+                .Select(m => new FaqSuggestionDto(m.Entry.Id, m.Entry.Question))
+                .ToList();
 
-        return new FaqSearchResultDto(true, Math.Round(match.Score, 2), match.Entry.Question, match.Entry.Answer, match.Entry.Category, null);
+            return new FaqSearchResultDto(false, 0, null, null, null, NoMatchMessage, suggestions);
+        }
+
+        return new FaqSearchResultDto(true, Math.Round(match.Score, 2), match.Entry.Question, match.Entry.Answer, match.Entry.Category, null, []);
     }
 
     public async Task<IReadOnlyList<FaqEntryDto>> GetAllAsync()

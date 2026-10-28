@@ -39,32 +39,28 @@ public static class FaqMatcher
 
     public static FaqMatch? FindBestMatch(string? query, IEnumerable<FaqEntry> entries)
     {
+        var ranked = Rank(query, entries);
+        if (ranked.Count == 0) return null;
+
+        var best = ranked[0];
+        var tied = ranked.Count > 1 && Math.Abs(ranked[1].Score - best.Score) < 1e-9;
+
+        return best.Score >= MinScore && !tied ? best : null;
+    }
+
+    public static IReadOnlyList<FaqMatch> Rank(string? query, IEnumerable<FaqEntry> entries)
+    {
         var entryList = entries.ToList();
         var vocabulary = BuildVocabulary(entryList);
 
         var queryTokens = Tokenize(query).Select(token => CorrectTypo(token, vocabulary)).Distinct().ToList();
-        if (queryTokens.Count == 0) return null;
+        if (queryTokens.Count == 0) return Array.Empty<FaqMatch>();
 
-        FaqMatch? best = null;
-        var tied = false;
-
-        foreach (var entry in entryList)
-        {
-            var score = Score(entry, queryTokens);
-            if (score <= 0) continue;
-
-            if (best is null || score > best.Score)
-            {
-                best = new FaqMatch(entry, score);
-                tied = false;
-            }
-            else if (Math.Abs(score - best.Score) < 1e-9)
-            {
-                tied = true;
-            }
-        }
-
-        return best is { Score: >= MinScore } && !tied ? best : null;
+        return entryList
+            .Select(entry => new FaqMatch(entry, Score(entry, queryTokens)))
+            .Where(match => match.Score > 0)
+            .OrderByDescending(match => match.Score)
+            .ToList();
     }
 
     public static IReadOnlyList<string> Tokenize(string? text)

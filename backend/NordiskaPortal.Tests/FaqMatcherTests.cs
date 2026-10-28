@@ -189,4 +189,19 @@ public class FaqMatcherTests
     {
         FaqMatcher.IsOneEditApart(first, second).Should().BeFalse();
     }
+
+
+    [Fact]
+    public void Rank_WhenTwoEntriesTie_ReturnsBothInRepositoryOrder()
+    {
+        var ranked = FaqMatcher.Rank("ränta skatt", Entries);
+
+        ranked.Select(m => m.Entry.Question).Should().Equal("När betalas räntan ut?", "Var hittar jag mitt räntebesked eller årsbesked?");
+    }
+
+    [Fact]
+    public void Rank_WhenNothingIsRelevant_ReturnsAnEmptyList()
+    {
+        FaqMatcher.Rank("hur bokar jag en flygresa", Entries).Should().BeEmpty();
+    }
 }
