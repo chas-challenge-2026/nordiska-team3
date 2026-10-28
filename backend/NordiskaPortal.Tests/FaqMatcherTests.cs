@@ -47,6 +47,8 @@ public class FaqMatcherTests
     [Theory]
     [InlineData("utag", "Hur tar jag ut pengar?")]
     [InlineData("insätning", "Hur sätter jag in pengar?")]
+    [InlineData("insättnimg", "Hur sätter jag in pengar?")]
+    [InlineData("kontoutdarg", "Hur får jag ett kontoutdrag?")]
     public void FindBestMatch_WhenQueryHasATypo_ReturnsExpectedEntry(string query, string expectedQuestion)
     {
         var result = FaqMatcher.FindBestMatch(query, Entries);
@@ -166,5 +168,25 @@ public class FaqMatcherTests
     public void Stem_KeepsContactAndAccountApart()
     {
         FaqMatcher.Stem("kontakt").Should().NotBe(FaqMatcher.Stem("konto"));
+    }
+
+
+    [Theory]
+    [InlineData("utag", "uttag")]
+    [InlineData("uttag", "utag")]
+    [InlineData("insättnimg", "insättning")]
+    [InlineData("kontoutdarg", "kontoutdrag")]
+    public void IsOneEditApart_WhenTheWordsAreOneTypoApart_ReturnsTrue(string first, string second)
+    {
+        FaqMatcher.IsOneEditApart(first, second).Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData("uttag", "uttag")]
+    [InlineData("utag", "uttagen")]
+    [InlineData("konto", "kontakt")]
+    public void IsOneEditApart_WhenTheWordsAreEqualOrTooDifferent_ReturnsFalse(string first, string second)
+    {
+        FaqMatcher.IsOneEditApart(first, second).Should().BeFalse();
     }
 }

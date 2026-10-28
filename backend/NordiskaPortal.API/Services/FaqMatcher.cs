@@ -13,6 +13,7 @@ public static class FaqMatcher
     private const int KeywordWeight = 3;
     private const int QuestionWeight = 2;
     private const int MinStemLength = 3;
+    private const int MinTypoLength = 4;
 
     private static readonly Regex NonAlphanumeric = new(@"[^\p{L}\p{N}]+");
 
@@ -38,13 +39,16 @@ public static class FaqMatcher
 
     public static FaqMatch? FindBestMatch(string? query, IEnumerable<FaqEntry> entries)
     {
-        var queryTokens = Tokenize(query).Distinct().ToList();
+        var entryList = entries.ToList();
+        var vocabulary = BuildVocabulary(entryList);
+
+        var queryTokens = Tokenize(query).Select(token => CorrectTypo(token, vocabulary)).Distinct().ToList();
         if (queryTokens.Count == 0) return null;
 
         FaqMatch? best = null;
         var tied = false;
 
-        foreach (var entry in entries)
+        foreach (var entry in entryList)
         {
             var score = Score(entry, queryTokens);
             if (score <= 0) continue;
@@ -85,6 +89,56 @@ public static class FaqMatcher
         }
 
         return word.Length >= 5 && word.EndsWith("ot", StringComparison.Ordinal) ? word[..^1] : word;
+    }
+
+
+    public static bool IsOneEditApart(string first, string second)
+    {
+        if (first == second || Math.Abs(first.Length - second.Length) > 1) return false;
+
+        if (first.Length == second.Length)
+        {
+            var differences = Enumerable.Range(0, first.Length).Where(i => first[i] != second[i]).ToList();
+
+            if (differences.Count == 1) return true;
+
+            return differences.Count == 2
+                && differences[1] == differences[0] + 1
+                && first[differences[0]] == second[differences[1]]
+                && first[differences[1]] == second[differences[0]];
+        }
+
+        var shorter = first.Length < second.Length ? first : second;
+        var longer = first.Length < second.Length ? second : first;
+
+        for (var i = 0; i < longer.Length; i++)
+        {
+            if (longer.Remove(i, 1) == shorter) return true;
+        }
+
+        return false;
+    }
+
+    private static HashSet<string> BuildVocabulary(IEnumerable<FaqEntry> entries)
+    {
+        var vocabulary = new HashSet<string>();
+
+        foreach (var entry in entries)
+        {
+            vocabulary.UnionWith(Tokenize(entry.Keywords));
+            vocabulary.UnionWith(Tokenize(entry.Question));
+        }
+
+        return vocabulary;
+    }
+
+    private static string CorrectTypo(string token, HashSet<string> vocabulary)
+    {
+        if (token.Length < MinTypoLength || vocabulary.Contains(token)) return token;
+
+        var candidates = vocabulary.Where(word => IsOneEditApart(token, word)).Take(2).ToList();
+
+        return candidates.Count == 1 ? candidates[0] : token;
     }
 
     private static double Score(FaqEntry entry, IReadOnlyList<string> queryTokens)
