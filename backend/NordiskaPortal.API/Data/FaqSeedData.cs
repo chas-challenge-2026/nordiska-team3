@@ -16,12 +16,12 @@ public static class FaqSeedData
         Entry(2, "Konto",
             "Kan jag ha flera sparkonton?",
             "Ja, du kan skapa flera sparkonton och döpa dem efter vad du sparar till, till exempel Resekassa. Alla syns på din Dashboard.",
-            "flera konton, flera sparkonton, fler konton, fler sparkonton, ett till konto, ytterligare konto, kontonamn, namnge konto, döpa konto, antal konton"),
+            "flera konton, flera sparkonton, fler konton, fler sparkonton, ytterligare konto, kontonamn, namnge konto, döpa konto, antal konton"),
 
         Entry(3, "Konto",
             "Hur avslutar jag mitt sparkonto?",
             "Ta ut hela saldot och kontakta sedan kundtjänst för att avsluta kontot.",
-            "avsluta konto, avsluta sparkonto, stänga konto, stänga sparkonto, säga upp konto, säga upp sparkonto, ta bort konto, radera konto, lägga ner konto"),
+            "avsluta konto, avsluta sparkonto, stänga konto, stänga sparkonto, säga upp konto, säga upp sparkonto, ta bort konto, ta bort sparkonto, radera konto, radera sparkonto, lägga ner konto"),
 
         Entry(4, "Insättning",
             "Hur sätter jag in pengar?",
@@ -41,7 +41,7 @@ public static class FaqSeedData
         Entry(7, "Överföring",
             "Hur flyttar jag pengar mellan mina konton?",
             "Välj Insättning/Uttag i menyn och sedan Mellan konton. Välj kontot pengarna ska flyttas från och till, ange belopp och bekräfta.",
-            "flytta pengar, flytta mellan konton, mellan konton, överföring, överföra, överföra pengar, föra över pengar, flytta saldo, från konto till konto"),
+            "flytta pengar, flytta mellan konton, mellan konton, överföring, överföra, överföra pengar, föra över pengar, flytta saldo, eget konto, egna konton"),
 
         Entry(8, "Ränta",
             "När betalas räntan ut?",
@@ -77,6 +77,16 @@ public static class FaqSeedData
             "Hur kontaktar jag kundtjänst?",
             "Ring 08-123 456 78 vardagar 8-18 eller mejla hej@nordiska.se.",
             "kundtjänst, kundservice, kontakta, kontakt, ringa, telefon, telefonnummer, ring oss, mejla, support, öppettider, chatt, prata med någon"),
+
+        Entry(15, "Överföring",
+            "Hur för jag över pengar till någon annan?",
+            "Välj Insättning/Uttag i menyn och sedan Mellan konton. Välj Annat konto under Mottagare och skriv mottagarens kontonummer, till exempel NKM-12345. Ange belopp och bekräfta.",
+            "någon annan, annan person, annat konto, annans konto, skicka pengar, skicka till, föra över till annan, mottagare, mottagarens kontonummer"),
+
+        Entry(16, "Inloggning",
+            "Varför blev jag utloggad?",
+            "Av säkerhetsskäl loggas du ut automatiskt efter 15 minuter utan aktivitet. Du behöver också logga in igen om du har stängt fliken eller öppnar portalen i en ny flik.",
+            "utloggad, loggades ut, loggas ut, utloggning, inaktivitet, inaktiv, kastades ut, sessionen gick ut, logga in igen, ny flik"),
     };
 
     private static FaqEntry Entry(int number, string category, string question, string answer, string keywords) => new()

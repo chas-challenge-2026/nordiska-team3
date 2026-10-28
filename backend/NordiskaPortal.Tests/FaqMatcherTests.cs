@@ -24,6 +24,10 @@ public class FaqMatcherTests
     [InlineData("insättningar", "Hur sätter jag in pengar?")]
     [InlineData("hur flyttar jag pengar mellan mina konton", "Hur flyttar jag pengar mellan mina konton?")]
     [InlineData("hur ändrar jag mitt namn", "Hur ändrar jag mina kontaktuppgifter?")]
+    [InlineData("hur skickar jag pengar till någon annan", "Hur för jag över pengar till någon annan?")]
+    [InlineData("överföring till annat konto", "Hur för jag över pengar till någon annan?")]
+    [InlineData("jag blev utloggad", "Varför blev jag utloggad?")]
+    [InlineData("jag loggas ut hela tiden", "Varför blev jag utloggad?")]
 
     public void FindBestMatch_ShouldReturnExpectedEntry(string query, string expectedQuestion)
     {
@@ -95,6 +99,7 @@ public class FaqMatcherTests
     [InlineData("in a")]
     [InlineData("hur gör jag det")]
     [InlineData("pengar")]
+    [InlineData("konto")]
     [InlineData("")]
     [InlineData("   ")]
     public void FindBestMatch_WhenNoEntryIsRelevant_ReturnsNull(string query)
