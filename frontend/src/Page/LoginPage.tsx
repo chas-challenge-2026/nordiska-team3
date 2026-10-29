@@ -5,6 +5,7 @@ import './LoginPage.css'
 import { Button } from '../components/Button'
 import { Input } from '../components/Input'
 import { DecorativeCircle } from '../components/DecorativeCircle'
+import { BankIdLoginModal } from '../components/BankIdLogin/BankIdLoginModal'
 import { useTheme } from '../context/useTheme'
 import { login } from '../services/authService'
 import { loginSchema } from '../schemas/loginSchema'
@@ -18,6 +19,7 @@ function LoginPage() {
     const [personalNumber, setPersonalNumber] = useState('')
     const [pin, setPin] = useState('')
     const [showPin, setShowPin] = useState(false)
+    const [isBankIdOpen, setIsBankIdOpen] = useState(false)
     // Visar t.ex. meddelandet om utloggning vid inaktivitet.
     const [errorMessage, setErrorMessage] = useState(
         (location.state as { logoutMessage?: string } | null)?.logoutMessage ?? ''
@@ -55,8 +57,8 @@ function LoginPage() {
     }
 
     function handleBankIdLogin() {
-        setIsCheckingPin(false)
-        setErrorMessage('BankID kommer snart. Logga in med PIN-kod så länge.')
+        setErrorMessage('')
+        setIsBankIdOpen(true)
     }
 
     return (
@@ -86,7 +88,7 @@ function LoginPage() {
                     <form className="login-card" onSubmit={handlePinLogin}>
                         <div>
                             <h1>Välkommen tillbaka</h1>
-                            <p>Logga in med PIN-kod. BankID kommer snart.</p>
+                            <p>Logga in med BankID eller PIN-kod.</p>
                         </div>
 
                         <Input
@@ -138,6 +140,12 @@ function LoginPage() {
                     </form>
                 </div>
             </section>
+
+            <BankIdLoginModal
+                isOpen={isBankIdOpen}
+                onClose={() => setIsBankIdOpen(false)}
+                onSuccess={() => navigate('/dashboard')}
+            />
         </main>
     )
 }
