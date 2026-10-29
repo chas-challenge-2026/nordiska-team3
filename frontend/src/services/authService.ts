@@ -96,6 +96,84 @@ export async function login(
     return data
 }
 
+export type BankIdStartResponse = {
+    orderId: string
+    autoStartToken: string
+    // true när servern kör mock-BankID (bara i Development). Då visas en panel för att simulera godkännande.
+    mock: boolean
+}
+
+export type BankIdStatusResponse = {
+    status: 'pending' | 'failed' | 'complete'
+    hintCode: string | null
+    qrData: string | null
+    login: LoginResponse | null
+}
+
+async function readError(response: Response, fallback: string): Promise<Error> {
+    const errorData = await response.json().catch(() => null)
+    return new Error(errorData?.message ?? fallback)
+}
+
+/** Startar en BankID-inloggning. */
+export async function startBankId(): Promise<BankIdStartResponse> {
+    const response = await fetch(`${API_URL}/api/auth/bankid/start`, {
+        method: 'POST',
+        credentials: 'include',
+    })
+
+    if (!response.ok) {
+        throw await readError(response, 'Det gick inte att starta BankID. Försök igen.')
+    }
+
+    return response.json()
+}
+
+/** Hämtar status för en BankID-inloggning. När den är klar sparas inloggningen precis som vid PIN-login. */
+export async function getBankIdStatus(orderId: string): Promise<BankIdStatusResponse> {
+    const response = await fetch(`${API_URL}/api/auth/bankid/status/${encodeURIComponent(orderId)}`, {
+        credentials: 'include', // krävs för att ta emot HttpOnly refresh-token-cookien
+    })
+
+    if (!response.ok) {
+        throw await readError(response, 'Kunde inte hämta status för BankID.')
+    }
+
+    const data: BankIdStatusResponse = await response.json()
+
+    if (data.status === 'complete' && data.login) {
+        storeLoginResponse(data.login)
+    }
+
+    return data
+}
+
+/** Avbryter en pågående BankID-inloggning. Fel ignoreras, ordern går ut av sig själv. */
+export async function cancelBankId(orderId: string) {
+    try {
+        await fetch(`${API_URL}/api/auth/bankid/cancel/${encodeURIComponent(orderId)}`, {
+            method: 'POST',
+            credentials: 'include',
+        })
+    } catch {
+        // Ingenting att göra, ordern löper ut på servern.
+    }
+}
+
+/** Simulerar att personen godkänner i BankID-appen. Finns bara när servern kör i mock-läge. */
+export async function mockApproveBankId(orderId: string, personalNumber: string) {
+    const response = await fetch(`${API_URL}/api/auth/bankid/mock/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ orderId, personalNumber }),
+    })
+
+    if (!response.ok) {
+        throw new Error('Mock-godkännandet misslyckades. Är servern i mock-läge?')
+    }
+}
+
 /** Loggar ut och rensar alltid lokal inloggning. */
 export async function logout() {
     // Spara token innan vi rensar, så backend kan identifiera användaren.
