@@ -432,6 +432,7 @@
 
 .modal-card:has(.create-account-modal) {
   width: min(440px, calc(100vw - 32px));
+  padding: var(--space-5);
   max-height: calc(100vh - 48px);
   overflow-y: auto;
 }
@@ -439,6 +440,88 @@
 .create-account-modal {
   display: flex;
   flex-direction: column;
+}
+
+.create-account-modal__products {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  min-width: 0;
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  border: none;
+}
+
+.create-account-modal__products legend {
+  margin-bottom: var(--space-2);
+  padding: 0;
+  color: var(--color-text-primary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.create-account-modal__product {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.create-account-modal__product:has(input:checked) {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface-soft));
+}
+
+.create-account-modal__product:has(input:focus-visible) {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.create-account-modal__product input {
+  flex-shrink: 0;
+  margin: 2px 0 0;
+  accent-color: var(--color-primary-text);
+}
+
+.create-account-modal__product-content {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.create-account-modal__product-content strong {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 12px;
+}
+
+.create-account-modal__product-content > span {
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.create-account-modal__product-content > .create-account-modal__product-badge {
+  justify-self: start;
+  padding: 2px 6px;
+  border-radius: var(--radius-pill);
+  background: var(--dashboard-card-bg, var(--color-surface));
+  color: var(--color-text-secondary);
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.create-account-modal__product--unavailable {
+  cursor: default;
 }
 
 .create-account-modal__name-field {
@@ -483,7 +566,7 @@
 }
 
 .create-account-modal__field {
-  margin-top: var(--space-4);
+  margin-top: var(--space-3);
 }
 
 .create-account-modal__field p {
@@ -555,12 +638,12 @@
 }
 
 .create-account-modal__color-option {
-  min-height: 44px;
+  min-height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  padding: var(--space-2);
+  padding: 6px;
 }
 
 .create-account-modal__color-option span {
@@ -694,6 +777,25 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+
+.account-modal__details {
+  align-items: center;
+}
+
+.account-modal__interest-rate strong {
+  display: block;
+  color: var(--color-primary-text);
+  font-family: monospace;
+  font-size: 24px;
+}
+
+.account-modal__interest-rate span {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .account-modal__account-name {
