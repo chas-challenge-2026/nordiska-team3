@@ -1,4 +1,5 @@
-﻿using NordiskaPortal.API.DTOs.Faq;
+﻿using NordiskaPortal.API.Data;
+using NordiskaPortal.API.DTOs.Faq;
 using NordiskaPortal.API.Repositories.Interfaces;
 using NordiskaPortal.API.Services.Interfaces;
 using System.Text.RegularExpressions;
@@ -7,7 +8,7 @@ namespace NordiskaPortal.API.Services;
 
 public class FaqService : IFaqService
 {
-    private const string NoMatchMessage = "Vi hittade inget svar på din fråga. Kontakta kundtjänst på 08-123 456 78, vardagar 8-18, eller mejla hej@nordiska.se.";
+    private const string NoMatchMessage = $"Vi hittade inget svar på din fråga. Kontakta kundtjänst på {CustomerServiceContact.Phone}, {CustomerServiceContact.OpeningHours}, eller mejla {CustomerServiceContact.Email}.";
     private const int MaxSuggestions = 3;
 
     private static readonly Regex EmailAddress = new(@"\S+@\S+");

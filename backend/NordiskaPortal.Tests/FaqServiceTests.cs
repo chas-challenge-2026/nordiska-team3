@@ -58,7 +58,7 @@ public class FaqServiceTests
         result.Question.Should().BeNull();
         result.Answer.Should().BeNull();
         result.Category.Should().BeNull();
-        result.Message.Should().Contain("kundtjänst").And.Contain("08-123 456 78");
+        result.Message.Should().Contain("kundtjänst").And.Contain(CustomerServiceContact.Phone);
         result.Suggestions.Should().BeEmpty();
     }
 
@@ -123,6 +123,19 @@ public class FaqServiceTests
         result.Should().HaveCount(FaqSeedData.Entries.Count);
         result.Select(e => e.Id).Should().Equal(FaqSeedData.Entries.Select(e => e.Id));
         result[0].Question.Should().Be("Hur öppnar jag ett nytt sparkonto?");
+    }
+
+    [Fact]
+    public async Task SearchAsync_WhenNothingMatches_GivesTheSameContactDetailsAsTheContactAnswer()
+    {
+        var result = await CreateService().SearchAsync("hur bokar jag en flygresa");
+        var contactAnswer = FaqSeedData.Entries.Single(e => e.Category == "Kontakt").Answer;
+
+        foreach (var detail in new[] { CustomerServiceContact.Phone, CustomerServiceContact.Email, CustomerServiceContact.OpeningHours })
+        {
+            result.Message.Should().Contain(detail);
+            contactAnswer.Should().Contain(detail);
+        }
     }
 
     [Theory]

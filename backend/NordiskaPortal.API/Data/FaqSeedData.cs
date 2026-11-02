@@ -75,7 +75,7 @@ public static class FaqSeedData
 
         Entry(14, "Kontakt",
             "Hur kontaktar jag kundtjänst?",
-            "Ring 08-123 456 78 vardagar 8-18 eller mejla hej@nordiska.se.",
+                        $"Ring {CustomerServiceContact.Phone} {CustomerServiceContact.OpeningHours} eller mejla {CustomerServiceContact.Email}.",
             "kundtjänst, kundservice, kontakta, kontakt, ringa, telefon, telefonnummer, ring oss, mejla, support, öppettider, chatt, prata med någon"),
 
         Entry(15, "Överföring",
