@@ -9,6 +9,7 @@ export interface Account {
     label: string
     value: string
     interest?: string
+    interestRate?: string
     interestType?: InterestType
     // Ex: "123,45 kr"
     accruedInterest?: string
@@ -21,6 +22,7 @@ interface BalanceOverviewProps {
     totalValue: string
     subLabel: string
     accounts: Account[]
+    interestSummary?: (animationProgress: number) => ReactNode
     onAccountClick?: (accountId: string) => void
 }
 
@@ -37,11 +39,18 @@ export function BalanceOverview({
     totalValue,
     subLabel,
     accounts,
+    interestSummary,
     onAccountClick,
 }: BalanceOverviewProps) {
     const totalAmount = parseKrValue(totalValue)
-    const [animatedTotal, setAnimatedTotal] = useState(formatKrValue(0))
-    const displayedTotal = Number.isFinite(totalAmount) ? animatedTotal : totalValue
+    const [animation, setAnimation] = useState({ target: totalAmount, balance: 0, interest: 0 })
+    const balanceProgress = animation.target === totalAmount ? animation.balance : 0
+    const interestProgress = Number.isFinite(totalAmount)
+        ? (animation.target === totalAmount ? animation.interest : 0)
+        : 1
+    const displayedTotal = Number.isFinite(totalAmount)
+        ? formatKrValue(totalAmount * balanceProgress)
+        : totalValue
     const interestTypes = Array.from(
         new Set(accounts.flatMap((account) => (account.interestType ? [account.interestType] : [])))
     )
@@ -54,15 +63,21 @@ export function BalanceOverview({
         let animationFrameId = 0
         const duration = 450
         const startTime = performance.now()
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
         function animate(currentTime: number) {
-            const elapsedTime = currentTime - startTime
-            const progress = Math.min(elapsedTime / duration, 1)
-            const easedProgress = 1 - Math.pow(1 - progress, 3)
+            const elapsedTime = reducedMotion ? duration * 2 : currentTime - startTime
+            const balance = Math.min(elapsedTime / duration, 1)
+            // Båda börjar samtidigt, men räntan tar dubbelt så lång tid.
+            const interest = Math.min(elapsedTime / (duration * 2), 1)
 
-            setAnimatedTotal(formatKrValue(totalAmount * easedProgress))
+            setAnimation({
+                target: totalAmount,
+                balance: 1 - Math.pow(1 - balance, 3),
+                interest: 1 - Math.pow(1 - interest, 3),
+            })
 
-            if (progress < 1) {
+            if (interest < 1) {
                 animationFrameId = requestAnimationFrame(animate)
             }
         }
@@ -78,6 +93,7 @@ export function BalanceOverview({
                 <p className="balance-label">{totalLabel}</p>
                 <p className="balance-value">{displayedTotal}</p>
                 <p className="balance-sub">{subLabel}</p>
+                {interestSummary?.(interestProgress)}
             </div>
 
             <div className="accounts-row">
@@ -100,7 +116,16 @@ export function BalanceOverview({
                                 className={`account-card-chevron account-card-chevron--${account.variant ?? 'default'}`}
                             />
                         </div>
-                        {account.interest && <p className="account-card-interest">{account.interest}</p>}
+                        {account.interestRate && (
+                            <p className="account-card-interest">
+                                <span className="account-card-interest__rate">{account.interestRate} ränta</span>
+                                {account.interestType && (
+                                    <span className="account-card-interest__type">
+                                        {account.interestType === 'FIXED' ? 'Fast' : 'Rörlig'}
+                                    </span>
+                                )}
+                            </p>
+                        )}
                     </button>
                 ))}
             </div>

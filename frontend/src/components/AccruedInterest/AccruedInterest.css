@@ -1,0 +1,39 @@
+.accrued-interest {
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-success-soft);
+  text-align: center;
+}
+
+.accrued-interest .balance-label {
+  margin-bottom: var(--space-1);
+  color: var(--color-success);
+}
+
+.accrued-interest .accrued-interest__amount {
+  color: var(--color-success);
+  font-size: 28px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.accrued-interest__period {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.accrued-interest__note {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+@media (max-width: 700px) {
+  .accrued-interest .accrued-interest__amount {
+    font-size: 26px;
+  }
+}

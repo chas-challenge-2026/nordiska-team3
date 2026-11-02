@@ -46,6 +46,7 @@ import { getTransactionsNewestFirst } from '../utils/transactionOrder'
 import { OrderReceipt, type OrderReceiptData } from '../components/OrderReceipt/OrderReceipt'
 import { createAccountSchema } from '../schemas/accountSchema'
 import { transactionAmountSchema } from '../schemas/transactionSchema'
+import { AccruedInterest } from '../components/AccruedInterest/AccruedInterest'
 
 type CreateAccountIconId = AccountIconId
 type CreateAccountVariant = AccountVariant
@@ -87,6 +88,9 @@ function mapBackendAccountToDashboardAccount(account: BackendAccount, index: num
         label: account.name.toUpperCase(),
         value: formatBackendBalance(account.balance),
         interest: interest ? formatAccountInterest(interest) : undefined,
+        interestRate: interest
+            ? `${interest.rate.toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} %`
+            : undefined,
         interestType: interest?.type,
         // Konton utan ränta (t.ex. lönekonto på 0 %) visar ingen upplupen ränta
         accruedInterest: interest && interest.rate > 0 ? (formatAccruedInterest(account) ?? undefined) : undefined,
@@ -191,8 +195,9 @@ function DashboardPage() {
     const [dashboardReceipt, setDashboardReceipt] = useState<OrderReceiptData | null>(null)
 
     const selectedAccount = accounts.find((account) => account.id === selectedAccountId) ?? null
-    const selectedBackendAccountName =
-        accountTransactionGroups?.find(({ account }) => account.id === selectedAccountId)?.account.name ?? null
+    const selectedBackendAccount =
+        accountTransactionGroups?.find(({ account }) => account.id === selectedAccountId)?.account ?? null
+    const selectedBackendAccountName = selectedBackendAccount?.name ?? null
 
     const dashboardTransactionAccount =
         accounts.find((account) => account.id === dashboardTransactionAccountId) ?? accounts[0] ?? null
@@ -507,6 +512,12 @@ function DashboardPage() {
                             )}
                             subLabel={`${accounts.length} konton`}
                             accounts={accounts}
+                            interestSummary={(animationProgress) => (
+                                <AccruedInterest
+                                    accounts={(accountTransactionGroups ?? []).map(({ account }) => account)}
+                                    animationProgress={animationProgress}
+                                />
+                            )}
                             onAccountClick={handleAccountClick}
                         />
                     )}
@@ -532,6 +543,24 @@ function DashboardPage() {
                         title="Skapa nytt sparkonto"
                     >
                         <div className="create-account-modal" onPointerDown={handleCreateAccountModalPointerDown}>
+                            <fieldset className="create-account-modal__products">
+                                <legend>Typ av sparande</legend>
+                                <label className="create-account-modal__product">
+                                    <input type="radio" name="savingsProduct" value="variable" defaultChecked />
+                                    <span className="create-account-modal__product-content">
+                                        <strong>Rörligt</strong>
+                                        <span>Utan bindningstid</span>
+                                    </span>
+                                </label>
+                                <label className="create-account-modal__product create-account-modal__product--unavailable">
+                                    <input type="radio" name="savingsProduct" value="fixed" disabled />
+                                    <span className="create-account-modal__product-content">
+                                        <strong>Fast</strong>
+                                        <span className="create-account-modal__product-badge">Kommer senare</span>
+                                    </span>
+                                </label>
+                            </fieldset>
+
                             <div className="create-account-modal__name-field" ref={createAccountNameFieldRef}>
                                 <Input
                                     label="Kontonamn"
@@ -624,18 +653,21 @@ function DashboardPage() {
                                         {selectedAccount.value}
                                     </p>
 
-                                    {(selectedAccount.interest || selectedAccount.accruedInterest || selectedAccount.accountNumber) && (
+                                    {selectedBackendAccount?.accountType === 'SAVINGS' && (
+                                        <AccruedInterest accounts={[selectedBackendAccount]} />
+                                    )}
+
+                                    {(selectedAccount.interestRate || selectedAccount.accountNumber) && (
                                         <dl className="account-modal__details">
-                                            {selectedAccount.interest && (
+                                            {selectedAccount.interestRate && (
                                                 <div>
-                                                    <dt>Ränta</dt>
-                                                    <dd>{selectedAccount.interest}</dd>
-                                                </div>
-                                            )}
-                                            {selectedAccount.accruedInterest && (
-                                                <div>
-                                                    <dt>Upplupen ränta i år</dt>
-                                                    <dd>{selectedAccount.accruedInterest}</dd>
+                                                    <dt>Årsränta</dt>
+                                                    <dd className="account-modal__interest-rate">
+                                                        <strong>{selectedAccount.interestRate}</strong>
+                                                        {selectedAccount.interestType && (
+                                                            <span>{selectedAccount.interestType === 'FIXED' ? 'Fast ränta' : 'Rörlig ränta'}</span>
+                                                        )}
+                                                    </dd>
                                                 </div>
                                             )}
                                             {selectedAccount.accountNumber && (
