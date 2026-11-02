@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import type { LinkedModal } from '../hooks/useModalFromLink'
+import { customerServiceContact } from '../content/customerServiceContact'
 
 type AnswerLink = {
     text: string
@@ -21,8 +22,8 @@ const answerLinks: AnswerLink[] = [
     { text: 'Skatterapport', to: '/skatt' },
     { text: 'Historik', to: '/historik' },
     { text: 'Profil och inställningar', modal: 'profileSettings' },
-    { text: '08-123 456 78', to: 'tel:+46812345678' },
-    { text: 'hej@nordiska.se', to: 'mailto:hej@nordiska.se' },
+    { text: customerServiceContact.phone, to: customerServiceContact.phoneHref },
+    { text: customerServiceContact.email, to: customerServiceContact.emailHref },
 ]
 
 type Match = AnswerLink & { to: string; index: number }

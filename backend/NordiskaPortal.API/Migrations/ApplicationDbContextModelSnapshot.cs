@@ -213,7 +213,7 @@ namespace NordiskaPortal.API.Migrations
                             Answer = "Ja, du kan skapa flera sparkonton och döpa dem efter vad du sparar till, till exempel Resekassa. Alla syns på din Dashboard.",
                             Category = "Konto",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Keywords = "flera konton, flera sparkonton, fler konton, fler sparkonton, ett till konto, ytterligare konto, kontonamn, namnge konto, döpa konto, antal konton",
+                            Keywords = "flera konton, flera sparkonton, fler konton, fler sparkonton, ytterligare konto, kontonamn, namnge konto, döpa konto, antal konton",
                             Question = "Kan jag ha flera sparkonton?"
                         },
                         new
@@ -222,7 +222,7 @@ namespace NordiskaPortal.API.Migrations
                             Answer = "Ta ut hela saldot och kontakta sedan kundtjänst för att avsluta kontot.",
                             Category = "Konto",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Keywords = "avsluta konto, avsluta sparkonto, stänga konto, stänga sparkonto, säga upp konto, säga upp sparkonto, ta bort konto, radera konto, lägga ner konto",
+                            Keywords = "avsluta konto, avsluta sparkonto, stänga konto, stänga sparkonto, säga upp konto, säga upp sparkonto, ta bort konto, ta bort sparkonto, radera konto, radera sparkonto, lägga ner konto",
                             Question = "Hur avslutar jag mitt sparkonto?"
                         },
                         new
@@ -258,7 +258,7 @@ namespace NordiskaPortal.API.Migrations
                             Answer = "Välj Insättning/Uttag i menyn och sedan Mellan konton. Välj kontot pengarna ska flyttas från och till, ange belopp och bekräfta.",
                             Category = "Överföring",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Keywords = "flytta pengar, flytta mellan konton, mellan konton, överföring, överföra, överföra pengar, föra över pengar, flytta saldo, från konto till konto",
+                            Keywords = "flytta pengar, flytta mellan konton, mellan konton, överföring, överföra, överföra pengar, föra över pengar, flytta saldo, eget konto, egna konton",
                             Question = "Hur flyttar jag pengar mellan mina konton?"
                         },
                         new
@@ -318,11 +318,29 @@ namespace NordiskaPortal.API.Migrations
                         new
                         {
                             Id = new Guid("fa000000-0000-0000-0000-000000000014"),
-                            Answer = "Ring 08-123 456 78 vardagar 8-18 eller mejla hej@nordiska.se.",
+                            Answer = "Ring 08-23 28 00 vardagar 8:30-16:30 eller mejla info@nordiska.se.",
                             Category = "Kontakt",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Keywords = "kundtjänst, kundservice, kontakta, kontakt, ringa, telefon, telefonnummer, ring oss, mejla, support, öppettider, chatt, prata med någon",
                             Question = "Hur kontaktar jag kundtjänst?"
+                        },
+                        new
+                        {
+                            Id = new Guid("fa000000-0000-0000-0000-000000000015"),
+                            Answer = "Välj Insättning/Uttag i menyn och sedan Mellan konton. Välj Annat konto under Mottagare och skriv mottagarens kontonummer, till exempel NKM-12345. Ange belopp och bekräfta.",
+                            Category = "Överföring",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Keywords = "någon annan, annan person, annat konto, annans konto, skicka pengar, skicka till, föra över till annan, mottagare, mottagarens kontonummer",
+                            Question = "Hur för jag över pengar till någon annan?"
+                        },
+                        new
+                        {
+                            Id = new Guid("fa000000-0000-0000-0000-000000000016"),
+                            Answer = "Av säkerhetsskäl loggas du ut automatiskt efter 15 minuter utan aktivitet. Du behöver också logga in igen om du har stängt fliken eller öppnar portalen i en ny flik.",
+                            Category = "Inloggning",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Keywords = "utloggad, loggades ut, loggas ut, utloggning, inaktivitet, inaktiv, kastades ut, sessionen gick ut, logga in igen, ny flik",
+                            Question = "Varför blev jag utloggad?"
                         });
                 });
 

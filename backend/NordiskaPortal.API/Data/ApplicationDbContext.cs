@@ -95,7 +95,6 @@ public class ApplicationDbContext : DbContext
             .OnDelete(DeleteBehavior.Cascade);
 
         // Seed data for FAQ
-        // Seed data for FAQ
         modelBuilder.Entity<FaqEntry>().HasData(FaqSeedData.Entries);
 
 
