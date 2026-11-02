@@ -318,7 +318,7 @@ namespace NordiskaPortal.API.Migrations
                         new
                         {
                             Id = new Guid("fa000000-0000-0000-0000-000000000014"),
-                            Answer = "Ring 08-123 456 78 vardagar 8-18 eller mejla hej@nordiska.se.",
+                            Answer = "Ring 08-23 28 00 vardagar 8:30-16:30 eller mejla info@nordiska.se.",
                             Category = "Kontakt",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Keywords = "kundtjänst, kundservice, kontakta, kontakt, ringa, telefon, telefonnummer, ring oss, mejla, support, öppettider, chatt, prata med någon",
