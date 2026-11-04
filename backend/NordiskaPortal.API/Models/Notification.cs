@@ -7,6 +7,7 @@ public class Notification
     public string Type { get; set; }
     public string Message { get; set; }
     public string Status { get; set; } = "PENDING";
+    public int RetryCount { get; set; } = 0;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? SentAt { get; set; }
 

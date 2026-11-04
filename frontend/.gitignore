@@ -12,6 +12,8 @@ build
 .env
 .env.*
 !.env.example
+!.env.production
+!.env.development
 
 # Logs
 logs
@@ -37,3 +39,5 @@ lerna-debug.log*
 *.tmp
 *.cache
 coverage
+.env
+.env

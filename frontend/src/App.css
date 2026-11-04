@@ -182,3 +182,207 @@
     border-right-color: var(--border);
   }
 }
+
+/* ============================= */
+/* Button-komponent (Nordiska)   */
+/* ============================= */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: 14px;
+  padding: var(--space-3) var(--space-5);
+  border: none;
+  cursor: pointer;
+  transition: box-shadow 0.2s, background-color 0.2s;
+}
+
+.button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.button--primary {
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
+  color: var(--color-on-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.button--primary:hover:not(:disabled) {
+  box-shadow: var(--shadow-md);
+}
+
+.button--secondary {
+  background: transparent;
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.button--secondary:hover:not(:disabled) {
+  background-color: var(--color-surface-soft);
+}
+
+[data-theme="dark"] .user-profile,
+[data-theme="dark"] .login-card,
+[data-theme="dark"] .modal-card,
+[data-theme="dark"] .balance-card,
+[data-theme="dark"] .account-card,
+[data-theme="dark"] .recent-events__list,
+[data-theme="dark"] .next-event__card,
+[data-theme="dark"] .dashboard-actions__button,
+[data-theme="dark"] .transaction-card,
+[data-theme="dark"] .account-preview-card,
+[data-theme="dark"] .transact-form-card,
+[data-theme="dark"] .tax-summary-card,
+[data-theme="dark"] .tax-breakdown-card,
+[data-theme="dark"] .tax-history-card {
+  border: 1px solid var(--color-border);
+}
+
+/* ============================= */
+/* Input-komponent (Nordiska)    */
+/* ============================= */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.input-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-primary);
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-soft);
+  font-size: 14px;
+  box-sizing: border-box;
+  color: var(--color-text-primary);
+}
+
+.input:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
+
+.input--error {
+  box-shadow: 0 0 0 1px var(--color-danger);
+}
+
+.input-suffix {
+  position: absolute;
+  right: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.input-error-text {
+  /* Reserverar plats för två rader så att fältet inte ändrar höjd när felet visas */
+  min-height: 32px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--color-danger);
+  margin: 0;
+}
+
+.button:focus-visible,
+.nav-icon:focus-visible,
+.account-card:focus-visible,
+.dashboard-actions__button:focus-visible,
+.create-account-btn:focus-visible,
+.pill-toggle:focus-visible,
+.transact-pill-input:focus-visible,
+.transact-submit-btn:focus-visible,
+.tax-download-btn:focus-visible,
+.theme-toggle:focus-visible,
+.password-toggle:focus-visible,
+.modal-close:focus-visible {
+  outline: 3px solid var(--color-primary-soft);
+  outline-offset: 4px;
+}
+
+h1[tabindex="0"]:focus-visible,
+h2[tabindex="0"]:focus-visible,
+h3[tabindex="0"]:focus-visible {
+  border-radius: 6px;
+  outline: 3px solid var(--color-primary-soft);
+  outline-offset: 4px;
+}
+
+/* ============================= */
+/* NavIcon-komponent (Nordiska)  */
+/* ============================= */
+.nav-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.nav-icon:hover {
+  background-color: var(--color-surface-soft);
+}
+
+.nav-icon--active {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  box-shadow: 0 0 24px 4px color-mix(in srgb, var(--color-primary) 50%, transparent);
+}
+/* ================================== */
+/* DecorativeCircle-komponent (Nordiska) */
+/* ================================== */
+.decorative-circle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.decorative-circle--orange {
+  background: var(--color-primary-soft);
+}
+
+.decorative-circle--blue {
+  background: var(--color-steel-blue);
+}
+
+.decorative-circle--green {
+  background: var(--color-jungle-teal);
+}
+
+.decorative-circle--white {
+  background: var(--color-surface);
+}
+
+@media (max-width: 700px) {
+  .decorative-circle {
+    display: none;
+  }
+}
+
+.session-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}

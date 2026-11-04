@@ -1,0 +1,112 @@
+.next-event {
+  width: 100%;
+  max-width: var(--desktop-content-width);
+}
+
+/* Samma rubrikstil som "Senaste händelser" */
+.next-event__heading {
+  margin: 0 0 12px;
+  color: var(--color-text-inverted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.next-event__card {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--dashboard-card-bg, var(--color-surface-soft));
+  box-shadow: var(--dashboard-card-shadow, var(--shadow-sm));
+}
+
+.next-event__icon {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-pill);
+  display: grid;
+  place-items: center;
+  background: var(--color-surface-soft);
+  color: var(--color-text-primary);
+}
+
+.next-event__icon--interest {
+  background: var(--color-primary-pale);
+  color: var(--color-primary-text);
+}
+
+.next-event__content h3 {
+  margin: 0 0 5px;
+  color: var(--color-text-primary);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.next-event__content p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.next-event__date {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  text-align: right;
+}
+
+.next-event__date span {
+  color: var(--color-text-secondary);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.next-event__date time,
+.next-event__date strong {
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+[data-theme="dark"] .next-event__icon {
+  background: var(--color-surface-soft);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .next-event__icon--interest {
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  color: var(--color-primary);
+}
+
+@media (max-width: 700px) {
+  .next-event {
+    width: min(100%, 292px);
+    margin: 0 auto;
+  }
+
+  /* Datumet hamnar på egen rad under texten när kortet är smalt */
+  .next-event__card {
+    grid-template-columns: 34px minmax(0, 1fr);
+    padding: 14px 16px;
+  }
+
+  .next-event__date {
+    grid-column: 2;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px;
+    text-align: left;
+  }
+}

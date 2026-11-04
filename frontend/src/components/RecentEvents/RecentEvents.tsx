@@ -1,0 +1,104 @@
+import { ArrowDownLeft, ArrowUpRight } from 'lucide-react'
+import './RecentEvents.css'
+
+export type RecentEvent = {
+  id: string
+  title: string
+  accountName: string
+  date: string
+  amount: number
+  type: 'deposit' | 'withdrawal' | 'transfer' | 'interest'
+  counterparty?: string | null
+}
+
+type RecentEventsProps = {
+  events?: RecentEvent[]
+  title?: string
+}
+
+export function RecentEvents({ events = [], title = 'Senaste händelser' }: RecentEventsProps) {
+  return (
+    <section className="recent-events">
+      <h2 className="recent-events__title">{title}</h2>
+
+      <div className={`recent-events__list ${events.length === 0 ? 'recent-events__list--empty' : ''}`}>
+        {events.length === 0 ? (
+          <div className="recent-events__empty">
+            <h3>Inga händelser ännu</h3>
+          </div>
+        ) : (
+          events.map((event) => (
+            <article className="recent-events__item" key={event.id}>
+              <div
+              className={`recent-events__icon ${event.amount < 0 ? 'recent-events__icon--negative' : ''}`}
+              aria-hidden="true"
+              >
+                {event.amount >= 0 ? (
+                  <ArrowDownLeft size={14} strokeWidth={2.5} />
+                ) : (
+                  <ArrowUpRight size={14} strokeWidth={2.5} />
+                )}
+              </div>
+
+              <div className="recent-events__content">
+                <h3>{event.title}</h3>
+                <p>
+                  {event.accountName}
+                  {event.counterparty && ` - ${event.counterparty}`} - {event.date}
+                </p>
+              </div>
+
+              <div className="recent-events__meta">
+                <strong
+                  className={event.amount >= 0 ? 'is-positive' : 'is-negative'}
+                >
+                  {formatAmount(event.amount)}
+                </strong>
+                <span
+                  className={`recent-events__badge recent-events__badge--${getEventBadgeType(event)}`}
+                >
+                  {getEventLabel(getEventBadgeType(event))}
+                </span>
+              </div>
+            </article>
+          ))
+        )}
+      </div>
+    </section>
+  )
+}
+
+/** Visar beloppet med plus eller minus. */
+function formatAmount(amount: number) {
+  const sign = amount > 0 ? '+' : ''
+  return `${sign}${amount.toLocaleString('sv-SE', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })} kr`
+}
+
+/** Hämtar texten till händelsens badge. */
+function getEventLabel(type: RecentEvent['type']) {
+  if (type === 'deposit') {
+    return 'Insättning'
+  }
+
+  if (type === 'withdrawal') {
+    return 'Uttag'
+  }
+
+  if (type === 'transfer') {
+    return 'Överföring'
+  }
+
+  return 'Ränta'
+}
+
+/** Väljer badge efter om pengarna går in eller ut. */
+function getEventBadgeType(event: RecentEvent): RecentEvent['type'] {
+  if (event.type === 'transfer') {
+    return event.amount < 0 ? 'withdrawal' : 'deposit'
+  }
+
+  return event.type
+}

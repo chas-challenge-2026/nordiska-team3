@@ -1,0 +1,138 @@
+.dashboard-actions {
+  width: 100%;
+  max-width: var(--desktop-content-width);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.dashboard-actions__button {
+  min-height: 78px;
+  border-radius: 26px;
+  background: var(--dashboard-card-bg, var(--color-surface-soft));
+  color: var(--color-yale-blue-900);
+  box-shadow: var(--dashboard-card-shadow, var(--shadow-sm));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+  transition:
+    background-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.dashboard-actions__button:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.dashboard-actions__button--primary {
+  background: var(--color-primary-pale);
+  color: var(--color-yale-blue-900);
+}
+
+.dashboard-actions__button--secondary {
+  background: var(--color-text-inverted);
+  color: var(--color-yale-blue-900);
+}
+
+.dashboard-actions__icon {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-pill);
+  background: var(--color-yale-blue-900);
+  color: var(--color-text-inverted);
+  display: grid;
+  place-items: center;
+}
+
+.dashboard-actions__button--primary .dashboard-actions__icon {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.dashboard-actions__button--deposit {
+  background: var(--color-success-soft);
+  color: var(--color-yale-blue-900);
+}
+
+.dashboard-actions__button--deposit .dashboard-actions__icon {
+  background: var(--color-pine-teal);
+  color: var(--color-text-inverted);
+}
+
+.dashboard-actions__button--secondary:not(.dashboard-actions__button--deposit) .dashboard-actions__icon {
+  background: var(--color-yale-blue-900);
+  color: var(--color-text-inverted);
+}
+
+[data-theme="dark"] .dashboard-actions__button--deposit {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+[data-theme="dark"] .dashboard-actions__button--deposit .dashboard-actions__icon {
+  background: var(--color-pine-teal);
+  color: var(--color-text-inverted);
+}
+
+[data-theme="dark"] .dashboard-actions__button--primary {
+  background: var(--color-primary-pale);
+  color: var(--color-yale-blue-900);
+}
+
+[data-theme="dark"] .dashboard-actions__button--primary .dashboard-actions__icon {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+[data-theme="dark"] .dashboard-actions__button--secondary {
+  background: var(--color-yale-blue-900);
+  color: var(--color-alice-blue);
+}
+
+[data-theme="dark"] .dashboard-actions__button--secondary .dashboard-actions__icon {
+  background: var(--color-alice-blue);
+  color: var(--color-yale-blue-900);
+}
+
+[data-theme="dark"] .dashboard-actions__button--secondary.dashboard-actions__button--deposit {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+[data-theme="dark"] .dashboard-actions__button--secondary.dashboard-actions__button--deposit .dashboard-actions__icon {
+  background: var(--color-pine-teal);
+  color: var(--color-text-inverted);
+}
+
+@media (min-width: 521px) {
+  .dashboard-actions__button {
+    min-height: 64px;
+    border-radius: 22px;
+    padding: 12px 10px;
+    font-size: 12px;
+  }
+
+  .dashboard-actions__icon {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+@media (max-width: 520px) {
+  .dashboard-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+
+  .dashboard-actions__button {
+    min-height: 104px;
+    border-radius: 28px;
+    font-size: 16px;
+    gap: 14px;
+  }
+}

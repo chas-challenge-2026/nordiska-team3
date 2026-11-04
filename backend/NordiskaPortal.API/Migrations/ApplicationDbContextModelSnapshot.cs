@@ -28,12 +28,20 @@ namespace NordiskaPortal.API.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("AccountNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("AccountType")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -47,9 +55,326 @@ namespace NordiskaPortal.API.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AccountNumber")
+                        .IsUnique();
+
                     b.HasIndex("UserId");
 
                     b.ToTable("Accounts");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000002"),
+                            AccountNumber = "NKM-10001",
+                            AccountType = "CHECKING",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Transaktionskonto",
+                            Status = "ACTIVE",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            UserId = new Guid("d0000000-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000003"),
+                            AccountNumber = "NKM-10002",
+                            AccountType = "SAVINGS",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Sparkonto",
+                            Status = "ACTIVE",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            UserId = new Guid("d0000000-0000-0000-0000-000000000001")
+                        });
+                });
+
+            modelBuilder.Entity("NordiskaPortal.API.Models.AccountInterestPolicy", b =>
+                {
+                    b.Property<string>("AccountType")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateOnly>("EffectiveFrom")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("SpreadPercentagePoints")
+                        .HasPrecision(9, 4)
+                        .HasColumnType("numeric(9,4)");
+
+                    b.HasKey("AccountType", "EffectiveFrom");
+
+                    b.ToTable("AccountInterestPolicies");
+
+                    b.HasData(
+                        new
+                        {
+                            AccountType = "SAVINGS",
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            SpreadPercentagePoints = -0.5m
+                        },
+                        new
+                        {
+                            AccountType = "CHECKING",
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            SpreadPercentagePoints = -100m
+                        });
+                });
+
+            modelBuilder.Entity("NordiskaPortal.API.Models.AuditEntry", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Details")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Hash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("PreviousHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AuditEntries");
+                });
+
+            modelBuilder.Entity("NordiskaPortal.API.Models.FaqEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Answer")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Keywords")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("Question")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FaqEntries");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("fa000000-0000-0000-0000-000000000001"),
+                            Answer = "Gå till Dashboard och välj Skapa nytt sparkonto. Ge kontot ett namn och välj ikon och färg, så skapas det direkt.",
+                            Category = "Konto",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Keywords = "öppna konto, öppna sparkonto, öppna nytt konto, nytt konto, nytt sparkonto, skapa konto, skapa sparkonto, skapa nytt konto, starta sparkonto, ansöka konto",
+                            Question = "Hur öppnar jag ett nytt sparkonto?"
+                        },
+                        new
+                        {
+                            Id = new Guid("fa000000-0000-0000-0000-000000000002"),
+                            Answer = "Ja, du kan skapa flera sparkonton och döpa dem efter vad du sparar till, till exempel Resekassa. Alla syns på din Dashboard.",
+                            Category = "Konto",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Keywords = "flera konton, flera sparkonton, fler konton, fler sparkonton, ett till konto, ytterligare konto, kontonamn, namnge konto, döpa konto, antal konton",
+                            Question = "Kan jag ha flera sparkonton?"
+                        },
+                        new
+                        {
+                            Id = new Guid("fa000000-0000-0000-0000-000000000003"),
+                            Answer = "Ta ut hela saldot och kontakta sedan kundtjänst för att avsluta kontot.",
+                            Category = "Konto",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Keywords = "avsluta konto, avsluta sparkonto, stänga konto, stänga sparkonto, säga upp konto, säga upp sparkonto, ta bort konto, radera konto, lägga ner konto",
+                            Question = "Hur avslutar jag mitt sparkonto?"
+                        },
+                        new
+                        {
+                            Id = new Guid("fa000000-0000-0000-0000-000000000004"),
+                            Answer = "Välj Insättning/Uttag i menyn och sedan Sätt in. Ange konto och belopp och bekräfta. Pengarna syns direkt på kontot.",
+                            Category = "Insättning",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Keywords = "insättning, sätta in, sätter in, sätt in, sätta in pengar, sätter in pengar, lägga in pengar, lägger in pengar, deponera, spara pengar",
+                            Question = "Hur sätter jag in pengar?"
+                        },
+                        new
+                        {
+                            Id = new Guid("fa000000-0000-0000-0000-000000000005"),
+                            Answer = "Välj Insättning/Uttag i menyn och sedan Ta ut. Ange konto och belopp och bekräfta. Du kan bara ta ut pengar som finns på kontot, och saldot uppdateras direkt.",
+                            Category = "Uttag",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Keywords = "uttag, ta ut, tar ut, ta ut pengar, tar ut pengar, ta ut saldo, ta ut belopp, plocka ut pengar, hämta ut pengar, göra uttag, ta pengar",
+                            Question = "Hur tar jag ut pengar?"
+                        },
+                        new
+                        {
+                            Id = new Guid("fa000000-0000-0000-0000-000000000006"),
+                            Answer = "Ett uttag registreras direkt och saldot på kontot uppdateras med en gång.",
+                            Category = "Uttag",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Keywords = "tid uttag, lång tid uttag, snabbt uttag, uttaget syns, när kommer pengarna, dröja uttag, handläggningstid",
+                            Question = "Hur lång tid tar ett uttag?"
+                        },
+                        new
+                        {
+                            Id = new Guid("fa000000-0000-0000-0000-000000000007"),
+                            Answer = "Välj Insättning/Uttag i menyn och sedan Mellan konton. Välj kontot pengarna ska flyttas från och till, ange belopp och bekräfta.",
+                            Category = "Överföring",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Keywords = "flytta pengar, flytta mellan konton, mellan konton, överföring, överföra, överföra pengar, föra över pengar, flytta saldo, från konto till konto",
+                            Question = "Hur flyttar jag pengar mellan mina konton?"
+                        },
+                        new
+                        {
+                            Id = new Guid("fa000000-0000-0000-0000-000000000008"),
+                            Answer = "Räntan beräknas dagligen och betalas ut den 31 december varje år.",
+                            Category = "Ränta",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Keywords = "ränta, räntan, ränteutbetalning, utbetalning ränta, räntesats, ränta procent, få ränta, när betalas ränta, ränta 31 december, räkna ränta",
+                            Question = "När betalas räntan ut?"
+                        },
+                        new
+                        {
+                            Id = new Guid("fa000000-0000-0000-0000-000000000009"),
+                            Answer = "Välj Skatterapport i menyn och sedan år. Där finns underlaget för ränta och transaktioner för det året.",
+                            Category = "Rapporter",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Keywords = "räntebesked, årsbesked, skatterapport, skatteunderlag, skatt, deklaration, deklarera, kontrolluppgift, underlag, ladda ner rapport",
+                            Question = "Var hittar jag mitt räntebesked eller årsbesked?"
+                        },
+                        new
+                        {
+                            Id = new Guid("fa000000-0000-0000-0000-000000000010"),
+                            Answer = "Under Historik i menyn ser du alla dina transaktioner och kan filtrera på konto och typ. Ett fullständigt underlag för hela året finns i Skatterapport.",
+                            Category = "Rapporter",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Keywords = "kontoutdrag, utdrag, transaktioner, transaktionshistorik, historik, se transaktioner, mina transaktioner, kontohistorik, händelser",
+                            Question = "Hur får jag ett kontoutdrag?"
+                        },
+                        new
+                        {
+                            Id = new Guid("fa000000-0000-0000-0000-000000000011"),
+                            Answer = "Ja, dina pengar omfattas av insättningsgarantin enligt de villkor som gäller för kontot.",
+                            Category = "Trygghet",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Keywords = "skyddade, skyddad, insättningsgaranti, garanti, trygga pengar, säkra pengar, säkerhet, riksgälden, bankkonkurs, förlora pengar",
+                            Question = "Är mina pengar skyddade?"
+                        },
+                        new
+                        {
+                            Id = new Guid("fa000000-0000-0000-0000-000000000012"),
+                            Answer = "Fullständiga avtalsvillkor skickas till dig per post. Kontakta kundtjänst om du saknar dem.",
+                            Category = "Villkor",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Keywords = "villkor, villkoren, avtal, avtalsvillkor, kundavtal, regler, bestämmelser, kontovillkor",
+                            Question = "Var hittar jag villkoren för mitt sparkonto?"
+                        },
+                        new
+                        {
+                            Id = new Guid("fa000000-0000-0000-0000-000000000013"),
+                            Answer = "Klicka på din profil uppe till höger och välj Profil och inställningar för att ändra namn och e-post.",
+                            Category = "Profil",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Keywords = "kontaktuppgifter, ändra e-post, byta e-post, ändra epost, e-postadress, mejl, mail, ändra namn, byta namn, profil, inställningar, uppgifter",
+                            Question = "Hur ändrar jag mina kontaktuppgifter?"
+                        },
+                        new
+                        {
+                            Id = new Guid("fa000000-0000-0000-0000-000000000014"),
+                            Answer = "Ring 08-123 456 78 vardagar 8-18 eller mejla hej@nordiska.se.",
+                            Category = "Kontakt",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Keywords = "kundtjänst, kundservice, kontakta, kontakt, ringa, telefon, telefonnummer, ring oss, mejla, support, öppettider, chatt, prata med någon",
+                            Question = "Hur kontaktar jag kundtjänst?"
+                        });
+                });
+
+            modelBuilder.Entity("NordiskaPortal.API.Models.InterestPayout", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("PaidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("TransactionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId", "Year")
+                        .IsUnique();
+
+                    b.ToTable("InterestPayouts");
+                });
+
+            modelBuilder.Entity("NordiskaPortal.API.Models.InterestRateObservation", b =>
+                {
+                    b.Property<string>("SeriesId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime>("FetchedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("Value")
+                        .HasPrecision(9, 4)
+                        .HasColumnType("numeric(9,4)");
+
+                    b.HasKey("SeriesId", "Date");
+
+                    b.ToTable("InterestRateObservations");
                 });
 
             modelBuilder.Entity("NordiskaPortal.API.Models.LedgerEntry", b =>
@@ -62,7 +387,8 @@ namespace NordiskaPortal.API.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("Amount")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -85,6 +411,58 @@ namespace NordiskaPortal.API.Migrations
                     b.HasIndex("TransactionId");
 
                     b.ToTable("LedgerEntries");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000009"),
+                            AccountId = new Guid("d0000000-0000-0000-0000-000000000002"),
+                            Amount = 5000m,
+                            CreatedAt = new DateTime(2026, 1, 2, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Deposit",
+                            EntryType = "DEPOSIT",
+                            TransactionId = new Guid("d0000000-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-00000000000a"),
+                            AccountId = new Guid("d0000000-0000-0000-0000-000000000002"),
+                            Amount = 3000m,
+                            CreatedAt = new DateTime(2026, 1, 10, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Deposit",
+                            EntryType = "DEPOSIT",
+                            TransactionId = new Guid("d0000000-0000-0000-0000-000000000005")
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-00000000000b"),
+                            AccountId = new Guid("d0000000-0000-0000-0000-000000000002"),
+                            Amount = -750m,
+                            CreatedAt = new DateTime(2026, 1, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Withdrawal",
+                            EntryType = "WITHDRAWAL",
+                            TransactionId = new Guid("d0000000-0000-0000-0000-000000000006")
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-00000000000c"),
+                            AccountId = new Guid("d0000000-0000-0000-0000-000000000003"),
+                            Amount = 20000m,
+                            CreatedAt = new DateTime(2026, 1, 3, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Deposit",
+                            EntryType = "DEPOSIT",
+                            TransactionId = new Guid("d0000000-0000-0000-0000-000000000007")
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-00000000000d"),
+                            AccountId = new Guid("d0000000-0000-0000-0000-000000000003"),
+                            Amount = 5000m,
+                            CreatedAt = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Deposit",
+                            EntryType = "DEPOSIT",
+                            TransactionId = new Guid("d0000000-0000-0000-0000-000000000008")
+                        });
                 });
 
             modelBuilder.Entity("NordiskaPortal.API.Models.Notification", b =>
@@ -99,6 +477,9 @@ namespace NordiskaPortal.API.Migrations
                     b.Property<string>("Message")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int>("RetryCount")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("SentAt")
                         .HasColumnType("timestamp with time zone");
@@ -121,6 +502,83 @@ namespace NordiskaPortal.API.Migrations
                     b.ToTable("Notifications");
                 });
 
+            modelBuilder.Entity("NordiskaPortal.API.Models.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("RotatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RefreshTokens");
+                });
+
+            modelBuilder.Entity("NordiskaPortal.API.Models.TaxReport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("NativeExitCode")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PdfPath")
+                        .HasColumnType("text");
+
+                    b.Property<int>("ReportYear")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Sha256")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SignaturePath")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("TaxReports");
+                });
+
             modelBuilder.Entity("NordiskaPortal.API.Models.Transaction", b =>
                 {
                     b.Property<Guid>("Id")
@@ -131,13 +589,21 @@ namespace NordiskaPortal.API.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("Amount")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("CounterpartyLabel")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -147,11 +613,72 @@ namespace NordiskaPortal.API.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("TransferId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AccountId");
 
+                    b.HasIndex("TransferId");
+
+                    b.HasIndex("AccountId", "IdempotencyKey")
+                        .IsUnique()
+                        .HasFilter("\"IdempotencyKey\" IS NOT NULL");
+
                     b.ToTable("Transactions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000004"),
+                            AccountId = new Guid("d0000000-0000-0000-0000-000000000002"),
+                            Amount = 5000m,
+                            CompletedAt = new DateTime(2026, 1, 2, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2026, 1, 2, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = "COMPLETED",
+                            TransactionType = "DEPOSIT"
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000005"),
+                            AccountId = new Guid("d0000000-0000-0000-0000-000000000002"),
+                            Amount = 3000m,
+                            CompletedAt = new DateTime(2026, 1, 10, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2026, 1, 10, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = "COMPLETED",
+                            TransactionType = "DEPOSIT"
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000006"),
+                            AccountId = new Guid("d0000000-0000-0000-0000-000000000002"),
+                            Amount = 750m,
+                            CompletedAt = new DateTime(2026, 1, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2026, 1, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = "COMPLETED",
+                            TransactionType = "WITHDRAWAL"
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000007"),
+                            AccountId = new Guid("d0000000-0000-0000-0000-000000000003"),
+                            Amount = 20000m,
+                            CompletedAt = new DateTime(2026, 1, 3, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2026, 1, 3, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = "COMPLETED",
+                            TransactionType = "DEPOSIT"
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000008"),
+                            AccountId = new Guid("d0000000-0000-0000-0000-000000000003"),
+                            Amount = 5000m,
+                            CompletedAt = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = "COMPLETED",
+                            TransactionType = "DEPOSIT"
+                        });
                 });
 
             modelBuilder.Entity("NordiskaPortal.API.Models.User", b =>
@@ -167,7 +694,28 @@ namespace NordiskaPortal.API.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("PasswordHash")
+                    b.Property<int>("FailedPinAttempts")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("LockedUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PersonalNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PersonalNumberHash")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PinHash")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -179,7 +727,24 @@ namespace NordiskaPortal.API.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
+                    b.HasIndex("PersonalNumberHash")
+                        .IsUnique();
+
                     b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("d0000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "demo@nordiskaportal.se",
+                            FailedPinAttempts = 0,
+                            FirstName = "Demo",
+                            LastName = "Kund",
+                            PersonalNumber = "19850615-5678",
+                            PinHash = "$2b$12$Ma9ikA7xtUOXMH86.OZA7eYIEb.yDiazDkk5uu5M/4PpbuC3ORvSu",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        });
                 });
 
             modelBuilder.Entity("NordiskaPortal.API.Models.Account", b =>
@@ -191,6 +756,15 @@ namespace NordiskaPortal.API.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("NordiskaPortal.API.Models.InterestPayout", b =>
+                {
+                    b.HasOne("NordiskaPortal.API.Models.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("NordiskaPortal.API.Models.LedgerEntry", b =>
@@ -216,6 +790,26 @@ namespace NordiskaPortal.API.Migrations
                 {
                     b.HasOne("NordiskaPortal.API.Models.User", "User")
                         .WithMany("Notifications")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("NordiskaPortal.API.Models.RefreshToken", b =>
+                {
+                    b.HasOne("NordiskaPortal.API.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("NordiskaPortal.API.Models.TaxReport", b =>
+                {
+                    b.HasOne("NordiskaPortal.API.Models.User", "User")
+                        .WithMany("TaxReports")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -251,6 +845,8 @@ namespace NordiskaPortal.API.Migrations
                     b.Navigation("Accounts");
 
                     b.Navigation("Notifications");
+
+                    b.Navigation("TaxReports");
                 });
 #pragma warning restore 612, 618
         }

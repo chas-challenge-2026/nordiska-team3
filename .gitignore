@@ -1,9 +1,21 @@
 bin/
 obj/
+TestResults/
 *.user
 .vs/
 *.slnx
 appsettings.Development.json
-
 # Local-only notes, never commit
 docs/systemdev-context.md
+
+# Frontend / Node
+node_modules/
+dist/
+.env
+.env.local
+
+broken.json
+
+# Tax report JSON written by local runs of the API and by the PDF tests.
+# The sample files native uses are already tracked and stay in git.
+/backend/NordiskaPortal.API/tax-reports/*.json
