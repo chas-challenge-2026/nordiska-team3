@@ -13,6 +13,7 @@ public static class FaqMatcher
     private const int KeywordWeight = 3;
     private const int QuestionWeight = 2;
     private const int MinStemLength = 3;
+    private const int MinTypoLength = 4;
 
     private static readonly Regex NonAlphanumeric = new(@"[^\p{L}\p{N}]+");
 
@@ -25,7 +26,8 @@ public static class FaqMatcher
         "får", "få", "fick", "gör", "göra", "gjorde", "gjort", "finns", "hitta", "hittar",
         "en", "ett", "i", "på", "till", "från", "av", "med", "för", "om", "att", "och", "eller",
         "men", "som", "så", "då", "där", "här", "inte", "ju", "bara", "också", "mycket", "lite",
-        "någon", "något", "några", "alla"
+        "någon", "något", "några", "alla", "hej", "hejsan", "hallå", "tjena", "tack", "snälla", 
+        "undrar", "undrade", "funderar", "fråga", "vet", "veta"
     };
 
     private static readonly string[] Suffixes = new[]
@@ -37,29 +39,28 @@ public static class FaqMatcher
 
     public static FaqMatch? FindBestMatch(string? query, IEnumerable<FaqEntry> entries)
     {
-        var queryTokens = Tokenize(query).Distinct().ToList();
-        if (queryTokens.Count == 0) return null;
+        var ranked = Rank(query, entries);
+        if (ranked.Count == 0) return null;
 
-        FaqMatch? best = null;
-        var tied = false;
+        var best = ranked[0];
+        var tied = ranked.Count > 1 && Math.Abs(ranked[1].Score - best.Score) < 1e-9;
 
-        foreach (var entry in entries)
-        {
-            var score = Score(entry, queryTokens);
-            if (score <= 0) continue;
+        return best.Score >= MinScore && !tied ? best : null;
+    }
 
-            if (best is null || score > best.Score)
-            {
-                best = new FaqMatch(entry, score);
-                tied = false;
-            }
-            else if (Math.Abs(score - best.Score) < 1e-9)
-            {
-                tied = true;
-            }
-        }
+    public static IReadOnlyList<FaqMatch> Rank(string? query, IEnumerable<FaqEntry> entries)
+    {
+        var entryList = entries.ToList();
+        var vocabulary = BuildVocabulary(entryList);
 
-        return best is { Score: >= MinScore } && !tied ? best : null;
+        var queryTokens = Tokenize(query).Select(token => CorrectTypo(token, vocabulary)).Distinct().ToList();
+        if (queryTokens.Count == 0) return Array.Empty<FaqMatch>();
+
+        return entryList
+            .Select(entry => new FaqMatch(entry, Score(entry, queryTokens)))
+            .Where(match => match.Score > 0)
+            .OrderByDescending(match => match.Score)
+            .ToList();
     }
 
     public static IReadOnlyList<string> Tokenize(string? text)
@@ -84,6 +85,56 @@ public static class FaqMatcher
         }
 
         return word.Length >= 5 && word.EndsWith("ot", StringComparison.Ordinal) ? word[..^1] : word;
+    }
+
+
+    public static bool IsOneEditApart(string first, string second)
+    {
+        if (first == second || Math.Abs(first.Length - second.Length) > 1) return false;
+
+        if (first.Length == second.Length)
+        {
+            var differences = Enumerable.Range(0, first.Length).Where(i => first[i] != second[i]).ToList();
+
+            if (differences.Count == 1) return true;
+
+            return differences.Count == 2
+                && differences[1] == differences[0] + 1
+                && first[differences[0]] == second[differences[1]]
+                && first[differences[1]] == second[differences[0]];
+        }
+
+        var shorter = first.Length < second.Length ? first : second;
+        var longer = first.Length < second.Length ? second : first;
+
+        for (var i = 0; i < longer.Length; i++)
+        {
+            if (longer.Remove(i, 1) == shorter) return true;
+        }
+
+        return false;
+    }
+
+    private static HashSet<string> BuildVocabulary(IEnumerable<FaqEntry> entries)
+    {
+        var vocabulary = new HashSet<string>();
+
+        foreach (var entry in entries)
+        {
+            vocabulary.UnionWith(Tokenize(entry.Keywords));
+            vocabulary.UnionWith(Tokenize(entry.Question));
+        }
+
+        return vocabulary;
+    }
+
+    private static string CorrectTypo(string token, HashSet<string> vocabulary)
+    {
+        if (token.Length < MinTypoLength || vocabulary.Contains(token)) return token;
+
+        var candidates = vocabulary.Where(word => IsOneEditApart(token, word)).Take(2).ToList();
+
+        return candidates.Count == 1 ? candidates[0] : token;
     }
 
     private static double Score(FaqEntry entry, IReadOnlyList<string> queryTokens)

@@ -60,6 +60,8 @@ Databaslösenordet och nycklarna genereras första gången appen startar och sparas
 
 Namn och förklaringar finns i `backend/.env.example`.
 
+BankID-lagena (Off, Mock och Test) och hur man byter dem finns i README, avsnittet BankID.
+
 ## 5. Tester mot riktig Postgres
 
 Samtidighetstesterna för överföring körs bara om miljövariabeln `NORDISKA_TEST_DB` pekar på en databas med "test" i namnet. Utan den hoppas de över.

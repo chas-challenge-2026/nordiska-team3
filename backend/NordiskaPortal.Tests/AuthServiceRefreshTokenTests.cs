@@ -186,6 +186,38 @@ public class AuthServiceRefreshTokenTests
             .Which.TokenHash.Should().Be(RefreshTokenHasher.Hash("refresh-3"));
     }
 
+    [Fact]
+    public async Task LoginWithPersonalNumber_IssuesTokensForAKnownUser()
+    {
+        var result = await CreateService().LoginWithPersonalNumberAsync("19900101-1234");
+
+        result.Should().NotBeNull();
+        result!.RefreshToken.Should().Be("refresh-1");
+        _refreshTokens.Tokens.Should().ContainSingle().Which.UserId.Should().Be(_user.Id);
+    }
+
+    [Fact]
+    public async Task LoginWithPersonalNumber_ForAnUnknownPersonalNumber_ReturnsNullAndIssuesNothing()
+    {
+        _protector.Setup(p => p.ComputeHash("19800101-0000")).Returns("other-hash");
+        _users.Setup(r => r.GetByPersonalNumberHashAsync("other-hash")).ReturnsAsync((User?)null);
+
+        var result = await CreateService().LoginWithPersonalNumberAsync("19800101-0000");
+
+        result.Should().BeNull();
+        _refreshTokens.Tokens.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task LoginWithPersonalNumber_WorksEvenWhileThePinIsLocked()
+    {
+        _user.LockedUntil = _clock.Now.UtcDateTime.AddMinutes(5);
+
+        var result = await CreateService().LoginWithPersonalNumberAsync("19900101-1234");
+
+        result.Should().NotBeNull();
+    }
+
     private async Task<AuthResult> LoginAsync()
     {
         var result = await CreateService().LoginWithPinAsync(new LoginPinRequestDto("19900101-1234", Pin));
