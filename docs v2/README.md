@@ -47,6 +47,66 @@ Alla endpoints finns i Swagger. I korthet: `/api/auth` (register, login-pin, ref
 - **Ränta:** Riksbankens styrränta plus påslag per kontotyp. Upplupen ränta visas på kontot och betalas ut 1 januari.
 - **Skatterapport:** skapas i en kö av `pdf_generator`, signeras av `pdf_signer` och blir `READY` först när signaturen är verifierad. Kontrollera den med `openssl dgst -sha256 -verify <publik nyckel> -signature <fil>.pdf.sig <fil>.pdf`.
 
+### BankID
+
+BankID har tre lägen. Du väljer läge med inställningen `BankId__Mode`. PIN-inloggningen fungerar alltid, oavsett läge.
+
+| Läge | Vad det gör | Används |
+|------|-------------|---------|
+| `Off` | BankID är avstängt. Standard om inget är inställt. | Stage och prod |
+| `Mock` | Ett låtsas-BankID i minnet. Du godkänner själv i panelen "Mock-läge (utveckling)". Fungerar bara i Development, annars startar API:et inte. | Lokalt i Docker (standard) |
+| `Test` | BankIDs riktiga testserver. Du skannar QR-koden eller öppnar BankID på samma enhet. | Lokalt, när du vill bevisa att det fungerar på riktigt |
+
+#### Byta läge lokalt
+
+Lokalt läser `infra/docker-compose.override.yml` läget från variabeln `BANKID_MODE`. Utan inställning blir det `Mock`. För att byta skapar du filen `infra/.env` (den är git-ignorerad) med en rad:
+
+```
+BANKID_MODE=Test
+```
+
+Skriv `Mock`, `Test` eller `Off` efter likhetstecknet. Starta sedan om från mappen `infra`. Första gången du byter till `Test` bygger du om, så att testcertifikaten kommer med i bilden:
+
+```bash
+docker compose up -d --build app
+```
+
+Kontrollera vilket läge som gäller. Svaret från start innehåller `mock: true` i Mock-läge, `mock: false` i Test-läge och felet 502 i Off-läge:
+
+```bash
+curl -X POST http://localhost:5077/api/auth/bankid/start
+```
+
+#### Prova Mock
+
+1. Klicka på **Logga in med BankID**.
+2. Ange en demokunds personnummer i panelen **Mock-läge (utveckling)**, till exempel `19880312-4421`.
+3. Klicka på **Simulera godkännande**.
+
+Panelen visas bara när API:et svarar `mock: true`. På stage och i prod syns den aldrig.
+
+#### Prova Test (riktigt testserver)
+
+Testcertifikaten (BankIDs publika testcertifikat och rotcertifikat) ligger redan i `backend/NordiskaPortal.API/Certs/`. Lösenordet till klientcertifikatet är `qwerty123` och är publikt. Du behöver:
+
+1. **En telefon i testläge.** Gör så här: installera om BankID-appen, slå på flygplansläge, gå till Inställningar, Support, håll in "Felinformation" och skriv `kundtest`. Kontrollera att det står CUST och tvångsstäng appen. Det riktiga BankID försvinner från telefonen tills du installerar om appen igen, så använd helst en reservtelefon.
+2. **Ett test-BankID.** Skapa ett på BankIDs testsida (developers.bankid.com, Test portal) med ett personnummer från Skatteverkets testpersoner. Våra demopersonnummer klarar inte BankIDs kontrollsiffra.
+3. **En kund med samma personnummer.** Registrera personnumret som ny kund, till exempel med `POST /api/auth/register` i Swagger. BankID-inloggning skapar inga konton. Saknas kunden får du felet "userNotFound".
+4. **Läget `Test`** enligt avsnittet ovan.
+
+Sedan loggar du in: **Logga in med BankID**, skanna QR-koden med testtelefonen och godkänn med ditt lösenord. På samma enhet använder du knappen för att öppna BankID.
+
+#### Felsökning
+
+| Problem | Orsak och åtgärd |
+|---------|------------------|
+| API:et startar inte i `Mock` | `Mock` fungerar bara när `ASPNETCORE_ENVIRONMENT` är `Development`. På stage och i prod ska läget vara `Off` eller `Test`. |
+| API:et startar inte i `Test` | Certifikatfilen saknas eller lösenordet är fel. Se `docker compose logs app` i mappen `infra`. |
+| 502 från `/api/auth/bankid/start` | Läget är `Off`, eller så når servern inte BankID. |
+| "userNotFound" efter godkännande | Personnumret finns inte som kund hos oss. Registrera det. |
+| Appen i telefonen hittar ingen order | Telefonen är inte i testläge, eller så skapades test-BankID:t för ett annat personnummer. |
+| QR-koden slutar fungera | Ordern gäller i 30 sekunder att starta. Starta en ny inloggning. |
+
 ### Avgränsningar
 
 - BankID är mockat lokalt (`BankId__Mode=Mock`), kan köras mot BankIDs testmiljö (`Test`) och är avstängt på stage (`Off`).
@@ -55,7 +115,7 @@ Alla endpoints finns i Swagger. I korthet: `/api/auth` (register, login-pin, ref
 
 ### Mer information
 
-[Beslutslogg](backend/beslutslogg.md), [teststatus](backend/teststatus.md), [kända brister](backend/kanda-brister.md), [fallback](backend/fallback.md), [feed forward](backend/feedforward.md), [alla inställningar](https://github.com/chas-challenge-2026/nordiska-team3/blob/dev/backend/.env.example) och [drift och deploy](https://github.com/chas-challenge-2026/nordiska-team3/blob/dev/DRIFT.md).
+[Beslutslogg](beslutslogg.md), [teststatus](backend/teststatus.md), [kända brister](backend/kanda-brister.md), [fallback](fallback.md), [feed forward](backend/feedforward.md), [alla inställningar](https://github.com/chas-challenge-2026/nordiska-team3/blob/dev/backend/.env.example) och [drift och deploy](https://github.com/chas-challenge-2026/nordiska-team3/blob/dev/DRIFT.md).
 
 ## Frontend
 
@@ -135,4 +195,4 @@ Den lokala Docker-konfigurationen använder som standard BankID i mock-läge. D�
 2. Ange testkontots personnummer i panelen **Mock-läge (utveckling)**.
 3. Klicka på **Simulera godkännande**.
 
-När inloggningen har godkänts kommer du till dashboarden.
+När inloggningen har godkänts kommer du till dashboarden. Mer om BankID-lägena, och hur du byter mellan dem, finns i avsnittet [BankID](#bankid) under Backend.
