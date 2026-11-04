@@ -1,6 +1,6 @@
 # Teststatus — backend
 
-Mätt 2026-11-04 på `dev` (commit `547d2cf`).
+Mätt 2026-11-04 på `dev`.
 
 - **420 tester** (xUnit): 401 godkända, 0 underkända och 19 hoppade över lokalt eftersom de kräver Postgres. Alla 420 körs i CI mot en Postgres 15.
 - **Radtäckning 71,8 %** för API-projektet (utan genererade migrationer) och 80,5 % för Services.

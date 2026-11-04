@@ -1,6 +1,4 @@
-# Beslutslogg — backend
-
-Våra viktigaste vägval i backend. PR-numren pekar på pull requests i GitHub.
+# Beslutslogg
 
 ## Så tog vi beslut
 

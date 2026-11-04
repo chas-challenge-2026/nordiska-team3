@@ -1,10 +1,10 @@
-# Fallback för demon — backend
+# Fallback
 
 Teamets fallback är en inspelad demo som vi gjorde tidigare och lämnar in med leveransen. Om livedemon krånglar:
 
 1. Prova stage: https://nordiska-team3-dev.team.chas-challenge.comerit.se (`/api/health` ska svara).
 2. Kör lokalt: `cd infra`, `docker compose up --build`, öppna `http://localhost:5077` och logga in med en demokund ([demo-data.md](https://github.com/chas-challenge-2026/nordiska-team3/blob/dev/docs/demo-data.md)).
-3. Visa den inspelade demon.
+
 
 | Problem | Orsak och åtgärd |
 |---------|------------------|
