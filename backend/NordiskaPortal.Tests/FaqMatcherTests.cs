@@ -24,6 +24,10 @@ public class FaqMatcherTests
     [InlineData("insättningar", "Hur sätter jag in pengar?")]
     [InlineData("hur flyttar jag pengar mellan mina konton", "Hur flyttar jag pengar mellan mina konton?")]
     [InlineData("hur ändrar jag mitt namn", "Hur ändrar jag mina kontaktuppgifter?")]
+    [InlineData("hur skickar jag pengar till någon annan", "Hur för jag över pengar till någon annan?")]
+    [InlineData("överföring till annat konto", "Hur för jag över pengar till någon annan?")]
+    [InlineData("jag blev utloggad", "Varför blev jag utloggad?")]
+    [InlineData("jag loggas ut hela tiden", "Varför blev jag utloggad?")]
 
     public void FindBestMatch_ShouldReturnExpectedEntry(string query, string expectedQuestion)
     {
@@ -33,7 +37,43 @@ public class FaqMatcherTests
         result!.Entry.Question.Should().Be(expectedQuestion);
     }
 
-    [Fact]
+    [Theory]
+    [InlineData("hej! jag undrar hur jag gör ett uttag", "Hur tar jag ut pengar?")]
+    [InlineData("tack! jag har en fråga om insättning", "Hur sätter jag in pengar?")]
+    public void FindBestMatch_WhenQueryHasFillerWords_ReturnsExpectedEntry(string query, string expectedQuestion)
+    {
+        var result = FaqMatcher.FindBestMatch(query, Entries);
+
+        result.Should().NotBeNull();
+        result!.Entry.Question.Should().Be(expectedQuestion);
+    }
+
+    [Theory]
+    [InlineData("utag", "Hur tar jag ut pengar?")]
+    [InlineData("insätning", "Hur sätter jag in pengar?")]
+    [InlineData("insättnimg", "Hur sätter jag in pengar?")]
+    [InlineData("kontoutdarg", "Hur får jag ett kontoutdrag?")]
+    public void FindBestMatch_WhenQueryHasATypo_ReturnsExpectedEntry(string query, string expectedQuestion)
+    {
+        var result = FaqMatcher.FindBestMatch(query, Entries);
+
+        result.Should().NotBeNull();
+        result!.Entry.Question.Should().Be(expectedQuestion);
+    }
+
+    [Theory]
+    [InlineData("radera mitt sparkonto", "Hur avslutar jag mitt sparkonto?")]
+    [InlineData("ta bort mitt sparkonto", "Hur avslutar jag mitt sparkonto?")]
+    public void FindBestMatch_WhenWordsAreCombinedDifferently_ReturnsExpectedEntry(string query, string expectedQuestion)
+    {
+        var result = FaqMatcher.FindBestMatch(query, Entries);
+
+        result.Should().NotBeNull();
+        result!.Entry.Question.Should().Be(expectedQuestion);
+
+    }
+
+        [Fact]
     public void FindBestMatch_WhenQueryIsAnEntryQuestion_ReturnsThatEntry()
     {
         foreach (var entry in Entries)
@@ -59,6 +99,7 @@ public class FaqMatcherTests
     [InlineData("in a")]
     [InlineData("hur gör jag det")]
     [InlineData("pengar")]
+    [InlineData("konto")]
     [InlineData("")]
     [InlineData("   ")]
     public void FindBestMatch_WhenNoEntryIsRelevant_ReturnsNull(string query)
@@ -132,5 +173,40 @@ public class FaqMatcherTests
     public void Stem_KeepsContactAndAccountApart()
     {
         FaqMatcher.Stem("kontakt").Should().NotBe(FaqMatcher.Stem("konto"));
+    }
+
+
+    [Theory]
+    [InlineData("utag", "uttag")]
+    [InlineData("uttag", "utag")]
+    [InlineData("insättnimg", "insättning")]
+    [InlineData("kontoutdarg", "kontoutdrag")]
+    public void IsOneEditApart_WhenTheWordsAreOneTypoApart_ReturnsTrue(string first, string second)
+    {
+        FaqMatcher.IsOneEditApart(first, second).Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData("uttag", "uttag")]
+    [InlineData("utag", "uttagen")]
+    [InlineData("konto", "kontakt")]
+    public void IsOneEditApart_WhenTheWordsAreEqualOrTooDifferent_ReturnsFalse(string first, string second)
+    {
+        FaqMatcher.IsOneEditApart(first, second).Should().BeFalse();
+    }
+
+
+    [Fact]
+    public void Rank_WhenTwoEntriesTie_ReturnsBothInRepositoryOrder()
+    {
+        var ranked = FaqMatcher.Rank("ränta skatt", Entries);
+
+        ranked.Select(m => m.Entry.Question).Should().Equal("När betalas räntan ut?", "Var hittar jag mitt räntebesked eller årsbesked?");
+    }
+
+    [Fact]
+    public void Rank_WhenNothingIsRelevant_ReturnsAnEmptyList()
+    {
+        FaqMatcher.Rank("hur bokar jag en flygresa", Entries).Should().BeEmpty();
     }
 }

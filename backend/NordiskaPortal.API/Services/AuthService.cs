@@ -79,6 +79,24 @@ public class AuthService : IAuthService
         return LoginResult.Success(result);
     }
 
+    public async Task<AuthResult?> LoginWithPersonalNumberAsync(string personalNumber)
+    {
+        var personalNumberHash = _personalNumberProtector.ComputeHash(personalNumber);
+        var user = await _userRepository.GetByPersonalNumberHashAsync(personalNumberHash);
+
+        if (user is null)
+        {
+            _logger.LogWarning("BankID login for a personal number without an account.");
+            return null;
+        }
+
+        var result = await IssueTokensAsync(user);
+
+        _logger.LogInformation("User {UserId} logged in with BankID.", user.Id);
+
+        return result;
+    }
+
     public async Task<AuthResult?> RefreshAsync(string refreshToken)
     {
         var now = _timeProvider.GetUtcNow().UtcDateTime;

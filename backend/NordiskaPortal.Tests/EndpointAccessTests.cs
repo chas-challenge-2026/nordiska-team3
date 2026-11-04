@@ -10,11 +10,16 @@ namespace NordiskaPortal.Tests;
 public class EndpointAccessTests
 {
     private static readonly string[] AnonymousOnPurpose =
-    {
+{
         "AuthController.Register",
         "AuthController.LoginPin",
         "AuthController.Refresh",
         "HealthController.GetHealth",
+        // BankID login: the person is not logged in yet, this is the login.
+        "BankIdController.Start",
+        "BankIdController.Status",
+        "BankIdController.Cancel",
+        "BankIdController.MockApprove",
     };
 
     private static List<(string Name, bool IsAnonymous)> Actions()
